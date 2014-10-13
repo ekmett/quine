@@ -1,9 +1,10 @@
 /**
  * @author mrdoob / http://mrdoob.com/ https://github.com/mrdoob/stats.js/blob/master/src/Stats.js
- * modified to use require.js by Edward Kmett 2014
+ * modified to use require.js, strict, and generally fit my preferences by Edward Kmett 2014
  */
 
 define("stats",["performance"],function stats(performance) {
+ 'use strict'
 
  var container = document.createElement( 'div' );
  container.id = 'stats';
