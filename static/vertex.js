@@ -1,20 +1,25 @@
-define(["text","gl"], function vertex_plugin(text, gl) {
+define(["text","gl","performance"], function vertex_plugin(text, gl, performance) {
 
 'use strict';
 
 return {
   load : function load(name,req,onload,config) {
-    console.log("loading vertex shader", name);
+    name = name + ".vert";
+    var preload = performance.now();
     var shader = gl.createShader(gl.VERTEX_SHADER);
-    text.load(name + ".vert",req,function(source) {
-      console.log("compiling vertex shader",name)
+    text.load(name,req,function(source) {
+      var postload = performance.now();
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       if(gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.log(name, "compiled",
+          { load_ms: ~~(postload-preload)
+          , compile_ms: ~~(performance.now()-postload)
+          });
         onload(shader);
       } else {
         var lastError = gl.getShaderInfoLog(shader);
-        console.log("bad vertex shader", shader, lastError)
+        console.log(name, "bad vertex shader:", shader, lastError)
         gl.deleteShader(shader);
         if (onload.error) onload.error(lastError);
       }

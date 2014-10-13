@@ -1,20 +1,25 @@
-define(["text","gl"], function fragment_plugin(text, gl) {
+define(["text","gl","performance"], function fragment_plugin(text, gl, performance) {
 
 'use strict';
 
 return {
   load : function load(name,req,onload,config) {
-    console.log("loading fragment shader", name);
+    name = name + ".frag";
+    var preload = performance.now();
     var shader = gl.createShader(gl.FRAGMENT_SHADER);
-    text.load(name + ".frag",req,function(source) {
-      console.log("compiling fragment shader",name)
+    text.load(name,req,function(source) {
+      var postload = performance.now();
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       if(gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.log(name,"compiled",
+          { load_ms : ~~(postload-preload),
+            compile_ms : ~~(performance.now()-postload)
+          });
         onload(shader);
       } else {
         var lastError = gl.getShaderInfoLog(shader);
-        console.log("bad fragment shader", shader, lastError)
+        console.log(name,"bad fragment shader:", shader, lastError)
         gl.deleteShader(shader);
         if (onload.error) onload.error(lastError);
       }
