@@ -1,6 +1,6 @@
-define(["domReady!"], function canvas(dr) {
+define(["die","domReady!"], function canvas(die,dr) {
   'use strict';
   var canvas = document.getElementById("background");
-  if (!canvas) throw "missing canvas";
+  if (!canvas) die("missing canvas");
   return canvas;
 });
