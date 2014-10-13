@@ -1,6 +1,6 @@
 define(
-  ["jquery", "gl", "physics", "performance", "stats", "rainbow"],
-  function display($, gl, physics, performance, stats, rainbow) {
+  ["jquery", "gl", "physics", "performance", "stats", "extensions", "rainbow"],
+  function display($, gl, physics, performance, stats, extensions, rainbow) {
 
 'use strict';
 
