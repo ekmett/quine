@@ -1,4 +1,4 @@
-define(["canvas"], function define_gl(canvas) {
+define(["canvas"], function gl(canvas) {
 'use strict';
 try { 
   return canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
