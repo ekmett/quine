@@ -16,12 +16,11 @@ requirejs.config({
 });
 
 define(
-  ['jquery','stats','display','gl','hello'],
-  function ($, stats, display, hi) {
+  ['jquery','stats','display'],
+  function ($, stats, display) {
     'use strict';
     $(document).ready(function() {
       $('body').append(stats.domElement);
-      console.log(hi);
     });
   }
 );
