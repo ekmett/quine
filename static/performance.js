@@ -1,5 +1,6 @@
 // requirejs-friendly polyfill for performance.now. doesn't edit the global namespace
 define([],function() {
+  'use strict';
   var performance = window.performance || {};
 
   if (!performance.now) {
