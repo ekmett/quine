@@ -2,6 +2,8 @@ define(
   ["jquery", "performance", "stats", "gl"],
   function physics($, performance, stats) {
 
+'use strict';
+
 var FPS = 60;
 var MILLISECONDS_PER_FRAME = 1000 / FPS;
 var BURST_RATE = 5;
