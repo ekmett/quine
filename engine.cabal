@@ -1,0 +1,45 @@
+name:          engine
+category:      Graphics
+version:       0.1
+license:       BSD3
+cabal-version: >= 1.10
+license-file:  LICENSE
+author:        Edward A. Kmett
+maintainer:    Edward A. Kmett <ekmett@gmail.com>
+stability:     experimental
+homepage:      http://github.com/ekmett/engine/
+bug-reports:   http://github.com/ekmett/engine/issues
+copyright:     Copyright (C) 2014 Edward A. Kmett
+build-type:    Simple
+tested-with:   GHC == 7.8.3
+synopsis:      Engine
+description:   Engine
+
+extra-source-files:
+  .ghci
+  .gitignore
+  .vim.custom
+  HLint.hs
+  CHANGELOG.markdown
+  README.markdown
+
+source-repository head
+  type: git
+  location: git://github.com/ekmett/engine.git
+
+executable engine
+  main-is: Main.hs
+
+  build-depends:
+    base >= 4.7 && < 5,
+    containers,
+    lens,
+    linear,
+    OpenGL,
+    OpenGLRaw,
+    sdl2 == 1.1.*,
+    transformers
+
+  default-language: Haskell2010
+
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -O2

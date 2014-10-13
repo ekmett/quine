@@ -1,0 +1,7 @@
+define(["domReady!"], function define_canvas(dr) {
+  var canvas = document.getElementById("background");
+  if (!canvas) {
+    throw "missing canvas";
+  }
+  return canvas;
+});
