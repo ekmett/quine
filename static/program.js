@@ -30,21 +30,25 @@ program.load = function load(name,req,onload,config) {
   } else {
     var vname = vf[0];
     var fname = vf[1];
-    vertex.load(vname,req,function(v) {
-      fragment.load(fname,req,function(f) {
-        console.log("linking program with vertex shader",vname, "and fragment shader", fname);
-        var result = null;
-        var ok = false;
-        try { 
-          result = program.link(v,f);
-          ok = true;
-        } catch (e) {
-          if (onload.error) onload.error(e);
-          else throw e;
-        }
-        if (ok) onload(result);
-      }, config);
-    }, config);
+    var tick = 2;
+    var vs = null;
+    var fs = null;
+
+    var go = function () { 
+      console.log("linking vertex shader",vname, "with fragment shader", fname);
+      var result = null;
+      var ok = false;
+      try { 
+        result = program.link(v,f);
+        ok = true;
+      } catch (e) {
+        if (onload.error) onload.error(e);
+        else throw e;
+      }
+      if (ok) onload(result);
+    };
+    vertex.load(vname,req,function(v) { vs = v; if (! --tick) go(); }, config);
+    fragment.load(fname,req,function(f) { fs = f; if (! --tick) go(); }, config);
   }
 };
 
