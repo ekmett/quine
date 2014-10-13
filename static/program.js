@@ -1,4 +1,4 @@
-define(["gl","vertex","fragment"], function program_plugin(gl, vertex, fragment) {
+define(["gl","vs","fs"], function program_plugin(gl, vertex, fragment) {
 
 'use strict';
 
@@ -25,11 +25,11 @@ program.link = function link(v,f,attribs) {
 
 program.load = function load(name,req,onload,config) {
   var vf = name.split(",");
-  if (vf.length != 2) {
+  if (vf.length < 1 || vf.length > 2) {
     onload.error("malformed program!");
   } else {
     var vname = vf[0];
-    var fname = vf[1];
+    var fname = vf[vf.length == 1 ? 0 : 1];
     var tick = 2;
     var vs = null;
     var fs = null;

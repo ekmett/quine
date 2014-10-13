@@ -4,7 +4,9 @@ requirejs.config({
     'gl-matrix' : 'nih/gl-matrix.min',
     'domReady'  : 'nih/domReady',
     'text'      : 'nih/text',
-    'jquery'    : 'nih/jquery-2.1.1.min'
+    'jquery'    : 'nih/jquery-2.1.1.min',
+    'vs'        : 'shader/vs',
+    'fs'        : 'shader/fs'
   },
   shim: {
     'bootstrap': {
