@@ -2,6 +2,8 @@ define(
   ["jquery", "gl", "physics", "performance", "stats", "hello"],
   function display($, gl, physics, performance, stats, hello) {
 
+'use strict';
+
 gl.useProgram(hello.program);
 gl.enableVertexAttribArray(hello.pos);
 var verts = gl.createBuffer();
