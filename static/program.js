@@ -18,7 +18,7 @@ program.link = function link(v,f,attribs) {
   if (!linked) {
     var lastError = gl.getProgramInfoLog(p);
     gl.deleteProgram(p);
-    throw lastError;
+    throw lastError; // not necessarily fatal, allow catch
   }
   return p;
 };
