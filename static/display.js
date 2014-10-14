@@ -1,6 +1,6 @@
 define(
-  ["context", "physics", "stats", "rainbow","dds!Mountains", "staged"],
-  function display(context, physics, stats, rainbow, mountains, staged) {
+  ["context", "physics", "stats", "rainbow", "staged"],
+  function display(context, physics, stats, rainbow, staged) {
 
 'use strict';
 
@@ -14,7 +14,6 @@ var display = staged(function (gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, verts);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   gl.vertexAttribPointer(rainbow.pos, 2, gl.FLOAT, false, 0, 0)
-  this.gl = gl;
 });
 
 display.stats = stats.display;

@@ -1,4 +1,4 @@
-define(["die","vs","fs","staged"], function program_plugin(die, vertex, fragment, staged) {
+define(["die","shader","staged"], function program_plugin(die, shader, staged) {
 
 'use strict';
 
@@ -7,11 +7,9 @@ var program = {};
 // attribs is an object containing {name:location} pairs
 program.link = function link(v,f,attribs) {
   return staged(function(gl) {
-    v.stage();
-    f.stage();
-    var p = this.program = gl.createProgram();
-    gl.attachShader(p,v.shader);
-    gl.attachShader(p,f.shader);
+    var p = this.id = gl.createProgram();
+    gl.attachShader(p,v.stage().id);
+    gl.attachShader(p,f.stage().id);
     if (typeof attribs !== "undefined") {
       for (var key in attribs)
         gl.bindAttribLocation(p,attribs[key],key);
@@ -21,7 +19,7 @@ program.link = function link(v,f,attribs) {
     if (!linked && !gl.isContextLost) {
       var lastError = gl.getProgramInfoLog(p);
       gl.deleteProgram(p);
-      die("link error:" + lastError);
+      die("link error: " + lastError);
     }
   });
 };

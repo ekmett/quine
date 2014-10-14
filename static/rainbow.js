@@ -1,7 +1,7 @@
-define(["program","staged","vs!rainbow","fs!rainbow"],function(program,staged,vertex,fragment) {
+define(["program","staged","shader!rainbow.vs","shader!rainbow.fs"],function(program,staged,vs,fs) {
   return staged(function(gl) {
     this.pos = 0;
-    this.program = program.link(vertex,fragment,{"pos":0}).stage().program;
-    this.offset = gl.getUniformLocation(this.program,"offset");
+    this.program = program.link(vs,fs,{"pos":0}).stage().id;
+    this.offset = gl.getUniformLocation(this.id,"offset");
   });
 });
