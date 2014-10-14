@@ -139,7 +139,7 @@ define(["raw","gl/extensions","die"],function dds(raw, extensions, die) {
     switch ( fourCC ) {
       case FOURCC_DXT1:
         blockBytes = 8;
-        dds.format = s3tc.COMPRESSED_RGB_S3TC_DXT1_EXT";
+        dds.format = s3tc.COMPRESSED_RGB_S3TC_DXT1_EXT;
         break;
       case FOURCC_DXT3:
         blockBytes = 16;
