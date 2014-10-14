@@ -42,13 +42,27 @@ var render = display.render = function render(t) {
 render(performance.now());
 
 document.addEventListener("context-lost", function (e) { 
-  if (requestId != null) cancelRequestAnimationFrame(requestId);
+  console.log("WebGL context lost, epoch",e.detail.epoch);
+  if (requestId != null) cancelAnimationFrame(requestId);
   requestId = null;
 });
 
+var lc = context.gl.getExtension("WEBGL_lose_context"); // grab initial context
+
 document.addEventListener("context-restored", function (e) { 
+  console.log("WebGL context restored, epoch",e.detail.epoch);
   render(performance.now()); // this will restart the rendering pipeline.
+  lc = e.detail.gl.getExtension("WEBGL_lose_context"); // reset store context
 });
+
+// lose the context when I press click the mouse.
+window.addEventListener("mousedown", function() {
+  lc.loseContext();
+})
+
+window.addEventListener("mouseup", function() {
+  lc.restoreContext();
+})
 
 return display;
 

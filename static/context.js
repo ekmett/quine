@@ -15,7 +15,7 @@ var context = {
 
 // prevent this from causing the whole page to die
 canvas.addEventListener("webglcontextlost", function(e) {
-  document.dispatchEvent(new CustomEvent('context-lost', { epoch : context.epoch }));
+  document.dispatchEvent(new CustomEvent('context-lost', { detail : { epoch : context.epoch } }));
   e.preventDefault();
 });
 
@@ -23,7 +23,7 @@ canvas.addEventListener("webglcontextrestored", function(e) {
   // go fetch a new gl object
   context.epoch++;
   context.gl = getGL();
-  document.dispatchEvent(new CustomEvent('context-restored', context));
+  document.dispatchEvent(new CustomEvent('context-restored', { detail : context }));
 });
 
 return context;
