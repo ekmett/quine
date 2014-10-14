@@ -1,6 +1,4 @@
-define(
-  ["jquery", "performance", "stats", "gl"],
-  function physics($, performance, stats) {
+define(["jquery", "stats"], function physics($, stats) {
 
 'use strict';
 

@@ -3,7 +3,7 @@
  * modified to use require.js, strict, and generally fit my preferences by Edward Kmett 2014
  */
 
-define("stats",["performance"],function stats(performance) {
+define([],function stats() {
  'use strict'
 
  var container = document.createElement( 'div' );

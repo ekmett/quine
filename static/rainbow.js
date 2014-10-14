@@ -1,8 +1,7 @@
-define(["gl","program","vs!rainbow","fs!rainbow"],function(gl,program,v,f) {
-  var p = program.link(v,f,{"pos":0});
-  return { 
-    pos: 0, // gl.getAttribLocation(p,"pos"),
-    offset: gl.getUniformLocation(p,"offset"),
-    program: p
-  };
+define(["program","staged","vs!rainbow","fs!rainbow"],function(program,staged,vertex,fragment) {
+  return staged(function(gl) {
+    this.pos = 0;
+    this.program = program.link(vertex,fragment,{"pos":0}).stage().program;
+    this.offset = gl.getUniformLocation(this.program,"offset");
+  });
 });

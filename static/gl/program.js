@@ -1,4 +1,4 @@
-define(["gl","vs","fs"], function program_plugin(gl, vertex, fragment) {
+define(["die","vs","fs","staged"], function program_plugin(die, vertex, fragment, staged) {
 
 'use strict';
 
@@ -6,47 +6,37 @@ var program = {};
 
 // attribs is an object containing {name:location} pairs
 program.link = function link(v,f,attribs) {
-  var p = gl.createProgram();
-  gl.attachShader(p,v);
-  gl.attachShader(p,f);
-  if (typeof attribs !== "undefined") {
-    for (var key in attribs)
-      gl.bindAttribLocation(p,attribs[key],key);
-  }
-  gl.linkProgram(p)
-  var linked = gl.getProgramParameter(p, gl.LINK_STATUS);
-  if (!linked) {
-    var lastError = gl.getProgramInfoLog(p);
-    gl.deleteProgram(p);
-    throw lastError; // not necessarily fatal, allow catch
-  }
-  return p;
+  return staged(function(gl) {
+    v.stage();
+    f.stage();
+    var p = this.program = gl.createProgram();
+    gl.attachShader(p,v.shader);
+    gl.attachShader(p,f.shader);
+    if (typeof attribs !== "undefined") {
+      for (var key in attribs)
+        gl.bindAttribLocation(p,attribs[key],key);
+    }
+    gl.linkProgram(p)
+    var linked = gl.getProgramParameter(p, gl.LINK_STATUS);
+    if (!linked && !gl.isContextLost) {
+      var lastError = gl.getProgramInfoLog(p);
+      gl.deleteProgram(p);
+      die("link error:" + lastError);
+    }
+  });
 };
 
 program.load = function load(name,req,onload,config) {
   var vf = name.split(",");
   if (vf.length < 1 || vf.length > 2) {
-    onload.error("malformed program!");
+    onload.error("malformed program:",name);
   } else {
     var vname = vf[0];
     var fname = vf[vf.length == 1 ? 0 : 1];
     var tick = 2;
     var vs = null;
     var fs = null;
-
-    var go = function () { 
-      console.log("linking vertex shader",vname, "with fragment shader", fname);
-      var result = null;
-      var ok = false;
-      try { 
-        result = program.link(v,f);
-        ok = true;
-      } catch (e) {
-        if (onload.error) onload.error(e);
-        else throw e;
-      }
-      if (ok) onload(result);
-    };
+    var go = function () { onload(program.link(vs,fs)); };
     vertex.load(vname,req,function(v) { vs = v; if (! --tick) go(); }, config);
     fragment.load(fname,req,function(f) { fs = f; if (! --tick) go(); }, config);
   }

@@ -131,18 +131,23 @@ define(["raw","gl/ext!WEBGL_compressed_texture_s3tc","die"],function dds(raw, s3
     var fourCC = header[ off_pfFourCC ];
     var isRGBAUncompressed = false;
 
+    var COMPRESSED_RGB_S3TC_DXT1_EXT  = 0x83F0,
+        COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1,
+        COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2,
+        COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
+
     switch ( fourCC ) {
       case FOURCC_DXT1:
         blockBytes = 8;
-        dds.format = s3tc.COMPRESSED_RGB_S3TC_DXT1_EXT;
+        dds.format = "COMPRESSED_RGB_S3TC_DXT1_EXT";
         break;
       case FOURCC_DXT3:
         blockBytes = 16;
-        dds.format = s3tc.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        dds.format = "COMPRESSED_RGBA_S3TC_DXT3_EXT";
         break;
       case FOURCC_DXT5:
         blockBytes = 16;
-        dds.format = s3tc.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        dds.format = "COMPRESSED_RGBA_S3TC_DXT5_EXT";
         break;
       default:
         if( header[off_RGBBitCount] ==32 
@@ -152,7 +157,7 @@ define(["raw","gl/ext!WEBGL_compressed_texture_s3tc","die"],function dds(raw, s3
           && header[off_ABitMask]&0xff000000  ) {
           isRGBAUncompressed = true;
           blockBytes = 64;
-          dds.format = gl.RGBA;
+          dds.format = "RGBA";
         } else {
           console.error( 'dds: Unsupported FourCC code ', int32ToFourCC( fourCC ) );
           return dds;

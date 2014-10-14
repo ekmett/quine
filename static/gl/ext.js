@@ -1,7 +1,8 @@
-define(["gl","performance","die"],function ext(gl, performance, die) {
+define(["die","staged"],function ext(die, staged) {
 
-var then = performance.now();
+'use strict';
 
+// purely informative stats
 var features = [
   "RENDERER",
   "VENDOR",
@@ -24,23 +25,23 @@ var features = [
   "MAX_VIEWPORT_DIMS"
 ];
 
-var ext = {};
-for (var i in features) {
-  ext[features[i]] = gl.getParameter(gl[features[i]]);
-}
-
-var supports = gl.getSupportedExtensions();
-for (var i in supports) {
-  ext[supports[i]] = gl.getExtension(supports[i]);
-}
-
-console.log("gl/ext", ~~(performance.now() - then) + " ms", ext);
+var ext = staged(function(gl) { 
+  for (var i in features) {
+    this[features[i]] = gl.getParameter(gl[features[i]]);
+  }
+  // these stats tied to the current gl
+  var supports = gl.getSupportedExtensions();
+  for (var i in supports) {
+    this[supports[i]] = gl.getExtension(supports[i]);
+  }
+}, true);
 
 ext.load = function(name,req,onload,config) {
-  var result = gl.getExtension(name) || gl.getExtension("WEBKIT_" + name) || gl.getExtension("MOZ_" + name);
-  if (result) onload(result);
-  else if (onload.error) onload.error("Missing WebGL extension: " + name);
-  else die("Missing WebGL extension: " + name);
+  onload(staged(function(gl) {
+    var result = gl.getExtension(name) || gl.getExtension("WEBKIT_" + name) || gl.getExtension("MOZ_" + name);
+    if (!result && !gl.isContextLost()) die("Missing WebGL extension: " + name);
+    return result;
+  }));
 };
 
 return ext;
