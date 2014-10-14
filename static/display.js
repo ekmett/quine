@@ -1,10 +1,10 @@
 define(
-  ["jquery", "gl", "physics", "performance", "stats", "gl/extensions", "rainbow","dds!Mountains"],
-  function display($, gl, physics, performance, stats, extensions, rainbow, dds) {
+  ["jquery", "gl", "physics", "performance", "stats", "gl/ext", "rainbow","dds!Mountains"],
+  function display($, gl, physics, performance, stats, ext, rainbow, mountains) {
 
 'use strict';
 
-// console.log(dds);
+console.log(mountains);
 
 gl.useProgram(rainbow.program);
 gl.enableVertexAttribArray(rainbow.pos);

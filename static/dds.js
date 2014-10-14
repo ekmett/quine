@@ -10,12 +10,7 @@
  * Converted to a require.js plugin by Edward Kmett
  */
 
-define(["raw","gl/extensions","die"],function dds(raw, extensions, die) { 
-  var s3tc = extensions.WEBGL_compressed_texture_s3tc;
-
-  if (!s3tc) {
-    die("WEBGL_compressed_texture_s3tc extension required");
-  }
+define(["raw","gl/ext!WEBGL_compressed_texture_s3tc","die"],function dds(raw, s3tc, die) { 
 
   function parse(buffer, loadMipmaps) {
     var dds = { mipmaps: [], width: 0, height: 0, format: null, mipmapCount: 1 };

@@ -1,4 +1,4 @@
-define(["gl","performance"],function extensions(gl, performance) {
+define(["gl","performance","die"],function ext(gl, performance, die) {
 
 var then = performance.now();
 
@@ -24,18 +24,25 @@ var features = [
   "MAX_VIEWPORT_DIMS"
 ];
 
-var extensions = {};
+var ext = {};
 for (var i in features) {
-  extensions[features[i]] = gl.getParameter(gl[features[i]]);
+  ext[features[i]] = gl.getParameter(gl[features[i]]);
 }
 
 var supports = gl.getSupportedExtensions();
 for (var i in supports) {
-  extensions[supports[i]] = gl.getExtension(supports[i]);
+  ext[supports[i]] = gl.getExtension(supports[i]);
 }
 
-console.log("extensions:", ~~(performance.now() - then) + " ms", extensions);
+console.log("gl/ext", ~~(performance.now() - then) + " ms", ext);
 
-return extensions;
+ext.load = function(name,req,onload,config) {
+  var result = gl.getExtension(name) || gl.getExtension("WEBKIT_" + name) || gl.getExtension("MOZ_" + name);
+  if (result) onload(result);
+  else if (onload.error) onload.error("Missing WebGL extension: " + name);
+  else die("Missing WebGL extension: " + name);
+};
+
+return ext;
 
 });
