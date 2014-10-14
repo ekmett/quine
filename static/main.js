@@ -5,8 +5,12 @@ requirejs.config({
     'domReady'  : 'nih/domReady',
     'text'      : 'nih/text',
     'jquery'    : 'nih/jquery-2.1.1.min',
-    'vs'        : 'shader/vs',
-    'fs'        : 'shader/fs'
+    // require.js plugins
+    'shader'    : 'gl/shader',
+    'vs'        : 'gl/vs',
+    'fs'        : 'gl/fs',
+    'program'   : 'gl/program',
+    'image'     : 'image'
   },
   shim: {
     'bootstrap': {

@@ -31,11 +31,10 @@ for (var i in features) {
 
 var supports = gl.getSupportedExtensions();
 for (var i in supports) {
-  extensions[supports[i]] = +i;
+  extensions[supports[i]] = gl.getExtension(supports[i]);
 }
 
 console.log("extensions:", ~~(performance.now() - then) + " ms", extensions);
-
 
 return extensions;
 
