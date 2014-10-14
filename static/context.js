@@ -1,4 +1,4 @@
-define(["canvas","CustomEvent","die"], function context(canvas,CustomEvent,die) {
+define(["canvas","custom-event","die"], function context(canvas,CustomEvent,die) {
 
 function getGL() {
   try {
