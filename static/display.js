@@ -8,7 +8,7 @@ var requestId = null;
 
 var display = staged(function (gl) { 
   rainbow.stage()
-  gl.useProgram(rainbow.program);
+  gl.useProgram(rainbow.id);
   gl.enableVertexAttribArray(rainbow.pos);
   var verts = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, verts);
