@@ -1,8 +1,20 @@
 define(
-  ["context", "physics", "stats", "rainbow", "staged"],
-  function display(context, physics, stats, rainbow, staged) {
+  ["context", "physics", "stats", "rainbow", "staged","ext","gl-matrix"],
+  function display(context, physics, stats, rainbow, staged, ext, matrix) {
+
+var mat4 = matrix.mat4;
+
+function degrees(d) {
+  return d * Math.PI / 180.0;
+}
+
+// set up a perspective and model view matrix
+var projection = mat4.create();
+var modelView = mat4.create();
 
 'use strict';
+
+console.log(ext);
 
 var requestId = null;
 
@@ -25,15 +37,24 @@ var render = display.render = function render(t) {
 
   requestId = requestAnimationFrame(render);
 
+
   stats.display.begin();
 
+  // wipe the slate clean
   gl.clearColor(0.0, 0.0, 0.0, 1.0);                      // Set clear color to black, fully opaque
   gl.enable(gl.DEPTH_TEST);                               // Enable depth testing
   gl.depthFunc(gl.LEQUAL);                                // Near things obscure far things
   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // Clear the color as well as the depth buffer.
 
+  // set up projection and modelView matrices
+  mat4.perspective(projection, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+  mat4.identity(modelView);
+  mat4.translate(modelView, modelView, [0, 0, -40]);
+  mat4.rotate(modelView, modelView, degrees(23.4), [1, 0, -1]);
+
+  // taste (half) the rainbow
   gl.uniform2f(rainbow.offset, 0.5, 1);
-  gl.drawArrays(gl.TRIANGLE_STRIP,0,4)
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,3); // 0,4 gets the full screen
 
   stats.display.end();
 };
