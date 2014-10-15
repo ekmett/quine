@@ -25,4 +25,4 @@ weighted w z ci ai = OIT (m * ai) (1 - ai) (m *^ ci)
 
 -- blend an overlay into the background
 blend :: (Additive f, Fractional a) => OIT f a -> f a -> f a
-blend (OIT was nas cs) c0 = (nas *^ c0) ^+^ (1 - nas / was) *^ cs
+blend (OIT was nas cs) c0 = (nas *^ c0) ^+^ ((1 - nas) / was) *^ cs
