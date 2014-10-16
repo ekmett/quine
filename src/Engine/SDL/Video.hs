@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Engine.SDL.Video
   ( 
-  -- * Video
+  -- * Attribute StateVars
     contextMajorVersion
   , contextMinorVersion
   , contextFlags
@@ -36,7 +36,7 @@ import Graphics.UI.SDL (GLattr)
 import Prelude hiding (init)
 import Graphics.Rendering.OpenGL.GL.StateVar
 
--- * Video Attributes as StateVars
+-- * Attribute StateVars
   
 -- | get\/set @SDL_GL_RED_SIZE@, the minimum number of bits for the red channel of the color buffer; defaults to 3
 redSize :: StateVar Int

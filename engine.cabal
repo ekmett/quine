@@ -30,13 +30,18 @@ source-repository head
 library
   hs-source-dirs: src
   exposed-modules:
+    Engine.Harmonics
     Engine.SDL.Basic
     Engine.SDL.Exception
     Engine.SDL.Video
+    Engine.Transparency
+    Engine.Var
   
   build-depends:
     base >= 4.7 && < 5,
     containers,
+    contravariant,
+    distributive,
     lens,
     linear,
     OpenGL,
