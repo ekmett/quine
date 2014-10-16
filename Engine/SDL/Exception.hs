@@ -1,8 +1,4 @@
 {-# LANGUAGE DeriveDataTypeable #-}
--- | Start to make SDL binding a bit prettier
---
--- So far this is just Graphics.UI.SDL.Basic minus log handling and hints
--- plus a few other things 
 module Engine.SDL.Exception
   ( 
   -- * Extensible Exceptions
@@ -18,15 +14,17 @@ import Foreign.C
 import qualified Graphics.UI.SDL as SDL
 import Prelude hiding (init)
 
-data SDLException = SDLException String
+-- | This is thrown in the event of an error in the @Engine.SDL@ combinators
+newtype SDLException = SDLException String
   deriving (Show, Typeable)
 
 instance Exception SDLException
 
+-- | Treat negative return codes as prompting an error check.
 err :: CInt -> IO ()
 err e 
   | e < 0 = do
     msg <- SDL.getError >>= peekCString
     SDL.clearError
-    throw $ SDLException msg
+    when (msg /= "") $ throw $ SDLException msg
   | otherwise = return ()
