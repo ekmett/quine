@@ -1,6 +1,5 @@
 module Engine.Transparency where
 
-import Control.Applicative
 import Data.Monoid
 import Linear
 
