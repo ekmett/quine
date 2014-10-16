@@ -8,8 +8,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
-module Engine.Harmonics where
-
 -----------------------------------------------------------------------------
 -- |
 -- Copyright   :  (C) 2014 Edward Kmett
@@ -23,6 +21,7 @@ module Engine.Harmonics where
 -- The fast second order harmonic rotation here is based on code by John Hable's article on
 -- <http://www.filmicworlds.com/2014/07/02/simple-and-fast-spherical-harmonic-rotation/ "Simple and Fast Spherical Harmonic Rotation">.
 -----------------------------------------------------------------------------
+module Engine.Harmonics where
 
 import Control.Applicative
 import Control.Lens
