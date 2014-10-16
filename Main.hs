@@ -1,6 +1,7 @@
 module Main where
 
 import Control.Monad hiding (forM_)
+import Control.Monad.Random
 import Engine.SDL.Basic
 import Engine.SDL.Video
 import Engine.Var
@@ -17,17 +18,17 @@ import Prelude hiding (init)
 
 main :: IO ()
 main = withCString "engine" $ \windowName -> do
-  rev <- getRevision
-  putStr $ "SDL2 Revision: " ++ rev
+  ver <- version
+  putStr $ "SDL2 " ++ show ver
+  init initFlagEverything
   contextMajorVersion &= 4
   contextMinorVersion &= 1
+  contextProfileMask  &= glProfileCore
   redSize   &= 5
   greenSize &= 5
   blueSize  &= 5
   depthSize &= 16
   doubleBuffer &= True
-  contextProfileMask &= glProfileCore
-  init initFlagEverything
   window <- createWindow windowName windowPosUndefined windowPosUndefined 1024 768 (windowFlagOpenGL .|. windowFlagShown .|. windowFlagResizable .|. windowFlagAllowHighDPI)
   _ <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
@@ -35,7 +36,9 @@ main = withCString "engine" $ \windowName -> do
 
 render :: Window -> IO ()
 render window = do
-  clearColor $= Color4 0 0 0 1
+  r <- randomIO
+  clearColor $= Color4 r 0 0 1
+  clear [ColorBuffer, StencilBuffer, DepthBuffer]
   glSwapWindow window
 
 shutdown :: IO ()

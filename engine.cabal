@@ -61,6 +61,7 @@ executable engine
     engine,
     lens,
     linear,
+    MonadRandom,
     OpenGL,
     OpenGLRaw,
     sdl2 == 1.1.*,
