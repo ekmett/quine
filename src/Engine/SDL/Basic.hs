@@ -22,12 +22,13 @@ module Engine.SDL.Basic
   , quitSubSystem
   , wasInit
   -- * Versioning
-  , getVersion
-  , getRevision
-  , getRevisionNumber
+  , version
+  , revision
+  , revisionNumber
   ) where
 
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Functor
 import Data.Version as Data
 import Engine.SDL.Exception
@@ -61,15 +62,15 @@ initSubSystem = SDL.initSubSystem >=> err
 -- * Version
 
 -- | Get the Version (and Revision)
-getVersion :: IO Data.Version
-getVersion = alloca $ \p -> do
+version :: MonadIO m => m Data.Version
+version = liftIO $ alloca $ \p -> do
   SDL.getVersion p
   SDL.Version x y z <- peek p
-  w <- getRevisionNumber
+  w <- revisionNumber
   return $ Data.Version (fromIntegral <$> [fromIntegral x,fromIntegral y,fromIntegral z, w]) []
-  
-getRevision :: IO String
-getRevision = SDL.getRevision >>= peekCString
 
-getRevisionNumber :: IO Int
-getRevisionNumber = fromIntegral <$> SDL.getRevisionNumber
+revision :: MonadIO m => m String
+revision = liftIO $ SDL.getRevision >>= peekCString
+
+revisionNumber :: MonadIO m => m Int
+revisionNumber = liftIO $ fromIntegral <$> SDL.getRevisionNumber
