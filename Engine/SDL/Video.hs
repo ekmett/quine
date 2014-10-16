@@ -140,7 +140,7 @@ stereo = boolAttr SDL.glAttrStereo
 acceleratedVisual :: StateVar Bool
 acceleratedVisual = boolAttr SDL.glAttrAcceleratedVisual
 
--- | get\/set @SDL_GL_DOUBLEBUFFER
+-- | get\/set @SDL_GL_DOUBLEBUFFER@
 doubleBuffer :: StateVar Bool
 doubleBuffer = boolAttr SDL.glAttrDoubleBuffer
 
