@@ -18,6 +18,8 @@ module Engine.SDL
   -- * Video
   , redSize, greenSize, blueSize, alphaSize, bufferSize, depthSize, stencilSize, accumRedSize, accumGreenSize, accumBlueSize, accumAlphaSize, multiSampleBuffers, multiSampleSamples, contextMajorVersion, contextMinorVersion, contextFlags, contextProfileMask
   , stereo, acceleratedVisual, doubleBuffer, shareWithCurrentContext, framebufferSRGBCapable
+
+  , swapInterval
   -- * Utilities
   , err
   ) where
@@ -29,9 +31,8 @@ import Data.Typeable
 import Data.Version as Data
 import Foreign
 import Foreign.C
-import Foreign.C.String
 import qualified Graphics.UI.SDL as SDL
-import Graphics.UI.SDL (GLattr, Version(..))
+import Graphics.UI.SDL (GLattr)
 import Prelude hiding (init)
 import Graphics.Rendering.OpenGL.GL.StateVar
 
@@ -91,6 +92,12 @@ acceleratedVisual       = boolAttr SDL.glAttrAcceleratedVisual
 doubleBuffer            = boolAttr SDL.glAttrDoubleBuffer
 shareWithCurrentContext = boolAttr SDL.glAttrShareWithCurrentContext
 framebufferSRGBCapable  = boolAttr SDL.glAttrFramebufferSRGBCapable
+
+
+-- | 0 for immediate updates, 1 for updates synchronized with the vertical retrace. -1 for late swap tearing (if supported)
+-- late swap tearing support can be checked under the @GLX_EXT_swap_control_tear@ extension
+swapInterval :: StateVar Int
+swapInterval = makeStateVar (fromIntegral <$> SDL.glGetSwapInterval) (\a -> SDL.glSetSwapInterval (fromIntegral a) >>= err)
 
 -- * Utilities
 
