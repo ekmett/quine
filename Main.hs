@@ -26,7 +26,7 @@ main = withCString "engine" $ \windowName -> do
   blueSize  &= 5
   depthSize &= 16
   doubleBuffer &= True
-  _ <- contextProfileMask &= SDL.glProfileCore
+  contextProfileMask &= glProfileCore
   init initFlagEverything
   window <- createWindow windowName windowPosUndefined windowPosUndefined 1024 768 (windowFlagOpenGL .|. windowFlagShown .|. windowFlagResizable .|. windowFlagAllowHighDPI)
   _ <- glCreateContext window
