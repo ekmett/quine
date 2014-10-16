@@ -5,13 +5,13 @@ import Control.Monad.IO.Class
 --import Control.Monad.Trans.Class
 import Data.Foldable
 --import Data.Traversable
-import Engine.SDL as Nice
+import Engine.SDL.Basic as Basic
+import Engine.SDL.Video as Video
 import Foreign
 import Foreign.C
 import System.Exit
-import Graphics.Rendering.OpenGL as GL
+import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
 import Graphics.Rendering.OpenGL.Raw as GL
--- import qualified Graphics.UI.SDL.Basic as SDL
 import Graphics.UI.SDL.Enum  as SDL
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
@@ -43,7 +43,7 @@ main = withCString "engine" $ \windowName -> do
   greenSize $= 5
   blueSize  $= 5
   depthSize $= 16
-  Nice.doubleBuffer $= True
+  doubleBuffer $= True
   _ <- contextProfileMask $= SDL.glProfileCore
   window <- createWindow windowName windowPosUndefined windowPosUndefined 1024 768 (windowFlagOpenGL .|. windowFlagShown .|. windowFlagResizable .|. windowFlagAllowHighDPI)
   _ <- glCreateContext window
