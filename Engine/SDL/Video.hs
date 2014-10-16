@@ -42,67 +42,67 @@ import Graphics.Rendering.OpenGL.GL.StateVar
 
 -- * Video Attributes as StateVars
   
--- | get/set @SDL_GL_RED_SIZE@, the minimum number of bits for the red channel of the color buffer; defaults to 3
+-- | get\/set @SDL_GL_RED_SIZE@, the minimum number of bits for the red channel of the color buffer; defaults to 3
 redSize :: StateVar Int
 redSize = attr SDL.glAttrRedSize
 
--- | get/set @SDL_GL_GREEN_SIZE@, the minimum number of bits for the green channel of the color buffer; defaults to 3
+-- | get\/set @SDL_GL_GREEN_SIZE@, the minimum number of bits for the green channel of the color buffer; defaults to 3
 greenSize :: StateVar Int
 greenSize = attr SDL.glAttrGreenSize
 
--- | get/set @SDL_GL_BLUE_SIZE@, the minimum number of bits for the blue channel of the color buffer; defaults to 2
+-- | get\/set @SDL_GL_BLUE_SIZE@, the minimum number of bits for the blue channel of the color buffer; defaults to 2
 blueSize :: StateVar Int
 blueSize = attr SDL.glAttrBlueSize
 
--- | get/set @SDL_GL_ALPHA_SIZE@, the minimum number of bits for the alpha channel of the color buffer; defaults to 0
+-- | get\/set @SDL_GL_ALPHA_SIZE@, the minimum number of bits for the alpha channel of the color buffer; defaults to 0
 alphaSize :: StateVar Int
 alphaSize = attr SDL.glAttrAlphaSize
 
--- | get/set @SDL_GL_BUFFER_SIZE@, the minimum number of bits for frame buffer size; defaults to 0
+-- | get\/set @SDL_GL_BUFFER_SIZE@, the minimum number of bits for frame buffer size; defaults to 0
 bufferSize :: StateVar Int
 bufferSize = attr SDL.glAttrBufferSize
 
--- | get/set @SDL_GL_DEPTH_SIZE@, the minimum number of bits in the depth buffer; defaults to 16
+-- | get\/set @SDL_GL_DEPTH_SIZE@, the minimum number of bits in the depth buffer; defaults to 16
 depthSize :: StateVar Int
 depthSize = attr SDL.glAttrDepthSize
 
--- | get/set @SDL_GL_STENCIL_SIZE@, the minimum number of bits in the stencil buffer; defaults to 0
+-- | get\/set @SDL_GL_STENCIL_SIZE@, the minimum number of bits in the stencil buffer; defaults to 0
 stencilSize :: StateVar Int
 stencilSize = attr SDL.glAttrStencilSize
 
--- | get/set @SDL_GL_ACCUM_RED_SIZE@, the minimum number of bits for the red channel of the accumulation buffer; defaults to 0
+-- | get\/set @SDL_GL_ACCUM_RED_SIZE@, the minimum number of bits for the red channel of the accumulation buffer; defaults to 0
 accumRedSize :: StateVar Int
 accumRedSize = attr SDL.glAttrAccumRedSize
 
--- | get/set @SDL_GL_ACCUM_GREEN_SIZE@, the minimum number of bits for the green channel of the accumulation buffer; defaults to 0
+-- | get\/set @SDL_GL_ACCUM_GREEN_SIZE@, the minimum number of bits for the green channel of the accumulation buffer; defaults to 0
 accumGreenSize :: StateVar Int
 accumGreenSize = attr SDL.glAttrAccumGreenSize
 
--- | get/set @SDL_GL_ACCUM_BLUE_SIZE@, the minimum number of bits for the blue channel of the accumulation buffer; defaults to 0
+-- | get\/set @SDL_GL_ACCUM_BLUE_SIZE@, the minimum number of bits for the blue channel of the accumulation buffer; defaults to 0
 accumBlueSize :: StateVar Int
 accumBlueSize = attr SDL.glAttrAccumBlueSize
 
--- | get/set @SDL_GL_ACCUM_ALPHA_SIZE@, the minimum number of bits for the alpha channel of the accumulation buffer; defaults to 0
+-- | get\/set @SDL_GL_ACCUM_ALPHA_SIZE@, the minimum number of bits for the alpha channel of the accumulation buffer; defaults to 0
 accumAlphaSize :: StateVar Int
 accumAlphaSize = attr SDL.glAttrAccumAlphaSize
 
--- | get/set @SDL_GL_MULTISAMPLEBUFFERS@, the number of buffers used for multisample anti-aliasing; defaults to 0; see <https://wiki.libsdl.org/SDL_GLattr#multisample Remarks> for details
+-- | get\/set @SDL_GL_MULTISAMPLEBUFFERS@, the number of buffers used for multisample anti-aliasing; defaults to 0; see <https://wiki.libsdl.org/SDL_GLattr#multisample Remarks> for details
 multiSampleBuffers :: StateVar Int
 multiSampleBuffers  = attr SDL.glAttrMultiSampleBuffers
 
--- | get/set @SDL_GL_MULTISAMPLESAMPLES@, the number of samples used around the current pixel used for multisample anti-aliasing; defaults to 0; see <https://wiki.libsdl.org/SDL_GLattr#multisample Remarks> for details
+-- | get\/set @SDL_GL_MULTISAMPLESAMPLES@, the number of samples used around the current pixel used for multisample anti-aliasing; defaults to 0; see <https://wiki.libsdl.org/SDL_GLattr#multisample Remarks> for details
 multiSampleSamples :: StateVar Int
 multiSampleSamples  = attr SDL.glAttrMultiSampleSamples
 
--- | get/set @SDL_GL_CONTEXT_MAJOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
+-- | get\/set @SDL_GL_CONTEXT_MAJOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
 contextMajorVersion :: StateVar Int
 contextMajorVersion = attr SDL.glAttrContextMajorVersion
 
--- | get/set @SDL_GL_CONTEXT_MINOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
+-- | get\/set @SDL_GL_CONTEXT_MINOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
 contextMinorVersion :: StateVar Int
 contextMinorVersion = attr SDL.glAttrContextMinorVersion
 
--- | get/set @SDL_GL_CONTEXT_FLAGS@, some bitwise (.|.) of 0 or more of:
+-- | get\/set @SDL_GL_CONTEXT_FLAGS@, some bitwise (.|.) of 0 or more of:
 --
 -- 'glContextFlagDebug'
 --
@@ -123,7 +123,7 @@ contextMinorVersion = attr SDL.glAttrContextMinorVersion
 contextFlags :: StateVar Int
 contextFlags = attr SDL.glAttrContextFlags
 
--- | get/set @SDL_GL_CONTEXT_PROFILE_MASK@, which must be _one_ of
+-- | get\/set @SDL_GL_CONTEXT_PROFILE_MASK@, which must be _one_ of
 --
 -- * 'glProfileCore'
 --
@@ -136,23 +136,23 @@ contextFlags = attr SDL.glAttrContextFlags
 contextProfileMask :: StateVar Int
 contextProfileMask  = attr SDL.glAttrContextProfileMask
 
--- | get/set @SDL_GL_STEREO@, whether the output is stereo 3D; defaults to off
+-- | get\/set @SDL_GL_STEREO@, whether the output is stereo 3D; defaults to off
 stereo :: StateVar Bool
 stereo = boolAttr SDL.glAttrStereo
 
--- | get/set @SDL_GL_ACCELERATED_VISUAL@, set to 'True' to require hardware acceleration, set to 'False' to force software rendering; defaults to allow either
+-- | get\/set @SDL_GL_ACCELERATED_VISUAL@, set to 'True' to require hardware acceleration, set to 'False' to force software rendering; defaults to allow either
 acceleratedVisual :: StateVar Bool
 acceleratedVisual = boolAttr SDL.glAttrAcceleratedVisual
 
--- | get/set @SDL_GL_DOUBLEBUFFER
+-- | get\/set @SDL_GL_DOUBLEBUFFER
 doubleBuffer :: StateVar Bool
 doubleBuffer = boolAttr SDL.glAttrDoubleBuffer
 
--- | get/set @SDL_GL_SHARE_WITH_CURRENT_CONTEXT@
+-- | get\/set @SDL_GL_SHARE_WITH_CURRENT_CONTEXT@
 shareWithCurrentContext :: StateVar Bool
 shareWithCurrentContext = boolAttr SDL.glAttrShareWithCurrentContext
 
--- | get/set @SDL_GL_FRAMEBUFFER_SRGB_CAPABLE@
+-- | get\/set @SDL_GL_FRAMEBUFFER_SRGB_CAPABLE@
 framebufferSRGBCapable :: StateVar Bool
 framebufferSRGBCapable  = boolAttr SDL.glAttrFramebufferSRGBCapable
 
