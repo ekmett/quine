@@ -1,8 +1,4 @@
 {-# LANGUAGE DeriveDataTypeable #-}
--- | Start to make SDL binding a bit prettier
---
--- So far this is just Graphics.UI.SDL.Basic minus log handling and hints
--- plus a few other things 
 module Engine.SDL.Video
   ( 
   -- * Video
