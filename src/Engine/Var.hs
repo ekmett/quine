@@ -4,7 +4,7 @@ module Engine.Var
   ( Invariant(xmap)
   , Varied(vary)
   , Setting(Setting)
-  , ($=), ($~), ($~!), ($=!)
+  , (&=), (&~), (&~!), (&=!)
   ) where
 
 import Control.Monad (liftM)
@@ -76,20 +76,20 @@ instance Contravariant GL.SettableStateVar where
 instance Functor GL.GettableStateVar where
   fmap f v = GL.makeGettableStateVar (f <$> GL.get v)
 
-($~) :: MonadIO m => GL.StateVar a -> (a -> a) -> m ()
-v $~ f = liftIO $ do
+(&~) :: MonadIO m => GL.StateVar a -> (a -> a) -> m ()
+v &~ f = liftIO $ do
    x <- GL.get v
    v GL.$= f x
 
-($=) :: MonadIO m => Setting a -> a -> m ()
-Setting v $= x = liftIO $ v x
+(&=) :: MonadIO m => Setting a -> a -> m ()
+Setting v &= x = liftIO $ v x
 
--- | A variant of '$=' which is strict in the value to be set.
-($=!) :: MonadIO m => Setting a -> a -> m ()
-v $=! x = liftIO $ x `seq` v $= x
+-- | A variant of '&=' which is strict in the value to be set.
+(&=!) :: MonadIO m => Setting a -> a -> m ()
+v &=! x = liftIO $ x `seq` v &= x
 
--- | A variant of '$~' which is strict in the transformed value.
-($~!) :: MonadIO m => GL.StateVar a -> (a -> a) -> m ()
-v $~! f = liftIO $ do
+-- | A variant of '&~' which is strict in the transformed value.
+(&~!) :: MonadIO m => GL.StateVar a -> (a -> a) -> m ()
+v &~! f = liftIO $ do
    x <- GL.get v
    v GL.$=! f x

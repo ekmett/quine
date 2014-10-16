@@ -7,7 +7,7 @@ import Engine.Var
 import Foreign
 import Foreign.C
 import System.Exit
-import qualified Graphics.Rendering.OpenGL as GL -- hiding (doubleBuffer, ($=))
+import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
 import Graphics.Rendering.OpenGL.Raw as GL
 import Graphics.UI.SDL.Enum  as SDL
 import Graphics.UI.SDL.Event as SDL
@@ -19,14 +19,14 @@ main :: IO ()
 main = withCString "engine" $ \windowName -> do
   rev <- getRevision
   putStr $ "SDL2 Revision: " ++ rev
-  contextMajorVersion $= 4
-  contextMinorVersion $= 1
-  redSize   $= 5
-  greenSize $= 5
-  blueSize  $= 5
-  depthSize $= 16
-  doubleBuffer $= True
-  _ <- contextProfileMask $= SDL.glProfileCore
+  contextMajorVersion &= 4
+  contextMinorVersion &= 1
+  redSize   &= 5
+  greenSize &= 5
+  blueSize  &= 5
+  depthSize &= 16
+  doubleBuffer &= True
+  _ <- contextProfileMask &= SDL.glProfileCore
   init initFlagEverything
   window <- createWindow windowName windowPosUndefined windowPosUndefined 1024 768 (windowFlagOpenGL .|. windowFlagShown .|. windowFlagResizable .|. windowFlagAllowHighDPI)
   _ <- glCreateContext window
@@ -35,7 +35,7 @@ main = withCString "engine" $ \windowName -> do
 
 render :: Window -> IO ()
 render window = do
-  GL.clearColor GL.$= GL.Color4 0 0 0 1
+  clearColor $= Color4 0 0 0 1
   glSwapWindow window
 
 shutdown :: IO ()
