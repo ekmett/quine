@@ -5,16 +5,18 @@ import Control.Monad.IO.Class
 --import Control.Monad.Trans.Class
 import Data.Foldable
 --import Data.Traversable
+import Engine.SDL as Nice
 import Foreign
 import Foreign.C
 import System.Exit
 import Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL.Raw as GL
-import Graphics.UI.SDL.Basic as SDL
+-- import qualified Graphics.UI.SDL.Basic as SDL
 import Graphics.UI.SDL.Enum  as SDL
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
+import Prelude hiding (init)
 
 screenWidth, screenHeight :: CInt
 screenWidth  = 1024
@@ -32,28 +34,21 @@ m <?> xs = do
 
 main :: IO ()
 main = withCString "engine" $ \windowName -> do
-  putStr "SDL2 Revision: " >> getRevision >>= (peekCString >=> putStrLn)
-  _ <- SDL.init initFlagVideo -- Everything
-  -- request some minimums
-  _ <- glSetAttribute glAttrContextMajorVersion 4
-  _ <- glSetAttribute glAttrContextMinorVersion 1
-  _ <- glSetAttribute glAttrRedSize 5
-  _ <- glSetAttribute glAttrGreenSize 5
-  _ <- glSetAttribute glAttrBlueSize 5
-  _ <- glSetAttribute glAttrDepthSize 16
-  _ <- glSetAttribute glAttrDoubleBuffer 1
-
-  _ <- glSetAttribute glAttrContextProfileMask glProfileCore
+  rev <- getRevision
+  putStr $ "SDL2 Revision: " ++ rev
+  init initFlagVideo
+  contextMajorVersion $= 4
+  contextMinorVersion $= 1
+  redSize   $= 5
+  greenSize $= 5
+  blueSize  $= 5
+  depthSize $= 16
+  Nice.doubleBuffer $= True
+  _ <- contextProfileMask $= SDL.glProfileCore
   window <- createWindow windowName windowPosUndefined windowPosUndefined 1024 768 (windowFlagOpenGL .|. windowFlagShown .|. windowFlagResizable .|. windowFlagAllowHighDPI)
   _ <- glCreateContext window
-  alloca $ \iptr -> do
-    red   <- glGetAttribute glAttrRedSize   iptr >> peek iptr
-    green <- glGetAttribute glAttrGreenSize iptr >> peek iptr
-    blue  <- glGetAttribute glAttrBlueSize  iptr  >> peek iptr
-    print ("red", red, "green", green, "blue", blue)
-
   glEnable gl_FRAMEBUFFER_SRGB
-  forever $ poll >> render
+  forever (poll >> render)
 
 render :: IO ()
 render = do
