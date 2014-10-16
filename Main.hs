@@ -3,10 +3,11 @@ module Main where
 import Control.Monad hiding (forM_)
 import Engine.SDL.Basic
 import Engine.SDL.Video
+import Engine.Var
 import Foreign
 import Foreign.C
 import System.Exit
-import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
+import qualified Graphics.Rendering.OpenGL as GL -- hiding (doubleBuffer, ($=))
 import Graphics.Rendering.OpenGL.Raw as GL
 import Graphics.UI.SDL.Enum  as SDL
 import Graphics.UI.SDL.Event as SDL
@@ -34,8 +35,7 @@ main = withCString "engine" $ \windowName -> do
 
 render :: Window -> IO ()
 render window = do
-  clearColor $= Color4 0 0 0 1
-  
+  GL.clearColor GL.$= GL.Color4 0 0 0 1
   glSwapWindow window
 
 shutdown :: IO ()

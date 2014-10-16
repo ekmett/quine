@@ -3,8 +3,8 @@
 module Engine.Var 
   ( Invariant(xmap)
   , Varied(vary)
-  , Setting(($=))
-  , ($~), ($~!), ($=!)
+  , Setting(Setting)
+  , ($=), ($~), ($~!), ($=!)
   ) where
 
 import Control.Monad (liftM)
@@ -37,7 +37,7 @@ instance MonadIO m => Varied (ReaderT e m)
 instance MonadIO m => Varied (StateT s m)
 instance (MonadIO m, Monoid w) => Varied (WriterT w m) 
 
-newtype Setting a = Setting { ($=) :: a -> IO () }
+newtype Setting a = Setting (a -> IO ())
 
 instance Contravariant Setting where
   contramap f (Setting g) = Setting (g . f)
@@ -45,15 +45,27 @@ instance Contravariant Setting where
 instance Invariant Setting where
   xmap f _ = contramap f
 
+instance Varied Setting where
+  vary _ = Setting
+
 -- legacy support
 
 instance Invariant GL.StateVar where
   xmap f g v = GL.makeStateVar (g <$> GL.get v) ((GL.$=) v . f)
 
+instance Varied GL.StateVar where
+  vary = GL.makeStateVar
+
 instance Invariant GL.SettableStateVar where
   xmap f _ = contramap f
 
+instance Varied GL.SettableStateVar where
+  vary _ = GL.makeSettableStateVar
+
 instance Invariant GL.GettableStateVar
+
+instance Varied GL.GettableStateVar where
+  vary = const . GL.makeGettableStateVar
 
 -- orphan instances
 
@@ -64,17 +76,20 @@ instance Contravariant GL.SettableStateVar where
 instance Functor GL.GettableStateVar where
   fmap f v = GL.makeGettableStateVar (f <$> GL.get v)
 
-($~) :: GL.StateVar a -> (a -> a) -> IO ()
-v $~ f = do
+($~) :: MonadIO m => GL.StateVar a -> (a -> a) -> m ()
+v $~ f = liftIO $ do
    x <- GL.get v
    v GL.$= f x
 
+($=) :: MonadIO m => Setting a -> a -> m ()
+Setting v $= x = liftIO $ v x
+
 -- | A variant of '$=' which is strict in the value to be set.
-($=!) :: Setting a -> a -> IO ()
-v $=! x = x `seq` v $= x
+($=!) :: MonadIO m => Setting a -> a -> m ()
+v $=! x = liftIO $ x `seq` v $= x
 
 -- | A variant of '$~' which is strict in the transformed value.
-($~!) :: GL.StateVar a -> (a -> a) -> IO ()
-v $~! f = do
+($~!) :: MonadIO m => GL.StateVar a -> (a -> a) -> m ()
+v $~! f = liftIO $ do
    x <- GL.get v
    v GL.$=! f x
