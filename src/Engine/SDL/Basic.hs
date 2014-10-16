@@ -6,11 +6,21 @@
 module Engine.SDL.Basic
   ( 
   -- * Initialization and Shutdown
-    init
+  -- ** Subsystems
+    initFlagTimer
+  , initFlagAudio
+  , initFlagVideo
+  , initFlagJoystick
+  , initFlagHaptic
+  , initFlagGameController
+  , initFlagEvents
+  , initFlagEverything
+  -- * Initialization
+  , init
   , initSubSystem
-  , SDL.quit
-  , SDL.quitSubSystem
-  , SDL.wasInit
+  , quit
+  , quitSubSystem
+  , wasInit
   -- * Versioning
   , getVersion
   , getRevision
@@ -24,9 +34,24 @@ import Engine.SDL.Exception
 import Foreign
 import Foreign.C
 import qualified Graphics.UI.SDL as SDL
+import Graphics.UI.SDL 
+  ( quit
+  , quitSubSystem
+  , wasInit
+  , initFlagTimer
+  , initFlagAudio
+  , initFlagVideo
+  , initFlagJoystick
+  , initFlagHaptic
+  , initFlagGameController
+  , initFlagEvents
+  , initFlagEverything
+  )
 import Prelude hiding (init)
 
 -- * Initialization
+
+
 init :: Word32 -> IO ()
 init = SDL.init >=> err
 

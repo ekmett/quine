@@ -1,12 +1,8 @@
 module Main where
 
 import Control.Monad hiding (forM_)
-import Control.Monad.IO.Class
---import Control.Monad.Trans.Class
-import Data.Foldable
---import Data.Traversable
-import Engine.SDL.Basic as Basic
-import Engine.SDL.Video as Video
+import Engine.SDL.Basic
+import Engine.SDL.Video
 import Foreign
 import Foreign.C
 import System.Exit
@@ -18,25 +14,10 @@ import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Prelude hiding (init)
 
-screenWidth, screenHeight :: CInt
-screenWidth  = 1024
-screenHeight = 768
-
-infixl 0 <?>
-(<?>) :: MonadIO m => m a -> String -> m a
-m <?> xs = do
-  a <- m -- todo wrap this with a try
-  es <- liftIO (get errors)
-  unless (null es) $ do
-    liftIO $ putStrLn xs
-    forM_ es $ liftIO . print
-  return a
-
 main :: IO ()
 main = withCString "engine" $ \windowName -> do
   rev <- getRevision
   putStr $ "SDL2 Revision: " ++ rev
-  init initFlagVideo
   contextMajorVersion $= 4
   contextMinorVersion $= 1
   redSize   $= 5
@@ -45,14 +26,17 @@ main = withCString "engine" $ \windowName -> do
   depthSize $= 16
   doubleBuffer $= True
   _ <- contextProfileMask $= SDL.glProfileCore
+  init initFlagEverything
   window <- createWindow windowName windowPosUndefined windowPosUndefined 1024 768 (windowFlagOpenGL .|. windowFlagShown .|. windowFlagResizable .|. windowFlagAllowHighDPI)
   _ <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
-  forever (poll >> render)
+  forever (poll >> render window)
 
-render :: IO ()
-render = do
+render :: Window -> IO ()
+render window = do
   clearColor $= Color4 0 0 0 1
+  
+  glSwapWindow window
 
 shutdown :: IO ()
 shutdown = quit >> exitSuccess

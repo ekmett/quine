@@ -27,9 +27,13 @@ source-repository head
   type: git
   location: git://github.com/ekmett/engine.git
 
-executable engine
-  main-is: Main.hs
-
+library
+  hs-source-dirs: src
+  exposed-modules:
+    Engine.SDL.Basic
+    Engine.SDL.Exception
+    Engine.SDL.Video
+  
   build-depends:
     base >= 4.7 && < 5,
     containers,
@@ -41,5 +45,22 @@ executable engine
     transformers
 
   default-language: Haskell2010
+  ghc-options: -Wall -O2
 
+executable engine
+  main-is: Main.hs
+
+  build-depends:
+    base >= 4.7 && < 5,
+    containers,
+    engine,
+    lens,
+    linear,
+    OpenGL,
+    OpenGLRaw,
+    sdl2 == 1.1.*,
+    transformers
+
+  default-language: Haskell2010
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -O2
+
