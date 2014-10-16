@@ -12,12 +12,10 @@ module Engine.SDL
   , SDL.quit, SDL.quitSubSystem
   , SDL.wasInit
   -- * Versioning
-  , Version(..)
   , getVersion
   , getRevision
   , getRevisionNumber
   -- * Video
-  , GLattr
   , redSize, greenSize, blueSize, alphaSize, bufferSize, depthSize, stencilSize, accumRedSize, accumGreenSize, accumBlueSize, accumAlphaSize, multiSampleBuffers, multiSampleSamples, contextMajorVersion, contextMinorVersion, contextFlags, contextProfileMask
   , stereo, acceleratedVisual, doubleBuffer, shareWithCurrentContext, framebufferSRGBCapable
   -- * Utilities
@@ -28,6 +26,7 @@ import Control.Exception
 import Control.Monad
 import Data.Functor
 import Data.Typeable
+import Data.Version as Data
 import Foreign
 import Foreign.C
 import Foreign.C.String
@@ -50,11 +49,14 @@ initSubSystem = SDL.initSubSystem >=> err
 
 -- * Version
 
-getVersion :: IO Version
+-- | Get the Version (and Revision)
+getVersion :: IO Data.Version
 getVersion = alloca $ \p -> do
   SDL.getVersion p
-  peek p
-
+  SDL.Version x y z <- peek p
+  w <- getRevisionNumber
+  return $ Data.Version (fromIntegral <$> [fromIntegral x,fromIntegral y,fromIntegral z, w]) []
+  
 getRevision :: IO String
 getRevision = SDL.getRevision >>= peekCString
 
