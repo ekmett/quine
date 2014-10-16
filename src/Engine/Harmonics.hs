@@ -29,10 +29,8 @@ import Control.Lens
 import Data.Data
 import Data.Distributive
 import Data.Foldable
-import Data.Traversable
 import GHC.Generics
 import Linear
-import Linear.Matrix
 
 class Traversable t => Harmonic t where
   rot :: Floating a => M33 a -> t a -> t a
@@ -84,8 +82,8 @@ class HasBand1 t where
 instance HasBand1 Band1 where
   band1 = id
   sh10 f (Band1 a b c) = f a <&> \a' -> Band1 a' b c
-  sh11 f (Band1 a b c) = f a <&> \b' -> Band1 a b' c
-  sh12 f (Band1 a b c) = f a <&> \c' -> Band1 a b c'
+  sh11 f (Band1 a b c) = f b <&> \b' -> Band1 a b' c
+  sh12 f (Band1 a b c) = f c <&> \c' -> Band1 a b c'
 
 instance Applicative Band1 where
   pure a = Band1 a a a
@@ -131,10 +129,10 @@ class HasBand2 t where
 instance HasBand2 Band2 where
   band2 = id
   sh20 f (Band2 a b c d e) = f a <&> \a' -> Band2 a' b c d e
-  sh21 f (Band2 a b c d e) = f a <&> \b' -> Band2 a b' c d e
-  sh22 f (Band2 a b c d e) = f a <&> \c' -> Band2 a b c' d e
-  sh23 f (Band2 a b c d e) = f a <&> \d' -> Band2 a b c d' e
-  sh24 f (Band2 a b c d e) = f a <&> \e' -> Band2 a b c d e'
+  sh21 f (Band2 a b c d e) = f b <&> \b' -> Band2 a b' c d e
+  sh22 f (Band2 a b c d e) = f c <&> \c' -> Band2 a b c' d e
+  sh23 f (Band2 a b c d e) = f d <&> \d' -> Band2 a b c d' e
+  sh24 f (Band2 a b c d e) = f e <&> \e' -> Band2 a b c d e'
 
 instance Applicative Band2 where
   pure a = Band2 a a a a a
