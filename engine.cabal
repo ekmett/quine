@@ -29,6 +29,7 @@ source-repository head
 
 library
   hs-source-dirs: src
+  c-sources: cbits/edtaa4func.c
   exposed-modules:
     Engine.Harmonics
     Engine.SDL.Basic
@@ -46,7 +47,7 @@ library
     linear,
     OpenGL,
     OpenGLRaw,
-    sdl2 == 1.1.*,
+    sdl2 >= 1.1.3,
     transformers
 
   default-language: Haskell2010
@@ -64,7 +65,7 @@ executable engine
     MonadRandom,
     OpenGL,
     OpenGLRaw,
-    sdl2 == 1.1.*,
+    sdl2 >= 1.1.3,
     transformers
 
   default-language: Haskell2010
