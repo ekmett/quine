@@ -25,6 +25,8 @@ module Engine.SDL.Video
   , shareWithCurrentContext
   , framebufferSRGBCapable
   , swapInterval
+  , windowDisplayMode
+  , desktopDisplayMode
   ) where
 
 import Control.Monad
@@ -153,6 +155,20 @@ shareWithCurrentContext = boolAttr SDL.glAttrShareWithCurrentContext
 -- | get\/set @SDL_GL_FRAMEBUFFER_SRGB_CAPABLE@
 framebufferSRGBCapable :: Varied m => m Bool
 framebufferSRGBCapable  = boolAttr SDL.glAttrFramebufferSRGBCapable
+
+windowDisplayMode :: Varied m => SDL.Window -> m SDL.DisplayMode
+windowDisplayMode w = vary getWDM setWDM where
+  getWDM = alloca $ \p -> do
+    SDL.getWindowDisplayMode w p >>= err
+    peek p 
+  setWDM m = alloca $ \p -> do
+    poke p m
+    SDL.setWindowDisplayMode w p >>= err
+
+desktopDisplayMode :: MonadIO m => Int -> m SDL.DisplayMode
+desktopDisplayMode idx = liftIO $ alloca $ \p -> do
+  SDL.getDesktopDisplayMode (fromIntegral idx) p >>= err
+  peek p
 
 -- | Abstracts over @SDL_GL_GetSwapInterval@ / @SDL_GL_SetSwapInterval@
 --
