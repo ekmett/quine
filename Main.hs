@@ -19,7 +19,7 @@ import Prelude hiding (init)
 main :: IO ()
 main = withCString "engine" $ \windowName -> do
   ver <- version
-  putStr $ "SDL2 " ++ show ver
+  putStrLn $ "SDL2 " ++ show ver
   init initFlagEverything
   contextMajorVersion &= 4
   contextMinorVersion &= 1
