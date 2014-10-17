@@ -164,7 +164,7 @@ swapInterval = vary (fromIntegral <$> SDL.glGetSwapInterval) (\a -> SDL.glSetSwa
 
 -- * Utilities
 
--- | Build a StateVar from a GLattr
+-- | Use a GLattr as a variable
 attr :: Varied m => GLattr -> m Int
 attr a = vary (getAttr a) (setAttr a)
 
