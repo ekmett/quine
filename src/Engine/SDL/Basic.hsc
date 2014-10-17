@@ -37,11 +37,6 @@ import Engine.SDL.Exception
 import Foreign
 import Foreign.C
 import qualified Graphics.UI.SDL as SDL
-import Graphics.UI.SDL 
-  ( quit
-  , quitSubSystem
-  , wasInit
-  )
 import Prelude hiding (init)
 
 -- * Initialization
@@ -53,6 +48,15 @@ init = SDL.init >=> err
 
 initSubSystem :: SubSystem -> IO ()
 initSubSystem = SDL.initSubSystem >=> err
+
+quit :: IO ()
+quit = SDL.quit
+
+quitSubSystem :: SubSystem -> IO ()
+quitSubSystem = SDL.quitSubSystem
+
+wasInit :: SubSystem -> IO SubSystem
+wasInit = SDL.wasInit
 
 pattern InitFlagTimer = (#const SDL_INIT_TIMER)
 pattern InitFlagAudio = (#const SDL_INIT_AUDIO)
