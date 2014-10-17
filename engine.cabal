@@ -23,6 +23,12 @@ extra-source-files:
   CHANGELOG.markdown
   README.markdown
 
+data-files:
+  data/font.vs
+  data/font.fs
+  data/OpenSans-Regular.json
+  data/OpenSans-Regular.png
+
 source-repository head
   type: git
   location: git://github.com/ekmett/engine.git
