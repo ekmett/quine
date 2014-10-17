@@ -28,7 +28,7 @@ main :: IO ()
 main = withCString "engine" $ \windowName -> do
   ver <- version
   putStrLn $ "SDL2 " ++ show ver
-  init initFlagEverything
+  init InitFlagEverything
   contextMajorVersion &= 4
   contextMinorVersion &= 1
   contextProfileMask  &= glProfileCore

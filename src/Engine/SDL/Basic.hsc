@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, PatternSynonyms #-}
 -- | Start to make SDL binding a bit prettier
 --
 -- So far this is just Graphics.UI.SDL.Basic minus log handling and hints
@@ -6,15 +6,15 @@
 module Engine.SDL.Basic
   ( 
   -- * Initialization and Shutdown
-  -- ** Subsystems
-    initFlagTimer
-  , initFlagAudio
-  , initFlagVideo
-  , initFlagJoystick
-  , initFlagHaptic
-  , initFlagGameController
-  , initFlagEvents
-  , initFlagEverything
+  -- ** SubSystems
+    pattern InitFlagTimer
+  , pattern InitFlagAudio
+  , pattern InitFlagVideo
+  , pattern InitFlagJoystick
+  , pattern InitFlagHaptic
+  , pattern InitFlagGameController
+  , pattern InitFlagEvents
+  , pattern InitFlagEverything
   -- * Initialization
   , init
   , initSubSystem
@@ -26,6 +26,8 @@ module Engine.SDL.Basic
   , revision
   , revisionNumber
   ) where
+
+#include "SDL.h"
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -39,25 +41,28 @@ import Graphics.UI.SDL
   ( quit
   , quitSubSystem
   , wasInit
-  , initFlagTimer
-  , initFlagAudio
-  , initFlagVideo
-  , initFlagJoystick
-  , initFlagHaptic
-  , initFlagGameController
-  , initFlagEvents
-  , initFlagEverything
   )
 import Prelude hiding (init)
 
 -- * Initialization
 
+type SubSystem = Word32
 
-init :: Word32 -> IO ()
+init :: SubSystem -> IO ()
 init = SDL.init >=> err
 
-initSubSystem :: Word32 -> IO ()
+initSubSystem :: SubSystem -> IO ()
 initSubSystem = SDL.initSubSystem >=> err
+
+pattern InitFlagTimer = (#const SDL_INIT_TIMER)
+pattern InitFlagAudio = (#const SDL_INIT_AUDIO)
+pattern InitFlagVideo = (#const SDL_INIT_VIDEO)
+pattern InitFlagJoystick = (#const SDL_INIT_JOYSTICK)
+pattern InitFlagHaptic = (#const SDL_INIT_HAPTIC)
+pattern InitFlagGameController = (#const SDL_INIT_GAMECONTROLLER)
+pattern InitFlagEvents = (#const SDL_INIT_EVENTS)
+-- pattern InitFlagNoParachute = (#const SDL_INIT_NOPARACHUTE)
+pattern InitFlagEverything = (#const SDL_INIT_EVERYTHING)
 
 -- * Version
 
