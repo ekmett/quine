@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, PatternSynonyms #-}
+{-# LANGUAGE DeriveDataTypeable, PatternSynonyms, ScopedTypeVariables #-}
 -- | Start to make SDL binding a bit prettier
 --
 -- So far this is just Graphics.UI.SDL.Basic minus log handling and hints
@@ -58,15 +58,15 @@ quitSubSystem = SDL.quitSubSystem
 wasInit :: SubSystem -> IO SubSystem
 wasInit = SDL.wasInit
 
-pattern InitFlagTimer = (#const SDL_INIT_TIMER)
-pattern InitFlagAudio = (#const SDL_INIT_AUDIO)
-pattern InitFlagVideo = (#const SDL_INIT_VIDEO)
-pattern InitFlagJoystick = (#const SDL_INIT_JOYSTICK)
-pattern InitFlagHaptic = (#const SDL_INIT_HAPTIC)
-pattern InitFlagGameController = (#const SDL_INIT_GAMECONTROLLER)
-pattern InitFlagEvents = (#const SDL_INIT_EVENTS)
--- pattern InitFlagNoParachute = (#const SDL_INIT_NOPARACHUTE)
-pattern InitFlagEverything = (#const SDL_INIT_EVERYTHING)
+pattern InitFlagTimer = (#const SDL_INIT_TIMER) :: SubSystem
+pattern InitFlagAudio = (#const SDL_INIT_AUDIO) :: SubSystem
+pattern InitFlagVideo = (#const SDL_INIT_VIDEO) :: SubSystem
+pattern InitFlagJoystick = (#const SDL_INIT_JOYSTICK) :: SubSystem
+pattern InitFlagHaptic = (#const SDL_INIT_HAPTIC) :: SubSystem
+pattern InitFlagGameController = (#const SDL_INIT_GAMECONTROLLER) :: SubSystem
+pattern InitFlagEvents = (#const SDL_INIT_EVENTS) :: SubSystem
+-- pattern InitFlagNoParachute = (#const SDL_INIT_NOPARACHUTE) :: SubSystem
+pattern InitFlagEverything = (#const SDL_INIT_EVERYTHING) :: SubSystem
 
 -- * Version
 
