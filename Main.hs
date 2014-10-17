@@ -4,7 +4,7 @@ module Main where
 import Control.Applicative
 import Control.Lens
 import Control.Monad hiding (forM_)
-import Control.Monad.Random
+-- import Control.Monad.Random
 import Control.Monad.State
 import Engine.SDL.Basic
 import Engine.SDL.Video
@@ -46,8 +46,8 @@ render :: (MonadIO m, MonadState s m, HasConfig s) => m ()
 render = do
   w <- use configWindow
   liftIO $ do
-    r <- randomIO
-    clearColor $= Color4 r 0 0 1
+    -- r <- (*0.01) <$> randomIO
+    clearColor $= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
     glSwapWindow w
 
