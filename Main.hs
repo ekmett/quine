@@ -70,7 +70,7 @@ handleEvent QuitEvent{} = shutdown
 handleEvent KeyboardEvent{keyboardEventKeysym=Keysym{keysymKeycode = KeycodeEscape}} = shutdown
 -- alt-enter, full screen toggle
 handleEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = KeycodeReturn, keysymMod = m }} 
-  | m .&. fromIntegral (KeymodRAlt .|. KeymodLAlt .|. KeymodRGUI .|. KeymodLGUI) /= 0 = do
+  | m .&. (KeymodRAlt .|. KeymodLAlt .|. KeymodRGUI .|. KeymodLGUI) /= 0 = do
   fs <- configFullScreen <%= not
   w  <- use configWindow
   _ <- liftIO $ setWindowFullscreen w $ if fs then WindowFlagFullscreenDesktop else 0
