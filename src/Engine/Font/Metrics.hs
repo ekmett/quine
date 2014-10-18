@@ -59,3 +59,7 @@ instance ToJSON Glyph where
   toJSON (Glyph w h bx by ba ps) = toJSON $ w:h:bx:by:ba: case ps of 
      Just (px,py) -> [px,py]
      Nothing -> []
+
+--
+-- drawAt :: Metrics -> Int -> Int -> String -> IO ()
+-- drawAt 

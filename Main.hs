@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, PatternSynonyms #-}
 module Main where
 
 import Control.Applicative
@@ -14,7 +14,7 @@ import Foreign.C
 import System.Exit
 import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
 import Graphics.Rendering.OpenGL.Raw as GL
-import Graphics.UI.SDL.Enum  as SDL
+import Graphics.UI.SDL.Enum.Pattern as SDL
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
@@ -31,16 +31,19 @@ main = withCString "engine" $ \windowName -> do
   init InitFlagEverything
   contextMajorVersion &= 4
   contextMinorVersion &= 1
-  contextProfileMask  &= glProfileCore
+  contextProfileMask  &= GLProfileCore
   redSize   &= 5
   greenSize &= 5
   blueSize  &= 5
   depthSize &= 16
   doubleBuffer &= True
-  window <- createWindow windowName windowPosUndefined windowPosUndefined 1024 768 (windowFlagOpenGL .|. windowFlagShown .|. windowFlagResizable .|. windowFlagAllowHighDPI)
+  -- shareWithCurrentContext &= True
+  window <- createWindow windowName WindowPosUndefined WindowPosUndefined 1024 768 (WindowFlagOpenGL .|. WindowFlagShown .|. WindowFlagResizable .|. WindowFlagAllowHighDPI)
+  -- physicsContext   <- glCreateContext window
+  -- renderingContext <- glCreateContext window
   _ <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
-  () <$ execStateT (forever $ poll >> render) (Config False window)
+  () <$ execStateT (forever $ poll >> render) (Config False window) --  renderingContext)
 
 render :: (MonadIO m, MonadState s m, HasConfig s) => m ()
 render = do
@@ -63,11 +66,13 @@ poll = StateT $ \s -> alloca $ \ep -> runStateT (go ep) s where
 
 handleEvent :: HasConfig s => SDL.Event -> StateT s IO ()
 handleEvent QuitEvent{} = shutdown
-handleEvent KeyboardEvent{keyboardEventKeysym=Keysym{keysymKeycode = 27}} = shutdown
-handleEvent KeyboardEvent{eventType = et, keyboardEventKeysym=Keysym{keysymKeycode = 13, keysymMod = m }} 
-  | et == eventTypeKeyDown && m .&. (keymodAlt .|. keymodGUI) /= 0 = do
+-- escape
+handleEvent KeyboardEvent{keyboardEventKeysym=Keysym{keysymKeycode = KeycodeEscape}} = shutdown
+-- alt-enter, full screen toggle
+handleEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = KeycodeReturn, keysymMod = m }} 
+  | m .&. fromIntegral (KeymodRAlt .|. KeymodLAlt .|. KeymodRGUI .|. KeymodLGUI) /= 0 = do
   fs <- configFullScreen <%= not
   w  <- use configWindow
-  _ <- liftIO $ setWindowFullscreen w $ if fs then windowFlagFullscreenDesktop else 0
+  _ <- liftIO $ setWindowFullscreen w $ if fs then WindowFlagFullscreenDesktop else 0
   return ()
 handleEvent e = liftIO $ print e

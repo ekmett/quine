@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable, PatternSynonyms, ScopedTypeVariables #-}
 -- | Start to make SDL binding a bit prettier
 --
 -- So far this is just Graphics.UI.SDL.Basic minus log handling and hints
@@ -6,17 +5,7 @@
 module Engine.SDL.Basic
   ( 
   -- * Initialization and Shutdown
-  -- ** SubSystems
-    pattern InitFlagTimer
-  , pattern InitFlagAudio
-  , pattern InitFlagVideo
-  , pattern InitFlagJoystick
-  , pattern InitFlagHaptic
-  , pattern InitFlagGameController
-  , pattern InitFlagEvents
-  , pattern InitFlagEverything
-  -- * Initialization
-  , init
+    init
   , initSubSystem
   , quit
   , quitSubSystem
@@ -41,32 +30,20 @@ import Prelude hiding (init)
 
 -- * Initialization
 
-type SubSystem = Word32
-
-init :: SubSystem -> IO ()
+init :: SDL.InitFlag -> IO ()
 init = SDL.init >=> err
 
-initSubSystem :: SubSystem -> IO ()
+initSubSystem :: SDL.InitFlag -> IO ()
 initSubSystem = SDL.initSubSystem >=> err
 
 quit :: IO ()
 quit = SDL.quit
 
-quitSubSystem :: SubSystem -> IO ()
+quitSubSystem :: SDL.InitFlag -> IO ()
 quitSubSystem = SDL.quitSubSystem
 
-wasInit :: SubSystem -> IO SubSystem
+wasInit :: SDL.InitFlag -> IO SDL.InitFlag
 wasInit = SDL.wasInit
-
-pattern InitFlagTimer = (#const SDL_INIT_TIMER) :: SubSystem
-pattern InitFlagAudio = (#const SDL_INIT_AUDIO) :: SubSystem
-pattern InitFlagVideo = (#const SDL_INIT_VIDEO) :: SubSystem
-pattern InitFlagJoystick = (#const SDL_INIT_JOYSTICK) :: SubSystem
-pattern InitFlagHaptic = (#const SDL_INIT_HAPTIC) :: SubSystem
-pattern InitFlagGameController = (#const SDL_INIT_GAMECONTROLLER) :: SubSystem
-pattern InitFlagEvents = (#const SDL_INIT_EVENTS) :: SubSystem
--- pattern InitFlagNoParachute = (#const SDL_INIT_NOPARACHUTE) :: SubSystem
-pattern InitFlagEverything = (#const SDL_INIT_EVERYTHING) :: SubSystem
 
 -- * Version
 
