@@ -7,6 +7,6 @@ uniform vec2 u_size;
 varying vec2 v_uv;
 
 void main() {
-  gl_Position = umatrix * vec4(uv.xy, 0, 1)
-  vtexcoord = atexcoord / utexsize;
+  gl_Position = u_matrix * vec4(v_uv.xy, 0, 1)
+  v_uv = a_uv / u_size;
 }
