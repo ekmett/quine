@@ -2,6 +2,7 @@
 module Main where
 
 import Control.Applicative
+import Control.Concurrent
 import Control.Lens
 import Control.Monad hiding (forM_)
 -- import Control.Monad.Random
@@ -25,7 +26,7 @@ data Config = Config { _configFullScreen :: !Bool, _configWindow :: Window }
 makeClassy ''Config
 
 main :: IO ()
-main = withCString "engine" $ \windowName -> do
+main = runInBoundThread $ withCString "engine" $ \windowName -> do
   ver <- version
   putStrLn $ "SDL2 " ++ show ver
   init InitFlagEverything
