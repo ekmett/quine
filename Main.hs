@@ -150,9 +150,12 @@ render = do
   liftIO $ do
     clearColor $= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
-  use worldProgram >>= \p -> liftIO (currentProgram $= Just p)
-  liftIO $ drawArrays Triangles 0 3
-  liftIO $ glSwapWindow w
+  use worldProgram >>= \p -> liftIO $ currentProgram $= Just p
+  liftIO $ do
+    bindVertexArrayObject $= Nothing
+    drawArrays Triangles 0 3 -- scene shader is attributeless
+    glFlush
+    glSwapWindow w
 
 -- * Polling
 
