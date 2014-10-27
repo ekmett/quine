@@ -1,8 +1,18 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
--- | Shader support
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- Shader support
 --
 -- TODO: consider supporting binary shader formats for faster startup
+--------------------------------------------------------------------
+
 module Quine.GL.Shader 
   ( 
   -- * Shader compilation environment

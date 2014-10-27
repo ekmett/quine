@@ -1,4 +1,13 @@
 {-# LANGUAGE TemplateHaskell, PatternSynonyms, DeriveDataTypeable, OverloadedStrings #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
 module Main where
 
 import Control.Applicative
