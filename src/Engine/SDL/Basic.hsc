@@ -19,6 +19,7 @@ module Engine.SDL.Basic
 #include "SDL.h"
 
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Functor
 import Data.Version as Data
 import Engine.SDL.Exception
@@ -29,33 +30,33 @@ import Prelude hiding (init)
 
 -- * Initialization
 
-init :: SDL.InitFlag -> IO ()
-init = SDL.init >=> err
+init :: MonadIO m => SDL.InitFlag -> m ()
+init x = liftIO (SDL.init x >>= err)
 
-initSubSystem :: SDL.InitFlag -> IO ()
-initSubSystem = SDL.initSubSystem >=> err
+initSubSystem :: MonadIO m => SDL.InitFlag -> m ()
+initSubSystem x = liftIO (SDL.initSubSystem x >>= err)
 
-quit :: IO ()
-quit = SDL.quit
+quit :: MonadIO m => m ()
+quit = liftIO SDL.quit
 
-quitSubSystem :: SDL.InitFlag -> IO ()
-quitSubSystem = SDL.quitSubSystem
+quitSubSystem :: MonadIO m => SDL.InitFlag -> m ()
+quitSubSystem = liftIO . SDL.quitSubSystem
 
-wasInit :: SDL.InitFlag -> IO SDL.InitFlag
-wasInit = SDL.wasInit
+wasInit :: MonadIO m => SDL.InitFlag -> m SDL.InitFlag
+wasInit = liftIO . SDL.wasInit
 
 -- * Version
 
 -- | Get the Version (and Revision)
-version :: IO Data.Version
-version = alloca $ \p -> do
+version :: MonadIO m => m Data.Version
+version = liftIO $ alloca $ \p -> do
   SDL.getVersion p
   SDL.Version x y z <- peek p
   w <- revisionNumber
   return $ Data.Version (fromIntegral <$> [fromIntegral x,fromIntegral y,fromIntegral z, w]) []
 
-revision :: IO String
-revision = SDL.getRevision >>= peekCString
+revision :: MonadIO m => m String
+revision = liftIO $ SDL.getRevision >>= peekCString
 
-revisionNumber :: IO Int
-revisionNumber = fromIntegral <$> SDL.getRevisionNumber
+revisionNumber :: MonadIO m => m Int
+revisionNumber = liftIO $ fromIntegral <$> SDL.getRevisionNumber
