@@ -5,6 +5,7 @@
 -- TODO: consider supporting binary shader formats for faster startup
 module Engine.GL.Shader 
   ( ShaderEnv
+  , ShaderException(..)
   , HasShaderEnv(..)
   , buildShaderEnv
   , compile
@@ -15,6 +16,8 @@ module Engine.GL.Shader
   ) where
 
 import Control.Applicative
+import Control.Exception
+import Control.Exception.Lens
 import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
@@ -33,6 +36,20 @@ import Language.Preprocessor.Cpphs
 import System.Directory
 import System.FilePath
 import System.IO
+
+data ShaderException = ShaderException
+  { shaderExceptionFileName :: String
+  , shaderExceptionLog :: String
+  , shaderExceptionSource :: String
+  } deriving Typeable
+instance Exception ShaderException
+instance Show ShaderException where
+  show (ShaderException fp log source) = 
+    fp ++ ": error: Shader Exception\nlog:\n" ++ log ++ "\nsource:\n" ++ source
+
+
+_ShaderException :: Prism' SomeException ShaderException
+_ShaderException = exception
 
 data ShaderEnv = ShaderEnv
   { _shaderEnvFragmentHighPrecisionAvailable   :: !Bool
@@ -59,9 +76,16 @@ defined f = shaderEnvCpphsOpts go where
 
 buildShaderEnv :: Options -> IO ShaderEnv
 buildShaderEnv opts = do
-  b <- fragmentHighp
+  -- b <- fragmentHighp
+  let b = True
   return $ ShaderEnv b defaultCpphsOptions 
-    { defines = if b then [("GL_FRAGMENT_PRECISION_HIGH","1")]  else []
+    { defines = concat 
+      [ [ ("GL_FRAGMENT_PRECISION_HIGH","1") | b ]
+      , [ ("__VERSION__","410")
+        , ("GL_core_profile","1")
+        ]
+      , defines defaultCpphsOptions
+      ]
     , boolopts = boolOptions 
     , includes = [opts^.optionsDataDir]
     }
@@ -69,7 +93,7 @@ buildShaderEnv opts = do
 boolOptions :: BoolOptions
 boolOptions = defaultBoolOptions 
   { macros    = False -- don't leave #defines in
-  , locations = False -- the #line directive eats our #version ?
+  , locations = False -- #line directives in glsl have a different format
   , hashline  = False
   , pragma    = True
   , stripEol  = True  -- strip comments
@@ -111,11 +135,7 @@ compile st fp = do
     unless compiled $ do
       e <- get (shaderInfoLog s)
       deleteObjectName s
-      let msg = "error in shader: " ++ fp ++ "\n" ++ e
-      hPutStrLn stderr msg
-      hPutStrLn stderr "After CPP:"
-      hPutStrLn stderr source
-      fail msg
+      throw $ ShaderException fp e source
     return s
   
 -- | Link a program and vertex shader to build a program
