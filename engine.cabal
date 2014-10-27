@@ -32,7 +32,7 @@ source-repository head
 
 library
   exposed-modules:
-    Engine.Gen
+    Engine.Generator
     Engine.SDL.Basic
     Engine.SDL.Exception
     Engine.SDL.Video
