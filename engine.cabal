@@ -24,7 +24,7 @@ extra-source-files:
   README.markdown
 
 data-dir: data
-data-files: screen.vert smaa.glsl
+data-files: screen.vert smaa.glsl white.frag
 
 source-repository head
   type: git

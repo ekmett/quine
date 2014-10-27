@@ -69,7 +69,7 @@ boolOptions :: BoolOptions
 boolOptions = defaultBoolOptions 
   { macros    = False -- don't leave #defines in
   , locations = False -- the #line directive eats our #version ?
-  , hashline  = True
+  , hashline  = False
   , pragma    = True
   , stripEol  = True  -- strip comments
   , stripC89  = True
