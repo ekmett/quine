@@ -33,8 +33,10 @@ source-repository head
 library
   hs-source-dirs: src
   exposed-modules:
+    Engine.Display
     Engine.GL.Cache
     Engine.GL.Shader
+    Engine.Options
     Engine.SDL.Basic
     Engine.SDL.Exception
     Engine.SDL.Video
