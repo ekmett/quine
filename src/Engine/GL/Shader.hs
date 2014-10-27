@@ -7,10 +7,11 @@ module Engine.GL.Shader
   ( ShaderEnv
   , HasShaderEnv(..)
   , buildShaderEnv
-  , cpp
   , compile
   , link
-  , Shader
+  -- * Internal details
+  , cpp
+  , defined
   ) where
 
 import Control.Applicative
@@ -87,6 +88,7 @@ readFirst (p:ps) fn = do
   if ok then (,) pfn <$> readFile pfn
         else readFirst ps fn
 
+-- | C preprocess a file
 cpp :: (MonadIO m, MonadReader e m, HasShaderEnv e) => FilePath -> m String
 cpp fp = do
   opts <- view shaderEnvCpphsOpts
@@ -97,7 +99,6 @@ cpp fp = do
 -- | Compile a shader with a given set of defines
 compile :: (MonadIO m, MonadReader e m, HasShaderEnv e) => ShaderType -> FilePath -> m Shader
 compile st fp = do
-  ds <- view defined
   source <- cpp fp
   liftIO $ do
     s <- createShader st

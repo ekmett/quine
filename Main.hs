@@ -7,6 +7,7 @@ import Control.Lens
 import Control.Monad hiding (forM_)
 import Control.Monad.Reader
 import Control.Monad.State
+import Data.Default
 import Data.Monoid
 import Engine.Display
 import Engine.Options
@@ -29,6 +30,9 @@ import Prelude hiding (init)
 data World = World { _worldProgram :: !Program, _worldDisplay :: !Display }
 
 makeClassy ''World
+
+instance HasDisplay World where
+  display = worldDisplay
 
 main :: IO ()
 main = runInBoundThread $ withCString "engine" $ \windowName -> do
@@ -60,14 +64,13 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   cxt <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
   se <- buildShaderEnv opts
+  let disp = Display window cxt (opts^.optionsFullScreen) def
   runReaderT ?? se $ do
-    screenShader <- compile VertexShader "screen.vert"
-    return ()
-
-  -- set up the rest of the context
-  -- let d = Display window cxt (opts^.optionsFullScreen) def
-  -- w = World 
-  -- evalStateT (forever $ poll >> render) w
+    poll <- buildPoll
+    screenShader <- compile VertexShader   "screen.vert"
+    whiteShader  <- compile FragmentShader "white.frag"
+    prog <- link screenShader whiteShader
+    evalStateT (forever $ poll >> render) $ World prog disp
 
 render :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
 render = do
@@ -80,14 +83,18 @@ render = do
 shutdown :: MonadIO m => m ()
 shutdown = liftIO $ quit >> exitSuccess
 
-poll :: HasDisplay s => StateT s IO ()
-poll = StateT $ \s -> alloca $ \ep -> runStateT (go ep) s where
-  go ep = liftIO (pollEvent ep) >>= \ r -> when (r /= 0) $ do
-    e <- liftIO (peek ep)
-    handleEvent e
-    go ep
+buildPoll :: (MonadIO n, MonadIO m, MonadState s m, HasDisplay s) => n (m ())
+buildPoll = liftIO $ do
+  ep <- malloc
+  let poll = do
+        r <- liftIO (pollEvent ep)
+        when (r /= 0) $ do
+          e <- liftIO (peek ep)
+          handleEvent e
+          poll
+  return poll
 
-guiKey :: HasDisplay s => Keycode -> StateT s IO ()
+guiKey :: (MonadIO m, MonadState s m, HasDisplay s) => Keycode -> m ()
 guiKey KeycodeQ = shutdown
 guiKey KeycodeReturn = do
   fs <- displayFullScreen <%= not
@@ -96,7 +103,7 @@ guiKey KeycodeReturn = do
   return ()
 guiKey e = liftIO $ hPrint stderr $ "Command " ++ show e
 
-handleEvent :: HasDisplay s => SDL.Event -> StateT s IO ()
+handleEvent :: (MonadIO m, MonadState s m, HasDisplay s) => SDL.Event -> m ()
 handleEvent QuitEvent{} = shutdown
 -- escape
 handleEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
