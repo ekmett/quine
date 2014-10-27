@@ -104,6 +104,7 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
 
     -- start OpenGL
     cxt <- glCreateContext window
+    makeCurrent window cxt
     liftIO $ hPutStrLn stderr "enabling sRGB"
     -- fbo <- generate
     glEnable gl_FRAMEBUFFER_SRGB
