@@ -10,7 +10,6 @@ import Control.Monad.State
 import Engine.SDL.Basic
 import Engine.SDL.Exception
 import Engine.SDL.Video
-import Engine.Var
 import Foreign
 import Foreign.C
 import System.Exit
@@ -37,15 +36,15 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   ver <- version
   putStrLn $ "SDL2 " ++ show ver
   init InitFlagEverything
-  contextMajorVersion &= 4
-  contextMinorVersion &= 1
-  contextProfileMask  &= GLProfileCore
-  redSize   &= 5
-  greenSize &= 5
-  blueSize  &= 5
-  depthSize &= 16
-  doubleBuffer &= True
-  -- shareWithCurrentContext &= True
+  contextMajorVersion $= 4
+  contextMinorVersion $= 1
+  contextProfileMask  $= GLProfileCore
+  redSize   $= 5
+  greenSize $= 5
+  blueSize  $= 5
+  depthSize $= 16
+  doubleBuffer $= True
+  -- shareWithCurrentContext $= True
   window <- createWindow windowName WindowPosUndefined WindowPosUndefined 1024 768 (WindowFlagOpenGL .|. WindowFlagShown .|. WindowFlagResizable .|. WindowFlagAllowHighDPI)
   -- physicsContext   <- glCreateContext window
   -- renderingContext <- glCreateContext window
