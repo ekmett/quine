@@ -14,6 +14,7 @@ import Engine.SDL.Exception
 import Foreign.C
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
+import System.IO
 
 -- basic opengl + sdl display for the screen, etc.
 
@@ -29,8 +30,11 @@ makeClassy ''Display
 instance HasCaches Display where
   caches = displayCaches
 
+-- | complain loudly enough to pop up a window
 warn :: (MonadIO m, MonadState s m, HasDisplay s) => String -> String -> m ()
 warn t m = do
   window <- use displayWindow
-  liftIO $ withCString t $ \title -> withCString m $ \message ->
-    showSimpleMessageBox MessageBoxFlagWarning title message window >>= err
+  liftIO $ do 
+    hPutStrLn stderr $ "Warning: " ++ t ++ ": " ++ m
+    withCString t $ \title -> withCString m $ \message ->
+      showSimpleMessageBox MessageBoxFlagWarning title message window >>= err

@@ -26,12 +26,6 @@ import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
 
-warn :: HasDisplay s => String -> String -> StateT s IO ()
-warn t m = do
-  window <- use displayWindow
-  liftIO $ withCString t $ \title -> withCString m $ \message ->
-    showSimpleMessageBox MessageBoxFlagWarning title message window >>= err
-
 main :: IO ()
 main = runInBoundThread $ withCString "engine" $ \windowName -> do
   optsParser <- parseOptions
@@ -53,7 +47,6 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   blueSize  $= 5
   depthSize $= 16
   doubleBuffer $= True
-  -- shareWithCurrentContext $= True
   let flags = WindowFlagOpenGL
           .|. WindowFlagShown
           .|. WindowFlagResizable
@@ -69,7 +62,6 @@ render :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
 render = do
   w <- use displayWindow
   liftIO $ do
-    -- r <- (*0.01) <$> randomIO
     clearColor $= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
     glSwapWindow w
