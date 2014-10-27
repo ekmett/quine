@@ -83,16 +83,29 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
     blueSize  $= 5
     depthSize $= 16
     doubleBuffer $= True
-    let flags = WindowFlagOpenGL
+    let w = opts^.optionsWindowWidth
+        h = opts^.optionsWindowHeight
+        flags = WindowFlagOpenGL
             .|. WindowFlagShown
             .|. WindowFlagResizable
             .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
             .|. (if opts^.optionsFullScreen then WindowFlagFullscreen else 0)
-    window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral $ opts^.optionsWindowWidth) (fromIntegral $ opts^.optionsWindowHeight) flags
+    window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral w) (fromIntegral h) flags
     cxt <- glCreateContext window
     glEnable gl_FRAMEBUFFER_SRGB
     se <- buildShaderEnv opts
-    let disp = Display window cxt (opts^.optionsFullScreen) def
+    let disp = Display 
+          { _displayWindow = window
+          , _displayGL     = cxt
+          , _displayCaches = def
+          , _displayFullScreen = opts^.optionsFullScreen
+          , _displayWindowSize = Size (fromIntegral w) (fromIntegral h)
+          , _displayWindowSizeChanged = True
+          , _displayMinimized = False
+          , _displayHasMouseFocus = True
+          , _displayHasKeyboardFocus = True
+          , _displayVisible = True
+          }
     runReaderT ?? System mon opts se $ do
       poll <- buildPoll
       screenShader <- compile VertexShader   "screen.vert"
@@ -102,13 +115,20 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   
 -- * Rendering
 
-render :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
+render :: (MonadIO m, MonadState s m, HasWorld s, HasDisplay s) => m ()
 render = do
   w <- use displayWindow
+  use displayWindowSizeChanged >>= \c -> when c $ do
+    sz <- use displayWindowSize
+    liftIO $ viewport $= (Position 0 0, sz)
+    -- are we going to need to destroy everything, like we used to?
+    displayWindowSizeChanged .= False
   liftIO $ do
     clearColor $= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
-    glSwapWindow w
+  use worldProgram >>= \p -> liftIO (currentProgram $= Just p)
+  -- run this thing bindlessly
+  liftIO $ glSwapWindow w
 
 shutdown :: MonadIO m => m ()
 shutdown = liftIO $ quit >> exitSuccess
@@ -122,7 +142,7 @@ buildPoll = liftIO $ do
         r <- liftIO (pollEvent ep)
         when (r /= 0) $ do
           e <- liftIO (peek ep)
-          handleEvent e
+          handle e
           poll
   return poll
 
@@ -135,8 +155,27 @@ guiKey KeycodeReturn = do
   return ()
 guiKey e = liftIO $ hPrint stderr $ "Command " ++ show e
 
-handleEvent :: (MonadIO m, MonadState s m, HasDisplay s) => SDL.Event -> m ()
-handleEvent QuitEvent{} = shutdown
-handleEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
+handle :: (MonadIO m, MonadState s m, HasDisplay s) => SDL.Event -> m ()
+handle QuitEvent{} = shutdown
+handle KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0 = guiKey k
-handleEvent e = liftIO $ hPrint stderr e
+handle WindowEvent { eventType = WindowEventResized     } = return () -- handled during size change, since we only get that in the event of an OS change
+handle WindowEvent { eventType = WindowEventEnter       } = displayHasMouseFocus .= True
+handle WindowEvent { eventType = WindowEventLeave       } = displayHasMouseFocus .= False
+handle WindowEvent { eventType = WindowEventFocusGained } = displayHasKeyboardFocus .= True
+handle WindowEvent { eventType = WindowEventFocusLost   } = displayHasKeyboardFocus .= False
+handle WindowEvent { eventType = WindowEventMinimized   } = displayVisible .= False
+handle WindowEvent { eventType = WindowEventMaximized   } = displayVisible .= True
+handle WindowEvent { eventType = WindowEventHidden      } = displayVisible .= False
+handle WindowEvent { eventType = WindowEventExposed     } = displayVisible .= True
+handle WindowEvent { eventType = WindowEventRestored    } = displayVisible .= True -- unminimized
+handle WindowEvent { eventType = WindowEventShown       } = displayVisible .= True
+handle WindowEvent { eventType = WindowEventClose       } = shutdown
+handle WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
+handle WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
+handle WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
+  displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
+  displayWindowSizeChanged .= True
+handle e = liftIO $ hPrint stderr e -- unhandled event
+
+-- WindowEvent {eventType = 512, eventTimestamp = 231, windowEventWindowID = 1, windowEventEvent = 12, windowEventData1 = 0, windowEventData2 = 0}

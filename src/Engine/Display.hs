@@ -14,15 +14,22 @@ import Engine.SDL.Exception
 import Foreign.C
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
+import Graphics.Rendering.OpenGL.GL.CoordTrans
 import System.IO
 
 -- basic opengl + sdl display for the screen, etc.
 
 data Display = Display 
-  { _displayWindow     :: !Window
-  , _displayGL         :: !GLContext
-  , _displayFullScreen :: !Bool
-  , _displayCaches     :: !Caches
+  { _displayWindow            :: !Window
+  , _displayGL                :: !GLContext
+  , _displayCaches            :: !Caches
+  , _displayFullScreen        :: !Bool
+  , _displayWindowSize        :: !Size
+  , _displayWindowSizeChanged :: !Bool -- whenever this changes pretty much everything is borked.
+  , _displayMinimized         :: !Bool
+  , _displayHasMouseFocus     :: !Bool
+  , _displayHasKeyboardFocus  :: !Bool
+  , _displayVisible           :: !Bool
   } deriving Typeable
 
 makeClassy ''Display
