@@ -32,6 +32,7 @@ import Graphics.Rendering.OpenGL.Raw.ARB.FragmentShader
 import Language.Preprocessor.Cpphs
 import System.Directory
 import System.FilePath
+import System.IO
 
 data ShaderEnv = ShaderEnv
   { _shaderEnvFragmentHighPrecisionAvailable   :: !Bool
@@ -81,7 +82,9 @@ boolOptions = defaultBoolOptions
   }
 
 readFirst :: [FilePath] -> FilePath -> IO (FilePath, String)
-readFirst [] fn = fail $ "missing file: " ++ fn
+readFirst [] fn = do
+  hPutStrLn stderr $ "missing file: " ++ fn
+  fail $ "missing file: " ++ fn
 readFirst (p:ps) fn = do
   let pfn = p </> fn
   ok <- doesFileExist pfn
@@ -104,11 +107,15 @@ compile st fp = do
     s <- createShader st
     shaderSourceBS s $= UTF8.fromString source
     compileShader s
-    ok <- get (compileStatus s)
-    unless ok $ do
+    compiled <- get (compileStatus s)
+    unless compiled $ do
       e <- get (shaderInfoLog s)
       deleteObjectName s
-      fail e
+      let msg = "error in shader: " ++ fp ++ "\n" ++ e
+      hPutStrLn stderr msg
+      hPutStrLn stderr "After CPP:"
+      hPutStrLn stderr source
+      fail msg
     return s
   
 -- | Link a program and vertex shader to build a program

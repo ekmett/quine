@@ -27,9 +27,12 @@ module Engine.SDL.Video
   , swapInterval
   , windowDisplayMode
   , desktopDisplayMode
+  , makeCurrent
+  , xmapStateVar
   ) where
 
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Functor
 import Engine.SDL.Exception
 import Foreign
@@ -182,8 +185,11 @@ swapInterval = makeStateVar (fromIntegral <$> SDL.glGetSwapInterval) (\a -> SDL.
 attr :: GLattr -> StateVar Int
 attr a = makeStateVar (getAttr a) (setAttr a)
 
+xmapStateVar :: (b -> a) -> (a -> b) -> StateVar a -> StateVar b
+xmapStateVar f g v = makeStateVar (g <$> get v) (\x -> v $= f x)
+
 boolAttr :: GLattr -> StateVar Bool
-boolAttr a = makeStateVar (toEnum <$> getAttr a) (setAttr a . fromEnum)
+boolAttr = xmapStateVar fromEnum toEnum . attr
 
 getAttr :: GLattr -> IO Int
 getAttr a = alloca $ \p -> do
@@ -192,3 +198,6 @@ getAttr a = alloca $ \p -> do
 
 setAttr :: GLattr -> Int -> IO ()
 setAttr a i = SDL.glSetAttribute a (fromIntegral i) >>= err
+
+makeCurrent :: MonadIO m => SDL.Window -> SDL.GLContext -> m ()
+makeCurrent w c = liftIO (SDL.glMakeCurrent w c >>= err)

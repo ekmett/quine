@@ -44,6 +44,7 @@ library
     Engine.SDL.Basic
     Engine.SDL.Exception
     Engine.SDL.Video
+    Engine.Shutdown
 
   other-modules:
     Paths_engine

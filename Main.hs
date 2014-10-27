@@ -4,6 +4,7 @@ module Main where
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
+import Control.Exception.Lens
 import Control.Lens hiding (assign)
 import Control.Monad hiding (forM_)
 import Control.Monad.Reader
@@ -15,6 +16,7 @@ import Data.Typeable
 import Engine.Display
 import Engine.Monitor
 import Engine.Options
+import Engine.Shutdown
 import Engine.GL.Shader
 import Engine.SDL.Basic
 import Engine.SDL.Video
@@ -66,16 +68,20 @@ instance HasDisplay World where
 
 main :: IO ()
 main = runInBoundThread $ withCString "engine" $ \windowName -> do
+  -- parse options
   optsParser <- parseOptions
-
   opts <- execParser $ info (helper <*> optsParser) $
     fullDesc
     <> progDesc "engine"
     <> header "Engine"
 
+  liftIO $ hPutStrLn stderr "initializing Monitor"
+  -- set up EKG
   withMonitor opts $ \mon -> do -- start up monitoring
     label "sdl.version" mon >>= \ lv -> version >>= \v -> assign lv $ show v ^. packed
  
+    liftIO $ hPutStrLn stderr "initializing SDL"
+    -- start SDL
     init InitFlagEverything
     contextMajorVersion $= 4
     contextMinorVersion $= 1
@@ -92,9 +98,13 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
             .|. WindowFlagResizable
             .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
             .|. (if opts^.optionsFullScreen then WindowFlagFullscreen else 0)
+    liftIO $ hPutStrLn stderr "creating window"
     window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral w) (fromIntegral h) flags
-    cxt <- glCreateContext window
+    liftIO $ hPutStrLn stderr "creating context"
 
+    -- start OpenGL
+    cxt <- glCreateContext window
+    liftIO $ hPutStrLn stderr "enabling sRGB"
     -- fbo <- generate
     glEnable gl_FRAMEBUFFER_SRGB
     se <- buildShaderEnv opts
@@ -111,18 +121,24 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
           , _displayVisible = True
           }
 
+    -- System Shutdown Process
     let cleanup = do
-         glDeleteContext window
-         destroyWindow window
+         liftIO $ hPutStrLn stderr "cleaning up"
+         -- glDeleteContext window
+         -- destroyWindow window
          quit
          exitSuccess
 
-    finally cleanup $ runReaderT ?? System mon opts se $ do
-      poll <- buildPoll
+    result <- trying _Shutdown $ finally cleanup $ runReaderT ?? System mon opts se $ do
+      liftIO $ hPutStrLn stderr "compiling screen.vert"
       screenShader <- compile VertexShader   "screen.vert"
+      liftIO $ hPutStrLn stderr "compiling white.frag"
       whiteShader  <- compile FragmentShader "white.frag"
+      liftIO $ hPutStrLn stderr "linking program"
       prog <- link screenShader whiteShader
+      liftIO $ hPutStrLn stderr "entering loop"
       evalStateT (forever $ poll >> render) $ World prog disp
+    either print return result
 
     -- cleanup
 -- * Rendering
@@ -131,47 +147,31 @@ render :: (MonadIO m, MonadState s m, HasWorld s, HasDisplay s) => m ()
 render = do
   w <- use displayWindow
   use displayWindowSizeChanged >>= \c -> when c $ do
-    sz <- use displayWindowSize
-    liftIO $ viewport $= (Position 0 0, sz)
+    -- sz <- use displayWindowSize
+    -- liftIO $ viewport $= (Position 0 0, sz)
     -- are we going to need to destroy everything, like we used to?
     displayWindowSizeChanged .= False
   liftIO $ do
     clearColor $= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
-  use worldProgram >>= \p -> liftIO (currentProgram $= Just p)
+  -- use worldProgram >>= \p -> liftIO (currentProgram $= Just p)
   -- run this thing bindlessly
   liftIO $ glSwapWindow w
 
 -- * Polling
 
-data Shutdown = Shutdown deriving (Show,Typeable)
-instance Exception Shutdown
-
-buildPoll :: (MonadIO n, MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => n (m ())
-buildPoll = liftIO $ do
-  ep <- malloc
-  let poll = do
-        r <- liftIO (pollEvent ep)
-        when (r /= 0) $ do
-          e <- liftIO (peek ep)
-          event e
-          poll
-  return poll
-
-guiKey :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => Keycode -> m ()
-guiKey KeycodeQ = throw Shutdown
-guiKey KeycodeReturn = do
-  fs <- displayFullScreen <%= not
-  fsd <- view optionsFullScreenDesktop
-  w  <- use displayWindow
-  _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsd then WindowFlagFullscreenDesktop else WindowFlagFullscreen) else 0
-  return ()
-guiKey e = liftIO $ hPrint stderr $ "Command " ++ show e
+poll :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => m ()
+poll = do
+  me <- liftIO $ alloca $ \ep -> do
+    r <- pollEvent ep
+    if r /= 0 then Just <$> peek ep
+              else return Nothing
+  case me of
+    Just e  -> event e >> poll
+    Nothing -> return ()
 
 event :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
 event QuitEvent{} = throw Shutdown
-event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
-  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0 = guiKey k
 event WindowEvent { eventType = WindowEventResized     } = return () -- eventd during size change, since we only get that in the event of an OS change
 event WindowEvent { eventType = WindowEventEnter       } = displayHasMouseFocus .= True
 event WindowEvent { eventType = WindowEventLeave       } = displayHasMouseFocus .= False
@@ -187,8 +187,15 @@ event WindowEvent { eventType = WindowEventClose       } = liftIO $ throw Shutdo
 event WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
 event WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
 event WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
+  liftIO $ hPutStrLn stderr "size changed"
   displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
   displayWindowSizeChanged .= True
-event e = liftIO $ hPrint stderr e -- uneventd event
-
--- WindowEvent {eventType = 512, eventTimestamp = 231, windowEventWindowID = 1, windowEventEvent = 12, windowEventData1 = 0, windowEventData2 = 0}
+event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
+  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q
+  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeReturn = do             -- CUA Cmd-Return
+    fs <- displayFullScreen <%= not
+    fsd <- view optionsFullScreenDesktop
+    w  <- use displayWindow
+    _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsd then WindowFlagFullscreenDesktop else WindowFlagFullscreen) else 0
+    return ()
+event e = liftIO $ hPrint stderr e
