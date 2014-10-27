@@ -11,7 +11,6 @@ import Data.Monoid
 import Engine.Display
 import Engine.Options
 import Engine.SDL.Basic
-import Engine.SDL.Exception
 import Engine.SDL.Video
 import Foreign
 import Foreign.C
@@ -55,8 +54,9 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral $ opts^.optionsWindowWidth) (fromIntegral $ opts^.optionsWindowHeight) flags
   cxt <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
-  _ <- execStateT (forever $ poll >> render) $ Display window cxt (opts^.optionsFullScreen) def
-  return ()
+  -- set up the rest of the context
+  let d = Display window cxt (opts^.optionsFullScreen) def
+  evalStateT (forever $ poll >> render) d
 
 render :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
 render = do
