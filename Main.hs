@@ -16,6 +16,7 @@ import Engine.SDL.Video
 import Foreign
 import Foreign.C
 import System.Exit
+import System.IO
 import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
 import Graphics.Rendering.OpenGL.Raw as GL
 import Graphics.UI.SDL.Enum.Pattern as SDL
@@ -90,11 +91,11 @@ guiKey KeycodeReturn = do
   w  <- use displayWindow
   _ <- liftIO $ setWindowFullscreen w $ if fs then WindowFlagFullscreenDesktop else 0
   return ()
-guiKey e = liftIO $ print $ "Command " ++ show e
+guiKey e = liftIO $ hPrint stderr $ "Command " ++ show e
 
 handleEvent :: HasDisplay s => SDL.Event -> StateT s IO ()
 handleEvent QuitEvent{} = shutdown
 -- escape
 handleEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0 = guiKey k
-handleEvent e = liftIO $ print e
+handleEvent e = liftIO $ hPrint stderr e
