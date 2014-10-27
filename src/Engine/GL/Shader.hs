@@ -32,6 +32,7 @@ import Foreign.Storable
 import Graphics.Rendering.OpenGL
 import Graphics.Rendering.OpenGL.Raw.ARB.ES2Compatibility
 import Graphics.Rendering.OpenGL.Raw.ARB.FragmentShader
+import Graphics.Rendering.OpenGL.GLU.Errors
 import Language.Preprocessor.Cpphs
 import System.Directory
 import System.FilePath
@@ -40,13 +41,16 @@ import System.IO
 data ShaderException = ShaderException
   { shaderExceptionFileName :: String
   , shaderExceptionLog :: String
+  , shaderExceptionErrors :: [Error]
   , shaderExceptionSource :: String
   } deriving Typeable
 instance Exception ShaderException
 instance Show ShaderException where
-  show (ShaderException fp log source) = 
-    fp ++ ": error: Shader Exception\nlog:\n" ++ log ++ "\nsource:\n" ++ source
-
+  show (ShaderException fp log es source) = 
+    fp ++ ": error: Shader Exception" ++ 
+    "\nlog:\n" ++ log ++
+    "\nerrors:\n" ++ unlines (show <$> es) ++
+    "\nsource:\n" ++ source
 
 _ShaderException :: Prism' SomeException ShaderException
 _ShaderException = exception
@@ -92,7 +96,7 @@ buildShaderEnv opts = do
 
 boolOptions :: BoolOptions
 boolOptions = defaultBoolOptions 
-  { macros    = True  -- might as well leave #defines in
+  { macros    = False -- might as well leave #defines in
   , locations = False -- #line directives in glsl have a different format
   , hashline  = False
   , pragma    = True
@@ -134,8 +138,9 @@ compile st fp = do
     compiled <- get (compileStatus s)
     unless compiled $ do
       e <- get (shaderInfoLog s)
+      es <- get errors
       deleteObjectName s
-      throw $ ShaderException fp e source
+      throw $ ShaderException fp e es source
     return s
   
 -- | Link a program and vertex shader to build a program
