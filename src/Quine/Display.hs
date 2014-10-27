@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, TemplateHaskell #-}
-module Engine.Display 
+module Quine.Display 
   ( Display(..)
   , HasDisplay(..)
   , warn
@@ -9,12 +9,12 @@ import Control.Monad.IO.Class
 import Control.Monad.State
 import Control.Lens
 import Data.Typeable
-import Engine.GL.Cache
-import Engine.SDL.Exception
 import Foreign.C
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
 import Graphics.Rendering.OpenGL.GL.CoordTrans
+import Quine.GL.Cache
+import Quine.SDL.Exception
 import System.IO
 
 -- basic opengl + sdl display for the screen, etc.

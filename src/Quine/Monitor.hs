@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-module Engine.Monitor
+module Quine.Monitor
   ( withMonitor
   -- * The Monitor
   , Monitor(..)
@@ -21,9 +21,9 @@ module Engine.Monitor
   , withServer
   , forkServer
   -- * Modifiers
-  , module Engine.Monitor.Combinators
+  , module Quine.Monitor.Combinators
   -- * Options
-  , module Engine.Monitor.Options
+  , module Quine.Monitor.Options
   ) where
 
 import Control.Exception
@@ -34,9 +34,9 @@ import Data.ByteString.Lens
 import Data.Foldable as F
 import Data.Int
 import Data.Text
-import Engine.Monitor.Combinators
-import Engine.Monitor.Exception
-import Engine.Monitor.Options
+import Quine.Monitor.Combinators
+import Quine.Monitor.Exception
+import Quine.Monitor.Options
 import System.IO
 import System.Process
 import System.Remote.Monitoring

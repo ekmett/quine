@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Engine.SDL.Video
+module Quine.SDL.Video
   ( 
   -- * Attribute StateVars
     contextMajorVersion
@@ -34,12 +34,12 @@ module Engine.SDL.Video
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Functor
-import Engine.SDL.Exception
 import Foreign
 import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Graphics.UI.SDL (GLattr)
 import Prelude hiding (init)
+import Quine.SDL.Exception
 
 -- * Attribute StateVars
   

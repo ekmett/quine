@@ -1,4 +1,4 @@
-name:          engine
+name:          quine
 category:      Graphics
 version:       0.1
 license:       BSD3
@@ -7,13 +7,13 @@ license-file:  LICENSE
 author:        Edward A. Kmett
 maintainer:    Edward A. Kmett <ekmett@gmail.com>
 stability:     experimental
-homepage:      http://github.com/ekmett/engine/
-bug-reports:   http://github.com/ekmett/engine/issues
+homepage:      http://github.com/ekmett/quine/
+bug-reports:   http://github.com/ekmett/quine/issues
 copyright:     Copyright (C) 2014 Edward A. Kmett
 build-type:    Simple
 tested-with:   GHC == 7.8.3
-synopsis:      Engine
-description:   Engine
+synopsis:      Quine
+description:   Quine
 
 extra-source-files:
   .ghci
@@ -28,26 +28,26 @@ data-files: screen.vert smaa.glsl white.frag
 
 source-repository head
   type: git
-  location: git://github.com/ekmett/engine.git
+  location: git://github.com/ekmett/quine.git
 
 library
   hs-source-dirs: src
   exposed-modules:
-    Engine.Display
-    Engine.GL.Cache
-    Engine.GL.Shader
-    Engine.Monitor
-    Engine.Monitor.Combinators
-    Engine.Monitor.Exception
-    Engine.Monitor.Options
-    Engine.Options
-    Engine.SDL.Basic
-    Engine.SDL.Exception
-    Engine.SDL.Video
-    Engine.Shutdown
+    Quine.Display
+    Quine.GL.Cache
+    Quine.GL.Shader
+    Quine.Monitor
+    Quine.Monitor.Combinators
+    Quine.Monitor.Exception
+    Quine.Monitor.Options
+    Quine.Options
+    Quine.SDL.Basic
+    Quine.SDL.Exception
+    Quine.SDL.Video
+    Quine.Shutdown
 
   other-modules:
-    Paths_engine
+    Paths_quine
   
   build-depends:
     aeson,
@@ -75,14 +75,14 @@ library
   default-language: Haskell2010
   ghc-options: -Wall -O2
 
-executable engine
+executable quine
   main-is: Main.hs
 
   build-depends:
     base >= 4.7 && < 5,
     containers,
     data-default,
-    engine,
+    quine,
     lens,
     linear,
     mtl,

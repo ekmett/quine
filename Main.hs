@@ -13,13 +13,6 @@ import Data.Default
 import Data.Monoid
 import Data.Text.Lens
 import Data.Typeable
-import Engine.Display
-import Engine.Monitor
-import Engine.Options
-import Engine.Shutdown
-import Engine.GL.Shader
-import Engine.SDL.Basic
-import Engine.SDL.Video
 import Foreign
 import Foreign.C
 import System.Exit
@@ -32,6 +25,13 @@ import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
+import Quine.Display
+import Quine.GL.Shader
+import Quine.Monitor
+import Quine.Options
+import Quine.Shutdown
+import Quine.SDL.Basic
+import Quine.SDL.Video
 
 -- * Environment
 data System = System
@@ -67,20 +67,18 @@ instance HasDisplay World where
 -- * Setup
 
 main :: IO ()
-main = runInBoundThread $ withCString "engine" $ \windowName -> do
+main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- parse options
   optsParser <- parseOptions
   opts <- execParser $ info (helper <*> optsParser) $
     fullDesc
-    <> progDesc "engine"
-    <> header "Engine"
+    <> progDesc "quine"
+    <> header "Quine"
 
-  liftIO $ hPutStrLn stderr "initializing Monitor"
   -- set up EKG
   withMonitor opts $ \mon -> do -- start up monitoring
     label "sdl.version" mon >>= \ lv -> version >>= \v -> assign lv $ show v ^. packed
  
-    liftIO $ hPutStrLn stderr "initializing SDL"
     -- start SDL
     init InitFlagEverything
     contextMajorVersion $= 4
@@ -97,16 +95,12 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
             .|. WindowFlagShown
             .|. WindowFlagResizable
             .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
-            .|. (if opts^.optionsFullScreen then WindowFlagFullscreen else 0)
-    liftIO $ hPutStrLn stderr "creating window"
+            .|. (if opts^.optionsFullScreen then (if opts^.optionsFullScreenNormal then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0)
     window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral w) (fromIntegral h) flags
-    liftIO $ hPutStrLn stderr "creating context"
 
     -- start OpenGL
     cxt <- glCreateContext window
     makeCurrent window cxt
-    liftIO $ hPutStrLn stderr "enabling sRGB"
-    -- fbo <- generate
     glEnable gl_FRAMEBUFFER_SRGB
     se <- buildShaderEnv opts
     let disp = Display 
@@ -124,39 +118,31 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
 
     -- System Shutdown Process
     let cleanup = do
-         liftIO $ hPutStrLn stderr "cleaning up"
-         -- glDeleteContext window
-         -- destroyWindow window
-         quit
-         exitSuccess
+          glDeleteContext cxt
+          destroyWindow window
+          quit
+          exitSuccess
 
     result <- trying _Shutdown $ finally ?? cleanup $ runReaderT ?? System mon opts se $ do
-      liftIO $ hPutStrLn stderr "compiling screen.vert"
       screenShader <- compile VertexShader   "screen.vert"
-      liftIO $ hPutStrLn stderr "compiling white.frag"
       whiteShader  <- compile FragmentShader "white.frag"
-      liftIO $ hPutStrLn stderr "linking program"
       prog <- link screenShader whiteShader
-      liftIO $ hPutStrLn stderr "entering loop"
       evalStateT (forever $ poll >> render) $ World prog disp
     either print return result
-
-    -- cleanup
 -- * Rendering
 
 render :: (MonadIO m, MonadState s m, HasWorld s, HasDisplay s) => m ()
 render = do
   w <- use displayWindow
   use displayWindowSizeChanged >>= \c -> when c $ do
-    -- sz <- use displayWindowSize
-    -- liftIO $ viewport $= (Position 0 0, sz)
-    -- are we going to need to destroy everything, like we used to?
+    sz <- use displayWindowSize
+    liftIO $ viewport $= (Position 0 0, sz)
     displayWindowSizeChanged .= False
   liftIO $ do
     clearColor $= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
-  -- use worldProgram >>= \p -> liftIO (currentProgram $= Just p)
-  -- run this thing bindlessly
+  use worldProgram >>= \p -> liftIO (currentProgram $= Just p)
+  liftIO $ drawArrays Triangles 0 3
   liftIO $ glSwapWindow w
 
 -- * Polling
@@ -195,8 +181,8 @@ event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{key
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeReturn = do             -- CUA Cmd-Return
     fs <- displayFullScreen <%= not
-    fsd <- view optionsFullScreenDesktop
+    fsn <- view optionsFullScreenNormal
     w  <- use displayWindow
-    _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsd then WindowFlagFullscreenDesktop else WindowFlagFullscreen) else 0
+    _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsn then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0
     return ()
 event e = liftIO $ hPrint stderr e

@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-module Engine.Monitor.Options
+module Quine.Monitor.Options
   ( MonitorOptions(..)
   , HasMonitorOptions(..)
   , parseMonitorOptions

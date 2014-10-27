@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Engine.SDL.Exception
+module Quine.SDL.Exception
   ( 
   -- * Extensible Exceptions
     SDLException(..)
@@ -14,7 +14,7 @@ import Foreign.C
 import qualified Graphics.UI.SDL as SDL
 import Prelude hiding (init)
 
--- | This is thrown in the event of an error in the @Engine.SDL@ combinators
+-- | This is thrown in the event of an error in the @Quine.SDL@ combinators
 newtype SDLException = SDLException String
   deriving (Show, Typeable)
 

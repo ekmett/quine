@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
-module Engine.Monitor.Combinators
+module Quine.Monitor.Combinators
   ( Setting(..)
   , Updating(..)
   , Gauged(..)

@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Engine.Monitor.Exception
+module Quine.Monitor.Exception
   ( ShutdownMonitor(..)
   ) where
 

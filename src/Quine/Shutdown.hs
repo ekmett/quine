@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
-module Engine.Shutdown
+module Quine.Shutdown
   ( Shutdown(..)
   , _Shutdown
   ) where

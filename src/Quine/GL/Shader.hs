@@ -3,7 +3,7 @@
 -- | Shader support
 --
 -- TODO: consider supporting binary shader formats for faster startup
-module Engine.GL.Shader 
+module Quine.GL.Shader 
   ( ShaderEnv
   , ShaderException(..)
   , HasShaderEnv(..)
@@ -24,7 +24,6 @@ import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
 import Data.ByteString.UTF8 as UTF8
 import Data.Typeable
-import Engine.Options
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
@@ -34,6 +33,7 @@ import Graphics.Rendering.OpenGL.Raw.ARB.ES2Compatibility
 import Graphics.Rendering.OpenGL.Raw.ARB.FragmentShader
 import Graphics.Rendering.OpenGL.GLU.Errors
 import Language.Preprocessor.Cpphs
+import Quine.Options
 import System.Directory
 import System.FilePath
 import System.IO
@@ -67,7 +67,7 @@ makeClassy ''ShaderEnv
 peek2 :: Storable a => Ptr a -> IO (a,a)
 peek2 p = (,) <$> peekElemOff p 0 <*> peekElemOff p 1
 
--- TODO: when <https://github.com/haskell-opengl/OpenGL/issues/63> gets resolved, do this directly through OpenGL
+-- TODO: when <https://github.com/haskell-opengl/OpenGL/issues/63> gets resolved, do this directly through the OpenGL package
 fragmentHighp :: IO Bool
 fragmentHighp = allocaArray 2 $ \p -> alloca $ \q -> do
   glGetShaderPrecisionFormat gl_FRAGMENT_SHADER gl_HIGH_FLOAT p q
@@ -80,11 +80,10 @@ defined f = shaderEnvCpphsOpts go where
 
 buildShaderEnv :: Options -> IO ShaderEnv
 buildShaderEnv opts = do
-  -- b <- fragmentHighp
-  let b = True
-  return $ ShaderEnv b defaultCpphsOptions 
+  highp <- fragmentHighp
+  return $ ShaderEnv highp defaultCpphsOptions 
     { defines = concat 
-      [ [ ("GL_FRAGMENT_PRECISION_HIGH","1") | b ]
+      [ [ ("GL_FRAGMENT_PRECISION_HIGH","1") | highp ]
       , [ ("__VERSION__","410")
         , ("GL_core_profile","1")
         ]

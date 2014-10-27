@@ -2,7 +2,7 @@
 --
 -- So far this is just Graphics.UI.SDL.Basic minus log handling and hints
 -- plus a few other things 
-module Engine.SDL.Basic
+module Quine.SDL.Basic
   ( 
   -- * Initialization and Shutdown
     init
@@ -22,11 +22,11 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.Functor
 import Data.Version as Data
-import Engine.SDL.Exception
 import Foreign
 import Foreign.C
 import qualified Graphics.UI.SDL as SDL
 import Prelude hiding (init)
+import Quine.SDL.Exception
 
 -- * Initialization
 

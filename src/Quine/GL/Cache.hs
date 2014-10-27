@@ -9,7 +9,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
-module Engine.GL.Cache
+module Quine.GL.Cache
   ( 
   -- * Cache
     Cache(..)

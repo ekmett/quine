@@ -1,23 +1,23 @@
 {-# LANGUAGE TemplateHaskell, DeriveGeneric, DeriveDataTypeable #-}
-module Engine.Options where
+module Quine.Options where
 
 import Control.Applicative
 import Control.Lens
 import Data.Data
 import Data.Default
-import Engine.Monitor.Options
 import GHC.Generics
 import Options.Applicative
-import Paths_engine
+import Paths_quine
 import Prelude hiding (init)
+import Quine.Monitor.Options
 
 data Options = Options
-  { _optionsMonitorOptions    :: MonitorOptions
-  , _optionsFullScreen        :: !Bool
-  , _optionsFullScreenDesktop :: !Bool
-  , _optionsHighDPI           :: !Bool
-  , _optionsWindowWidth       :: !Int
-  , _optionsWindowHeight      :: !Int
+  { _optionsMonitorOptions   :: MonitorOptions
+  , _optionsFullScreen       :: !Bool
+  , _optionsFullScreenNormal :: !Bool
+  , _optionsHighDPI          :: !Bool
+  , _optionsWindowWidth      :: !Int
+  , _optionsWindowHeight     :: !Int
   , _optionsDataDir :: !FilePath
   } deriving (Generic,Data,Typeable)
 
@@ -33,7 +33,7 @@ parseOptions = do
   return $ Options 
        <$> parseMonitorOptions
        <*> switch (long "full-screen" <> short 'f' <> help "open full-screen on launch")
-       <*> switch (long "full-screen-to-desktop" <> short 'n' <> help "keep desktop resolution when going full screen")
+       <*> switch (long "real-full-screen" <> short 'n' <> help "use real full screen; exiting is buggy on OS X with SDL 2.0.3")
        <*> switch (long "retina" <> short 'r' <> help "exploit a retina display if it available")
        <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 1024)
        <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 768)
