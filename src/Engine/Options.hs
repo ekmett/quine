@@ -1,24 +1,38 @@
 {-# LANGUAGE TemplateHaskell, DeriveGeneric, DeriveDataTypeable #-}
 module Engine.Options where
 
--- import Control.Applicative
+import Control.Applicative
 import Control.Lens
 import Data.Data
 import Data.Default
+import Engine.Monitor.Options
 import GHC.Generics
+import Options.Applicative
 import Paths_engine
 import Prelude hiding (init)
 
 data Options = Options
-  { _optionsFullScreen :: !Bool
+  { _optionsMonitorOptions :: MonitorOptions
+  , _optionsFullScreen :: !Bool
+  , _optionsHighDPI :: !Bool
+  , _optionsWindowWidth :: !Int
+  , _optionsWindowHeight :: !Int
+  , _optionsDataDir :: !FilePath
   } deriving (Generic,Data,Typeable)
 
 makeClassy ''Options
 
-parseOptions :: IO Options
+-- we need to set up the data directory first
+parseOptions :: IO (Parser Options)
 parseOptions = do
-  _dd <- getDataDir
-  return $ Options True 
+  dd <- getDataDir
+  return $ Options 
+       <$> parseMonitorOptions
+       <*> switch (long "full-screen" <> short 'f' <> help "open full-screen on launch")
+       <*> switch (long "retina" <> short 'r' <> help "exploit a retina display if it available")
+       <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 1024)
+       <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 768)
+       <*> option auto (long "data" <> short 'd' <> help "location of the data directory" <> metavar "DIR" <> action "directory" <> value dd)
 
 instance Default Options where
-  def = Options True
+  def = Options def False False 1024 768 "data"

@@ -1,12 +1,13 @@
 {-# LANGUAGE TemplateHaskell, PatternSynonyms #-}
 module Main where
 
+import Control.Applicative
 import Control.Concurrent
 import Control.Lens
 import Control.Monad hiding (forM_)
--- import Control.Monad.Random
 import Control.Monad.State
 import Data.Default
+import Data.Monoid
 import Engine.Display
 import Engine.Options
 import Engine.SDL.Basic
@@ -21,6 +22,7 @@ import Graphics.UI.SDL.Enum.Pattern as SDL
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
+import Options.Applicative
 import Prelude hiding (init)
 
 warn :: HasDisplay s => String -> String -> StateT s IO ()
@@ -31,9 +33,16 @@ warn t m = do
 
 main :: IO ()
 main = runInBoundThread $ withCString "engine" $ \windowName -> do
-  opts <- parseOptions
+  optsParser <- parseOptions
+
+  opts <- execParser $ info (helper <*> optsParser) $
+    fullDesc
+    <> progDesc "engine"
+    <> header "Engine"
+
   ver <- version
   putStrLn $ "SDL2 " ++ show ver
+
   init InitFlagEverything
   contextMajorVersion $= 4
   contextMinorVersion $= 1
@@ -47,9 +56,9 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   let flags = WindowFlagOpenGL
           .|. WindowFlagShown
           .|. WindowFlagResizable
-          .|. WindowFlagAllowHighDPI
-          .|. if opts^.optionsFullScreen then WindowFlagFullscreen else 0
-  window <- createWindow windowName WindowPosUndefined WindowPosUndefined 1024 768 flags
+          .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
+          .|. (if opts^.optionsFullScreen then WindowFlagFullscreen else 0)
+  window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral $ opts^.optionsWindowWidth) (fromIntegral $ opts^.optionsWindowHeight) flags
   cxt <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
   _ <- execStateT (forever $ poll >> render) $ Display window cxt (opts^.optionsFullScreen) def

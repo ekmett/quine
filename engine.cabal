@@ -36,6 +36,9 @@ library
     Engine.Display
     Engine.GL.Cache
     Engine.GL.Shader
+    Engine.Monitor.Combinators
+    Engine.Monitor.Exception
+    Engine.Monitor.Options
     Engine.Options
     Engine.SDL.Basic
     Engine.SDL.Exception
@@ -52,11 +55,13 @@ library
     containers,
     contravariant,
     distributive,
+    ekg,
     lens,
     linear,
     mtl,
     OpenGL,
     OpenGLRaw,
+    optparse-applicative,
     sdl2 >= 1.1.3,
     text,
     transformers,
@@ -79,6 +84,7 @@ executable engine
     MonadRandom,
     OpenGL,
     OpenGLRaw,
+    optparse-applicative,
     sdl2 >= 1.1.3,
     transformers
 
