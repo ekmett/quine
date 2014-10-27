@@ -92,7 +92,7 @@ buildShaderEnv opts = do
 
 boolOptions :: BoolOptions
 boolOptions = defaultBoolOptions 
-  { macros    = False -- don't leave #defines in
+  { macros    = True  -- might as well leave #defines in
   , locations = False -- #line directives in glsl have a different format
   , hashline  = False
   , pragma    = True
