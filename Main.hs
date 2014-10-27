@@ -5,11 +5,12 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Lens
 import Control.Monad hiding (forM_)
+import Control.Monad.Reader
 import Control.Monad.State
-import Data.Default
 import Data.Monoid
 import Engine.Display
 import Engine.Options
+import Engine.GL.Shader
 import Engine.SDL.Basic
 import Engine.SDL.Video
 import Foreign
@@ -24,6 +25,10 @@ import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
+
+data World = World { _worldProgram :: !Program, _worldDisplay :: !Display }
+
+makeClassy ''World
 
 main :: IO ()
 main = runInBoundThread $ withCString "engine" $ \windowName -> do
@@ -54,9 +59,15 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral $ opts^.optionsWindowWidth) (fromIntegral $ opts^.optionsWindowHeight) flags
   cxt <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
+  se <- buildShaderEnv opts
+  runReaderT ?? se $ do
+    screenShader <- compile VertexShader "screen.vert"
+    return ()
+
   -- set up the rest of the context
-  let d = Display window cxt (opts^.optionsFullScreen) def
-  evalStateT (forever $ poll >> render) d
+  -- let d = Display window cxt (opts^.optionsFullScreen) def
+  -- w = World 
+  -- evalStateT (forever $ poll >> render) w
 
 render :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
 render = do

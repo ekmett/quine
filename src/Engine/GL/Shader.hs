@@ -1,67 +1,125 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | Shader support
 --
 -- TODO: consider supporting binary shader formats for faster startup
 module Engine.GL.Shader 
-  ( compile
+  ( ShaderEnv
+  , HasShaderEnv(..)
+  , buildShaderEnv
+  , cpp
+  , compile
   , link
   , Shader
   ) where
 
+import Control.Applicative
+import Control.Lens
 import Control.Monad
+import Control.Monad.IO.Class
+import Control.Monad.Reader.Class
 import Data.ByteString.UTF8 as UTF8
-import Data.Functor
+import Data.Typeable
+import Engine.Options
+import Foreign.Marshal.Alloc
+import Foreign.Marshal.Array
+import Foreign.Ptr
+import Foreign.Storable
 import Graphics.Rendering.OpenGL
+import Graphics.Rendering.OpenGL.Raw.ARB.ES2Compatibility
+import Graphics.Rendering.OpenGL.Raw.ARB.FragmentShader
 import Language.Preprocessor.Cpphs
-import Paths_engine
+import System.Directory
+import System.FilePath
 
-opts :: CpphsOptions
-opts = defaultCpphsOptions 
-  { boolopts = defaultBoolOptions 
-    { macros = False
-    , locations = True
-    , hashline = True
-    , pragma = True
-    , stripEol = True
-    , stripC89 = True
-    , lang = False
-    , ansi = False
-    , layout = True
-    , literate = False
-    , warnings = True
+data ShaderEnv = ShaderEnv
+  { _shaderEnvFragmentHighPrecisionAvailable   :: !Bool
+  , _shaderEnvCpphsOpts :: CpphsOptions
+  } deriving Typeable
+
+makeClassy ''ShaderEnv
+
+-- cpphs solves includes for us, but it eats the GL_PRECISION_HIGH define!
+
+peek2 :: Storable a => Ptr a -> IO (a,a)
+peek2 p = (,) <$> peekElemOff p 0 <*> peekElemOff p 1
+
+-- TODO: when <https://github.com/haskell-opengl/OpenGL/issues/63> gets resolved, do this directly through OpenGL
+fragmentHighp :: IO Bool
+fragmentHighp = allocaArray 2 $ \p -> alloca $ \q -> do
+  glGetShaderPrecisionFormat gl_FRAGMENT_SHADER gl_HIGH_FLOAT p q
+  pq <- (,) <$> peek2 p <*> peek q
+  return $ pq /= ((0,0),0)
+
+defined :: HasShaderEnv s => Lens' s [(String,String)]
+defined f = shaderEnvCpphsOpts go where
+  go opts = f (defines opts) <&> \ds -> opts { defines = ds } 
+
+buildShaderEnv :: Options -> IO ShaderEnv
+buildShaderEnv opts = do
+  b <- fragmentHighp
+  return $ ShaderEnv b defaultCpphsOptions 
+    { defines = if b then [("GL_FRAGMENT_PRECISION_HIGH","1")]  else []
+    , boolopts = boolOptions 
+    , includes = [opts^.optionsDataDir]
     }
+
+boolOptions :: BoolOptions
+boolOptions = defaultBoolOptions 
+  { macros    = False -- don't leave #defines in
+  , locations = False -- the #line directive eats our #version ?
+  , hashline  = True
+  , pragma    = True
+  , stripEol  = True  -- strip comments
+  , stripC89  = True
+  , lang      = False -- C-like, not Haskell-like
+  , ansi      = False -- disallow ## tricks for now
+  , layout    = True  -- keep formatting
+  , literate  = False -- no literate shaders please
+  , warnings  = False -- we have to disable these or cpphs complains about #version
   }
 
-cpphs :: [(String,String)] -> FilePath -> IO String
-cpphs ds fp = do
-  fp' <- getDataFileName fp
-  content <- readFile fp'
-  dataDir <- getDataDir
-  runCpphs opts { defines = ds, includes = [dataDir, "data"] } fp' content
+readFirst :: [FilePath] -> FilePath -> IO (FilePath, String)
+readFirst [] fn = fail $ "missing file: " ++ fn
+readFirst (p:ps) fn = do
+  let pfn = p </> fn
+  ok <- doesFileExist pfn
+  if ok then (,) pfn <$> readFile pfn
+        else readFirst ps fn
+
+cpp :: (MonadIO m, MonadReader e m, HasShaderEnv e) => FilePath -> m String
+cpp fp = do
+  opts <- view shaderEnvCpphsOpts
+  liftIO $ do
+    (fp',content) <- readFirst (includes opts) fp
+    runCpphs opts fp' content
 
 -- | Compile a shader with a given set of defines
-compile :: ShaderType -> [(String,String)] -> FilePath -> IO Shader
-compile st ds fp = do
-  source <- UTF8.fromString <$> cpphs ds fp
-  s <- createShader st
-  shaderSourceBS s $= source
-  compileShader s
-  ok <- get (compileStatus s)
-  unless ok $ do
-    e <- get (shaderInfoLog s)
-    deleteObjectName s
-    fail e
-  return s
+compile :: (MonadIO m, MonadReader e m, HasShaderEnv e) => ShaderType -> FilePath -> m Shader
+compile st fp = do
+  ds <- view defined
+  source <- cpp fp
+  liftIO $ do
+    s <- createShader st
+    shaderSourceBS s $= UTF8.fromString source
+    compileShader s
+    ok <- get (compileStatus s)
+    unless ok $ do
+      e <- get (shaderInfoLog s)
+      deleteObjectName s
+      fail e
+    return s
   
 -- | Link a program and vertex shader to build a program
-link :: Shader -> Shader -> IO Program
-link vs fs = do
+link :: MonadIO m => Shader -> Shader -> m Program
+link vs fs = liftIO $ do
   p <- createProgram
   attachShader p vs
   attachShader p fs
   linkProgram p
   linked <- get $ linkStatus p
   unless linked $ do
-    e <- get (programInfoLog p)
+    e <- get $ programInfoLog p
     deleteObjectName p
     fail e
   return p
