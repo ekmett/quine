@@ -1,4 +1,4 @@
-module Engine.Shader where
+module Engine.GL.Shader where
 
 import Language.Preprocessor.Cpphs
 import Paths_engine

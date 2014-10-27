@@ -32,11 +32,11 @@ source-repository head
 
 library
   exposed-modules:
-    Engine.Generator
+    Engine.GL.Generator
+    Engine.GL.Shader
     Engine.SDL.Basic
     Engine.SDL.Exception
     Engine.SDL.Video
-    Engine.Shader
   
   build-depends:
     aeson,

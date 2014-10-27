@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Engine.Generator 
+module Engine.GL.Generator 
   ( Generator(..)
   , HasGenerator(..)
+  , textureGenerator, bufferGenerator, queryGenerator, renderbufferGenerator, vertexArrayGenerator
+  , pool
   -- * Cache
   , Cache(..)
   , HasCache(..)
