@@ -7,9 +7,11 @@ import Control.Lens
 import Control.Monad hiding (forM_)
 import Control.Monad.Reader
 import Control.Monad.State
+import Data.ByteString.Lens
 import Data.Default
 import Data.Monoid
 import Engine.Display
+import Engine.Monitor
 import Engine.Options
 import Engine.GL.Shader
 import Engine.SDL.Basic
@@ -27,7 +29,7 @@ import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
 
-data World = World { _worldProgram :: !Program, _worldDisplay :: !Display }
+data World = World { _worldProgram :: !Program, _worldDisplay :: !Display, _worldMonitor :: Maybe Server }
 
 makeClassy ''World
 
@@ -42,6 +44,13 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
     fullDesc
     <> progDesc "engine"
     <> header "Engine"
+
+  server <- if opts^.monitorEnabled
+    then do
+      putStrLn $ "Monitoring enabled at http://" ++ opts^.monitorHost ++ ":" ++ show (opts^.monitorPort) ++ "/"
+      Just <$> forkServer (opts^.monitorHost.packedChars) (opts^.monitorPort)
+    else pure Nothing
+
 
   ver <- version
   putStrLn $ "SDL2 " ++ show ver
@@ -70,7 +79,7 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
     screenShader <- compile VertexShader   "screen.vert"
     whiteShader  <- compile FragmentShader "white.frag"
     prog <- link screenShader whiteShader
-    evalStateT (forever $ poll >> render) $ World prog disp
+    evalStateT (forever $ poll >> render) $ World prog disp server
 
 render :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
 render = do

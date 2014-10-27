@@ -22,6 +22,9 @@ data Options = Options
 
 makeClassy ''Options
 
+instance HasMonitorOptions Options where
+  monitorOptions = optionsMonitorOptions
+
 -- we need to set up the data directory first
 parseOptions :: IO (Parser Options)
 parseOptions = do
