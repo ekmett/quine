@@ -31,7 +31,6 @@ source-repository head
   location: git://github.com/ekmett/engine.git
 
 library
-  hs-source-dirs: src
   exposed-modules:
     Engine.SDL.Basic
     Engine.SDL.Exception
