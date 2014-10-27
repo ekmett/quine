@@ -4,13 +4,18 @@
 --
 -- TODO: consider supporting binary shader formats for faster startup
 module Quine.GL.Shader 
-  ( ShaderEnv
-  , ShaderException(..)
+  ( 
+  -- * Shader compilation environment
+    ShaderEnv
   , HasShaderEnv(..)
   , buildShaderEnv
+  -- * Compiling and Linking
   , compile
   , link
-  -- * Internal details
+  -- * Exceptions
+  , ProgramException(..), _ProgramException
+  , ShaderException(..), _ShaderException
+  -- * Internals
   , cpp
   , defined
   ) where
@@ -31,7 +36,6 @@ import Foreign.Storable
 import Graphics.Rendering.OpenGL
 import Graphics.Rendering.OpenGL.Raw.ARB.ES2Compatibility
 import Graphics.Rendering.OpenGL.Raw.ARB.FragmentShader
-import Graphics.Rendering.OpenGL.GLU.Errors
 import Language.Preprocessor.Cpphs
 import Quine.Options
 import System.Directory
@@ -41,19 +45,19 @@ import System.IO
 data ShaderException = ShaderException
   { shaderExceptionFileName :: String
   , shaderExceptionLog :: String
-  , shaderExceptionErrors :: [Error]
-  , shaderExceptionSource :: String
-  } deriving Typeable
+  } deriving (Show,Typeable)
 instance Exception ShaderException
-instance Show ShaderException where
-  show (ShaderException fp log es source) = 
-    fp ++ ": error: Shader Exception" ++ 
-    "\nlog:\n" ++ log ++
-    "\nerrors:\n" ++ unlines (show <$> es) ++
-    "\nsource:\n" ++ source
 
 _ShaderException :: Prism' SomeException ShaderException
 _ShaderException = exception
+
+data ProgramException = ProgramException
+  { programExceptionLog :: String
+  } deriving (Show,Typeable)
+instance Exception ProgramException
+
+_ProgramException :: Prism' SomeException ProgramException
+_ProgramException = exception
 
 data ShaderEnv = ShaderEnv
   { _shaderEnvFragmentHighPrecisionAvailable   :: !Bool
@@ -137,9 +141,8 @@ compile st fp = do
     compiled <- get (compileStatus s)
     unless compiled $ do
       e <- get (shaderInfoLog s)
-      es <- get errors
       deleteObjectName s
-      throw $ ShaderException fp e es source
+      throw $ ShaderException fp e
     return s
   
 -- | Link a program and vertex shader to build a program
@@ -153,5 +156,5 @@ link vs fs = liftIO $ do
   unless linked $ do
     e <- get $ programInfoLog p
     deleteObjectName p
-    fail e
+    throw $ ProgramException e
   return p
