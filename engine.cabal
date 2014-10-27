@@ -31,17 +31,22 @@ source-repository head
   location: git://github.com/ekmett/engine.git
 
 library
+  hs-source-dirs: src
   exposed-modules:
-    Engine.GL.Generator
+    Engine.GL.Cache
     Engine.GL.Shader
     Engine.SDL.Basic
     Engine.SDL.Exception
     Engine.SDL.Video
+
+  other-modules:
+    Paths_engine
   
   build-depends:
     aeson,
     base >= 4.7 && < 5,
     cpphs,
+    data-default,
     containers,
     contravariant,
     distributive,
@@ -64,6 +69,7 @@ executable engine
   build-depends:
     base >= 4.7 && < 5,
     containers,
+    data-default,
     engine,
     lens,
     linear,

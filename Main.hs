@@ -7,9 +7,11 @@ import Control.Lens
 import Control.Monad hiding (forM_)
 -- import Control.Monad.Random
 import Control.Monad.State
+import Data.Default
 import Engine.SDL.Basic
 import Engine.SDL.Exception
 import Engine.SDL.Video
+import Engine.GL.Cache
 import Foreign
 import Foreign.C
 import System.Exit
@@ -21,10 +23,13 @@ import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Prelude hiding (init)
 
-data Config = Config { _configFullScreen :: !Bool, _configWindow :: Window }
+data Config = Config { _configFullScreen :: !Bool, _configWindow :: Window, _configCaches :: Caches }
 
 makeClassy ''Config
 
+instance HasCaches Config where
+  caches = configCaches
+  
 warn :: HasConfig s => String -> String -> StateT s IO ()
 warn t m = do
   window <- use configWindow
@@ -50,7 +55,7 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
   -- renderingContext <- glCreateContext window
   _ <- glCreateContext window
   glEnable gl_FRAMEBUFFER_SRGB
-  () <$ execStateT (forever $ poll >> render) (Config False window) --  renderingContext)
+  () <$ execStateT (forever $ poll >> render) (Config False window def)
 
 render :: (MonadIO m, MonadState s m, HasConfig s) => m ()
 render = do
