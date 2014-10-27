@@ -1,7 +1,7 @@
-Engine
-======
+Quine
+=====
 
-[![Build Status](https://secure.travis-ci.org/ekmett/engine.svg)](http://travis-ci.org/ekmett/engine)
+[![Build Status](https://secure.travis-ci.org/ekmett/quine.svg)](http://travis-ci.org/ekmett/quine)
 
 This is just me waxing nostalgic and throwing together some code for playing with graphics.
 
