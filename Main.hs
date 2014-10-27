@@ -8,6 +8,7 @@ import Control.Monad hiding (forM_)
 -- import Control.Monad.Random
 import Control.Monad.State
 import Engine.SDL.Basic
+import Engine.SDL.Exception
 import Engine.SDL.Video
 import Engine.Var
 import Foreign
@@ -24,6 +25,12 @@ import Prelude hiding (init)
 data Config = Config { _configFullScreen :: !Bool, _configWindow :: Window }
 
 makeClassy ''Config
+
+warn :: HasConfig s => String -> String -> StateT s IO ()
+warn t m = do
+  window <- use configWindow
+  liftIO $ withCString t $ \title -> withCString m $ \message ->
+    showSimpleMessageBox MessageBoxFlagWarning title message window >>= err
 
 main :: IO ()
 main = runInBoundThread $ withCString "engine" $ \windowName -> do
@@ -65,15 +72,18 @@ poll = StateT $ \s -> alloca $ \ep -> runStateT (go ep) s where
     handleEvent e
     go ep
 
-handleEvent :: HasConfig s => SDL.Event -> StateT s IO ()
-handleEvent QuitEvent{} = shutdown
--- escape
-handleEvent KeyboardEvent{keyboardEventKeysym=Keysym{keysymKeycode = KeycodeEscape}} = shutdown
--- alt-enter, full screen toggle
-handleEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = KeycodeReturn, keysymMod = m }} 
-  | m .&. (KeymodRAlt .|. KeymodLAlt .|. KeymodRGUI .|. KeymodLGUI) /= 0 = do
+guiKey :: HasConfig s => Keycode -> StateT s IO ()
+guiKey KeycodeQ = shutdown
+guiKey KeycodeReturn = do
   fs <- configFullScreen <%= not
   w  <- use configWindow
   _ <- liftIO $ setWindowFullscreen w $ if fs then WindowFlagFullscreenDesktop else 0
   return ()
+guiKey e = liftIO $ print $ "Command " ++ show e
+
+handleEvent :: HasConfig s => SDL.Event -> StateT s IO ()
+handleEvent QuitEvent{} = shutdown
+-- escape
+handleEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
+  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0 = guiKey k
 handleEvent e = liftIO $ print e

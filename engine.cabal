@@ -51,6 +51,8 @@ library
     containers,
     contravariant,
     distributive,
+    ekg,
+    haskeline,
     lens,
     linear,
     mtl,
