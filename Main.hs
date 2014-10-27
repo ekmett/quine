@@ -130,7 +130,7 @@ main = runInBoundThread $ withCString "engine" $ \windowName -> do
          quit
          exitSuccess
 
-    result <- trying _Shutdown $ finally cleanup $ runReaderT ?? System mon opts se $ do
+    result <- trying _Shutdown $ finally ?? cleanup $ runReaderT ?? System mon opts se $ do
       liftIO $ hPutStrLn stderr "compiling screen.vert"
       screenShader <- compile VertexShader   "screen.vert"
       liftIO $ hPutStrLn stderr "compiling white.frag"
