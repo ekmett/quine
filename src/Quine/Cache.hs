@@ -18,7 +18,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Quine.GL.Cache
+module Quine.Cache
   ( 
   -- * Cache
     Cache(..)

@@ -13,7 +13,7 @@
 -- TODO: consider supporting binary shader formats for faster startup
 --------------------------------------------------------------------
 
-module Quine.GL.Shader 
+module Quine.Shader 
   ( 
   -- * Shader compilation environment
     ShaderEnv

@@ -1,4 +1,8 @@
-{-# LANGUAGE TemplateHaskell, PatternSynonyms, DeriveDataTypeable, OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -34,13 +38,15 @@ import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
+import Quine.Cache
 import Quine.Display
-import Quine.GL.Cache
-import Quine.GL.Shader
 import Quine.Monitor
 import Quine.Options
+import Quine.Shader
 import Quine.Shutdown
 import Quine.SDL
+
+#include "data/locations.h"
 
 -- * Environment
 data System = System
@@ -163,7 +169,10 @@ render = do
   w <- use displayWindow
   use displayWindowSizeChanged >>= \c -> when c $ do
     sz <- use displayWindowSize
-    liftIO $ viewport $= (Position 0 0, sz)
+    -- awsz <- liftIO $ get (windowSize w)
+    -- liftIO $ viewport $= (Position 0 0, sz)
+    liftIO $ print sz
+    -- displayWindowSize .= sz
     displayWindowSizeChanged .= False
   liftIO $ do
     clearColor $= Color4 0 1 0 1

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -46,6 +47,7 @@ module Quine.SDL
   , swapInterval
   , windowDisplayMode
   , desktopDisplayMode
+  , windowSize
   , makeCurrent
   , xmapStateVar
   -- * Extensible Exceptions
@@ -62,6 +64,7 @@ import Data.Typeable
 import Data.Version as Data
 import Foreign
 import Foreign.C
+import Graphics.Rendering.OpenGL.GL.CoordTrans
 import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Graphics.UI.SDL (GLattr)
@@ -245,6 +248,18 @@ desktopDisplayMode :: Int -> IO SDL.DisplayMode
 desktopDisplayMode idx = alloca $ \p -> do
   SDL.getDesktopDisplayMode (fromIntegral idx) p >>= err
   peek p
+
+elemOff :: forall a. Storable a => Ptr a -> Int -> Ptr a
+elemOff p n = p `plusPtr` (n * sizeOf (undefined :: a))
+
+windowSize :: SDL.Window -> StateVar Size
+windowSize win = makeStateVar g s where
+ g = allocaArray 2 $ \p -> do
+   SDL.getWindowSize win p (elemOff p 1)
+   w <- peek p
+   h <- peekElemOff p 1
+   return $ Size (fromIntegral w) (fromIntegral h)
+ s (Size w h) = SDL.setWindowSize win (fromIntegral w) (fromIntegral h)
 
 -- | Abstracts over @SDL_GL_GetSwapInterval@ / @SDL_GL_SetSwapInterval@
 --

@@ -22,7 +22,7 @@ import Foreign.C
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
 import Graphics.Rendering.OpenGL.GL.CoordTrans
-import Quine.GL.Cache
+import Quine.Cache
 import Quine.SDL
 import System.IO
 

@@ -33,12 +33,12 @@ source-repository head
 library
   hs-source-dirs: src
   exposed-modules:
+    Quine.Cache
     Quine.Display
-    Quine.GL.Cache
-    Quine.GL.Shader
     Quine.Monitor
     Quine.Options
     Quine.SDL
+    Quine.Shader
     Quine.Shutdown
 
   other-modules:
