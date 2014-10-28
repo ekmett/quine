@@ -37,7 +37,7 @@ import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
-import Data.ByteString.UTF8 as UTF8
+import qualified Data.ByteString.UTF8 as UTF8
 import Data.Typeable
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
@@ -109,7 +109,7 @@ buildShaderEnv opts = do
 
 boolOptions :: BoolOptions
 boolOptions = defaultBoolOptions 
-  { macros    = False
+  { macros    = True
   , locations = False -- #line directives in glsl have a different format
   , hashline  = False
   , pragma    = True
@@ -140,10 +140,14 @@ cpp fp = do
     (fp',content) <- readFirst (includes opts) fp
     runCpphs opts fp' content
 
+hack :: String -> String
+hack ('#':'p':'r':'a':'g':'m':'a':' ':xs) = '#':xs
+hack xs = xs
+
 -- | Compile a shader with a given set of defines
 compile :: (MonadIO m, MonadReader e m, HasShaderEnv e) => ShaderType -> FilePath -> m Shader
 compile st fp = do
-  source <- cpp fp
+  source <- liftM (unlines . map hack . lines) $ cpp fp
   liftIO $ do
     s <- createShader st
     shaderSourceBS s $= UTF8.fromString source
