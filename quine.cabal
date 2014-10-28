@@ -13,7 +13,7 @@ copyright:     Copyright (C) 2014 Edward A. Kmett
 build-type:    Simple
 tested-with:   GHC == 7.8.3
 synopsis:      Quine
-description:   Quine
+description:   Shader toys
 
 extra-source-files:
   .ghci
