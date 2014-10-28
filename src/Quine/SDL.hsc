@@ -7,11 +7,21 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
+-- Prettier SDL bindings
 --------------------------------------------------------------------
-module Quine.SDL.Video
+module Quine.SDL
   ( 
+    init
+  , initSubSystem
+  , quit
+  , quitSubSystem
+  , wasInit
+  -- * Versioning
+  , version
+  , revision
+  , revisionNumber
   -- * Attribute StateVars
-    contextMajorVersion
+  , contextMajorVersion
   , contextMinorVersion
   , contextFlags
   , contextProfileMask
@@ -38,18 +48,74 @@ module Quine.SDL.Video
   , desktopDisplayMode
   , makeCurrent
   , xmapStateVar
+  -- * Extensible Exceptions
+  , SDLException(..)
+  -- * Utilities
+  , err
   ) where
 
+import Control.Exception
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Functor
+import Data.Typeable
+import Data.Version as Data
 import Foreign
+import Foreign.C
 import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Graphics.UI.SDL (GLattr)
 import Prelude hiding (init)
-import Quine.SDL.Exception
 
+#include "SDL.h"
+
+-- | This is thrown in the event of an error in the @Quine.SDL@ combinators
+newtype SDLException = SDLException String
+  deriving (Show, Typeable)
+
+instance Exception SDLException
+
+-- | Treat negative return codes as prompting an error check.
+err :: CInt -> IO ()
+err e 
+  | e < 0 = do
+    msg <- SDL.getError >>= peekCString
+    SDL.clearError
+    when (msg /= "") $ throw $ SDLException msg
+  | otherwise = return ()
+
+-- * Initialization
+
+init :: MonadIO m => SDL.InitFlag -> m ()
+init x = liftIO (SDL.init x >>= err)
+
+initSubSystem :: MonadIO m => SDL.InitFlag -> m ()
+initSubSystem x = liftIO (SDL.initSubSystem x >>= err)
+
+quit :: MonadIO m => m ()
+quit = liftIO SDL.quit
+
+quitSubSystem :: MonadIO m => SDL.InitFlag -> m ()
+quitSubSystem = liftIO . SDL.quitSubSystem
+
+wasInit :: MonadIO m => SDL.InitFlag -> m SDL.InitFlag
+wasInit = liftIO . SDL.wasInit
+
+-- * Version
+
+-- | Get the Version (and Revision)
+version :: MonadIO m => m Data.Version
+version = liftIO $ alloca $ \p -> do
+  SDL.getVersion p
+  SDL.Version x y z <- peek p
+  w <- revisionNumber
+  return $ Data.Version (fromIntegral <$> [fromIntegral x,fromIntegral y,fromIntegral z, w]) []
+
+revision :: MonadIO m => m String
+revision = liftIO $ SDL.getRevision >>= peekCString
+
+revisionNumber :: MonadIO m => m Int
+revisionNumber = liftIO $ fromIntegral <$> SDL.getRevisionNumber
 -- * Attribute StateVars
   
 -- | get\/set @SDL_GL_RED_SIZE@, the minimum number of bits for the red channel of the color buffer; defaults to 3
@@ -210,3 +276,4 @@ setAttr a i = SDL.glSetAttribute a (fromIntegral i) >>= err
 
 makeCurrent :: MonadIO m => SDL.Window -> SDL.GLContext -> m ()
 makeCurrent w c = liftIO (SDL.glMakeCurrent w c >>= err)
+

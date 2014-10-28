@@ -38,9 +38,7 @@ library
     Quine.GL.Shader
     Quine.Monitor
     Quine.Options
-    Quine.SDL.Basic
-    Quine.SDL.Exception
-    Quine.SDL.Video
+    Quine.SDL
     Quine.Shutdown
 
   other-modules:

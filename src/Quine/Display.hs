@@ -23,7 +23,7 @@ import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
 import Graphics.Rendering.OpenGL.GL.CoordTrans
 import Quine.GL.Cache
-import Quine.SDL.Exception
+import Quine.SDL
 import System.IO
 
 -- basic opengl + sdl display for the screen, etc.

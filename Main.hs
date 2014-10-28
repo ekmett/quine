@@ -40,8 +40,7 @@ import Quine.GL.Shader
 import Quine.Monitor
 import Quine.Options
 import Quine.Shutdown
-import Quine.SDL.Basic
-import Quine.SDL.Video
+import Quine.SDL
 
 -- * Environment
 data System = System
