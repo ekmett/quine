@@ -39,13 +39,9 @@ module Quine.Monitor
   , HasMonitorOptions(..)
   , parseMonitorOptions
   , monitorUri
-  -- * Internal exception type
-  , ShutdownMonitor(..)
-  , _ShutdownMonitor
   ) where
 
 import Control.Exception
-import Control.Exception.Lens
 import Control.Lens hiding (Setting)
 import Control.Monad.Trans
 import Control.Monad.Reader
@@ -56,6 +52,7 @@ import Data.Foldable as F
 import Data.Int
 import Data.Text
 import Options.Applicative
+import Quine.Exception
 import System.IO
 import System.Process
 import System.Remote.Monitoring
@@ -81,11 +78,6 @@ class Incremental t where
 
   add :: MonadIO m => t -> Int64 -> m ()
   add _ _ = return ()
-
-data ShutdownMonitor = ShutdownMonitor deriving (Show,Typeable,Data)
-instance Exception ShutdownMonitor
-_ShutdownMonitor :: Prism' SomeException ShutdownMonitor
-_ShutdownMonitor = exception
 
 -- | Enable/disable EKG
 
@@ -183,5 +175,5 @@ withMonitor t k
       -- TODO: check to see if we're on a mac first
       _ <- system $ "/usr/bin/open " ++ uri
       return ()
-    k (Monitor (t^.monitorOptions) $ Just server) `finally` throwTo (serverThreadId server) ShutdownMonitor
+    k (Monitor (t^.monitorOptions) $ Just server) `finally` throwTo (serverThreadId server) Shutdown
   | otherwise = k $ Monitor (t^.monitorOptions) Nothing

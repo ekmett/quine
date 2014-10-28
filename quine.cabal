@@ -34,11 +34,11 @@ library
   hs-source-dirs: src
   exposed-modules:
     Quine.Display
+    Quine.Exception
     Quine.GL
     Quine.Monitor
     Quine.Options
     Quine.SDL
-    Quine.Shutdown
 
   other-modules:
     Paths_quine

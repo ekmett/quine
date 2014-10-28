@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Quine.Shutdown
+module Quine.Exception
   ( Shutdown(..)
   , _Shutdown
   ) where

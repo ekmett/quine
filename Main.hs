@@ -42,11 +42,11 @@ import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Display
+import Quine.Exception
 import Quine.GL
 import Quine.Monitor
 import Quine.Options
 import Quine.SDL
-import Quine.Shutdown
 
 #include "data/locations.h"
 
@@ -98,7 +98,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 
   -- be careful with exceptions
   setUncaughtExceptionHandler $ \ e -> if
-    | is _Shutdown e || is _ShutdownMonitor e -> return ()
+    | is _Shutdown e -> return ()
     | otherwise -> do
       hPrint stderr e
       exitFailure
