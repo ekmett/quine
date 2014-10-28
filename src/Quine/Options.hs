@@ -18,7 +18,7 @@ import GHC.Generics
 import Options.Applicative
 import Paths_quine
 import Prelude hiding (init)
-import Quine.Monitor.Options
+import Quine.Monitor
 
 data Options = Options
   { _optionsMonitorOptions   :: MonitorOptions

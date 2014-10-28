@@ -30,9 +30,15 @@ module Quine.Monitor
   , withServer
   , forkServer
   -- * Modifiers
-  , module Quine.Monitor.Combinators
+  , Setting(..)
+  , Updating(..)
+  , Gauged(..)
+  , Incremental(..)
   -- * Options
-  , module Quine.Monitor.Options
+  , MonitorOptions(..)
+  , HasMonitorOptions(..)
+  , parseMonitorOptions
+  , monitorUri
   ) where
 
 import Control.Exception
@@ -40,18 +46,66 @@ import Control.Lens hiding (Setting)
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Data.ByteString.Lens
+import Data.Data
+import Data.Default
 import Data.Foldable as F
 import Data.Int
 import Data.Text
-import Quine.Monitor.Combinators
-import Quine.Monitor.Exception
-import Quine.Monitor.Options
+import Options.Applicative
 import System.IO
 import System.Process
 import System.Remote.Monitoring
 import qualified System.Remote.Gauge as G
 import qualified System.Remote.Counter as C
 import qualified System.Remote.Label as L
+
+class Setting t a | t -> a where
+  assign :: MonadIO m => t -> a -> m ()        -- set
+  assign _ _ = return ()
+
+class Updating t a | t -> a where
+  update :: MonadIO m => t -> (a -> a) -> m () -- modify
+  update _ _ = return ()
+
+class Num a => Gauged t a | t -> a where
+  dec :: MonadIO m => t -> m ()
+  sub :: MonadIO m => t -> a -> m ()
+
+class Incremental t where
+  inc :: MonadIO m => t -> m ()
+  inc _ = return ()
+
+  add :: MonadIO m => t -> Int64 -> m ()
+  add _ _ = return ()
+
+data ShutdownMonitor = ShutdownMonitor deriving (Show,Typeable,Data)
+
+instance Exception ShutdownMonitor
+
+-- | Enable/disable EKG
+
+data MonitorOptions = MonitorOptions
+  { _monitorHost    :: String
+  , _monitorPort    :: Int
+  , _monitorEnabled :: Bool
+  , _monitorOpen    :: Bool
+  } deriving (Eq,Ord,Show,Read,Data,Typeable)
+
+makeClassy ''MonitorOptions
+
+monitorUri :: HasMonitorOptions t => t -> String
+monitorUri t = "http://" ++ t^.monitorHost ++ ":" ++ show (t^.monitorPort) ++ "/"
+
+-- | Parse EKG configuration
+parseMonitorOptions :: Parser MonitorOptions
+parseMonitorOptions = MonitorOptions
+  <$> strOption (long "ekg-host" <> short 'H' <> help "host for the EKG server" <> metavar "HOST" <> action "hostname" <> value "localhost")
+  <*> option auto (long "ekg-port" <> short 'P' <> help "port for the EKG server" <> metavar "PORT" <> value 5616)
+  <*> (not <$> switch (long "no-ekg" <> short 'Q' <> help "do NOT start the EKG server"))
+  <*> switch (long "ekg-open" <> short 'M' <> help "open EKG on launch")
+
+instance Default MonitorOptions where
+  def = MonitorOptions "localhost" 5616 True False
 
 -- | Enable/disable EKG
 

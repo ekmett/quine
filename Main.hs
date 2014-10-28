@@ -65,8 +65,8 @@ instance HasShaderEnv System where
 
 data World = World
   { _worldProgram  :: !Program
-  , _worldDisplay  :: !Display
   , _worldEmptyVAO :: !VertexArrayObject
+  , _worldDisplay  :: !Display
   } deriving Typeable
 
 makeClassy ''World
@@ -118,7 +118,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
             .|. WindowFlagResizable
             .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
             .|. (if opts^.optionsFullScreen then (if opts^.optionsFullScreenNormal then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0)
-    window <- createWindow windowName WindowPosUndefined WindowPosUndefined (fromIntegral w) (fromIntegral h) flags
+    window <- createWindow windowName WindowPosCentered WindowPosCentered (fromIntegral w) (fromIntegral h) flags
 
     -- start OpenGL
     cxt <- glCreateContext window
@@ -139,13 +139,15 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           , _displayVisible = True
           }
 
-    let run = do
+    let build = do
           screenShader <- compile VertexShader   "screen.vert"
           whiteShader  <- compile FragmentShader "white.frag"
           prog <- link screenShader whiteShader
           emptyVAO <- generate
           sanityCheck
-          evalStateT (forever $ poll >> render) $ World prog disp emptyVAO
+          gets $ World prog emptyVAO
+        
+    let run = evalStateT build disp >>= evalStateT (forever $ poll >> render)
 
     let cleanup = do
           glDeleteContext cxt
@@ -189,7 +191,6 @@ poll = do
 
 event :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
 event QuitEvent{} = throw Shutdown
-event WindowEvent { eventType = WindowEventResized     } = return () -- eventd during size change, since we only get that in the event of an OS change
 event WindowEvent { eventType = WindowEventEnter       } = displayHasMouseFocus .= True
 event WindowEvent { eventType = WindowEventLeave       } = displayHasMouseFocus .= False
 event WindowEvent { eventType = WindowEventFocusGained } = displayHasKeyboardFocus .= True
@@ -205,6 +206,10 @@ event WindowEvent { eventType = WindowEventMoved       } = return () -- who care
 event WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
 event WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
   liftIO $ hPutStrLn stderr "size changed"
+  displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
+  displayWindowSizeChanged .= True
+event WindowEvent { eventType = WindowEventResized, windowEventData1 = w, windowEventData2 = h } = do
+  liftIO $ hPutStrLn stderr "resized"
   displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
   displayWindowSizeChanged .= True
 event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}

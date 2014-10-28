@@ -37,9 +37,6 @@ library
     Quine.GL.Cache
     Quine.GL.Shader
     Quine.Monitor
-    Quine.Monitor.Combinators
-    Quine.Monitor.Exception
-    Quine.Monitor.Options
     Quine.Options
     Quine.SDL.Basic
     Quine.SDL.Exception
