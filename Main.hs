@@ -42,9 +42,10 @@ import Quine.Cache
 import Quine.Display
 import Quine.Monitor
 import Quine.Options
+import Quine.SDL
 import Quine.Shader
 import Quine.Shutdown
-import Quine.SDL
+import Quine.StateVar
 
 #include "data/locations.h"
 
@@ -88,9 +89,9 @@ instance Exception Errors
 
 -- | Check OpenGL for errors, throw them if we find them
 sanityCheck :: MonadIO m => m ()
-sanityCheck = liftIO $ do
-  es <- get errors
-  unless (null es) $ throw $ Errors es
+sanityCheck = do
+  es <- the errors
+  unless (null es) $ liftIO $ throw $ Errors es
 
 -- * Setup
 
@@ -109,14 +110,14 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
  
     -- start SDL
     init InitFlagEverything
-    contextMajorVersion $= 4
-    contextMinorVersion $= 1
-    contextProfileMask  $= GLProfileCore
-    redSize   $= 5
-    greenSize $= 5
-    blueSize  $= 5
-    depthSize $= 16
-    doubleBuffer $= True
+    contextMajorVersion &= 4
+    contextMinorVersion &= 1
+    contextProfileMask  &= GLProfileCore
+    redSize   &= 5
+    greenSize &= 5
+    blueSize  &= 5
+    depthSize &= 16
+    doubleBuffer &= True
     let w = opts^.optionsWindowWidth
         h = opts^.optionsWindowHeight
         flags = WindowFlagOpenGL
@@ -151,7 +152,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           whiteShader  <- compile FragmentShader "white.frag"
           scn <- link screenShader whiteShader
           vao <- generate
-          res <- liftIO $ get (uniformLocation scn "iResolution")
+          res <- the (uniformLocation scn "iResolution")
           sanityCheck
           gets $ World scn vao (uniform res)
         run = evalStateT build disp >>= evalStateT (forever $ poll >> resize >> render)
@@ -170,9 +171,9 @@ toVertex2 (Size w h) = Vertex2 (fromIntegral w) (fromIntegral h)
 resize :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
 resize = do
   w <- use displayWindow
-  sz <- liftIO $ get (windowSize w)
+  sz <- the (windowSize w)
   displayWindowSize .= sz
-  liftIO $ viewport $= (Position 0 0, sz)
+  viewport &= (Position 0 0, sz)
 {-
   use displayWindowSizeChanged >>= \c -> when c $ do
     sz <- use displayWindowSize
@@ -183,11 +184,11 @@ render :: (MonadIO m, MonadState s m, HasWorld s) => m ()
 render = do
   w <- use world
   liftIO $ do
-    clearColor $= Color4 0 1 0 1 -- scrub it green so we can see it
+    clearColor &= Color4 0 1 0 1 -- scrub it green so we can see it
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
-    currentProgram $= Just (w^.scene)
-    w^.iResolution $= toVertex2 (w^.displayWindowSize)
-    bindVertexArrayObject $= Just (w^.emptyVAO)
+    currentProgram &= Just (w^.scene)
+    w^.iResolution &= toVertex2 (w^.displayWindowSize)
+    bindVertexArrayObject &= Just (w^.emptyVAO)
     drawArrays Triangles 0 3
     glFlush
     glSwapWindow $ w^.displayWindow
@@ -235,4 +236,4 @@ event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{key
     w  <- use displayWindow
     _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsn then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0
     return ()
-event e = return () -- liftIO $ hPrint stderr e
+event _ = return () -- liftIO $ hPrint stderr e

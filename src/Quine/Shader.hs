@@ -140,6 +140,7 @@ cpp fp = do
     (fp',content) <- readFirst (includes opts) fp
     runCpphs opts fp' content
 
+-- | cpphs only copies through pragmas. write everything as a pragma.
 hack :: String -> String
 hack ('#':'p':'r':'a':'g':'m':'a':' ':xs) = '#':xs
 hack xs = xs
