@@ -41,14 +41,12 @@ import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
-import Quine.Cache
 import Quine.Display
+import Quine.GL
 import Quine.Monitor
 import Quine.Options
 import Quine.SDL
-import Quine.Shader
 import Quine.Shutdown
-import Quine.StateVar
 
 #include "data/locations.h"
 

@@ -68,7 +68,7 @@ import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Graphics.UI.SDL (GLattr)
 import Prelude hiding (init)
-import Quine.StateVar
+import Quine.GL
 
 #include "SDL.h"
 
