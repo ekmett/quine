@@ -202,9 +202,11 @@ compile st fp = do
     compiled <- the (compileStatus s)
     unless compiled $ do
       e <- the (shaderInfoLog s)
-      putStrLn source
+      -- putStrLn source
       deleteObjectName s
-      throw $ ShaderException fp e
+      let err = ShaderException fp e
+      print err
+      throw err
     return s
   
 -- | Link a program and vertex shader to build a program
