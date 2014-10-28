@@ -55,6 +55,8 @@ data System = System
   , _systemOptions   :: Options
   , _systemShaderEnv :: ShaderEnv
   , _frameCounter    :: Counter
+  , _widthGauge      :: Gauge
+  , _heightGauge     :: Gauge
   } deriving Typeable
 
 makeLenses ''System
@@ -137,7 +139,9 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   sanityCheck
   se <- buildShaderEnv opts
   fc <- counter "quine.frame" ekg
-  let sys = System ekg opts se fc
+  vw <- gauge "viewport.width" ekg
+  vh <- gauge "viewport.height" ekg
+  let sys = System ekg opts se fc vw vh
       dsp = Display 
         { _displayWindow            = window
         , _displayGL                = cxt
@@ -194,11 +198,14 @@ toVertex2 (Size w h) = Vertex2 (fromIntegral w) (fromIntegral h)
 rescale :: Float -> Size -> Size
 rescale r (Size w h) = Size (floor $ r * fromIntegral w) (floor $ r * fromIntegral h)
 
-resize :: (MonadIO m, MonadReader e m, HasOptions e, MonadState s m, HasDisplay s) => m ()
+resize :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m ()
 resize = do
-  w <- use displayWindow
+  win  <- use displayWindow
   opts <- view options
-  sz <- rescale (pointScale opts) `liftM` the (windowSize w) -- retina
+  sz@(Size w h) <- rescale (pointScale opts) `liftM` the (windowSize win) -- retina
+  sys <- view system
+  assign (sys^.widthGauge)  $ fromIntegral w
+  assign (sys^.heightGauge) $ fromIntegral h
   viewport &= (Position 0 0, sz)
   displayWindowSize .= sz
 
