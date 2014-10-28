@@ -11,6 +11,8 @@ A couple of shader toys:
 
 ![screenshot of chains](https://raw.githubusercontent.com/ekmett/quine/master/data/chains.png)
 
+Now I need to make things fast.
+
 Build Instructions
 ==================
 
