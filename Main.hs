@@ -25,6 +25,7 @@ import Control.Monad.State hiding (get)
 import Data.Default
 import Data.Monoid
 import Data.Text.Lens
+import Data.Time.Clock
 import Data.Typeable
 import Foreign
 import Foreign.C
@@ -73,6 +74,8 @@ data World = World
   { _scene        :: !Program
   , _emptyVAO     :: !VertexArrayObject
   , _iResolution  :: !(StateVar (Vertex2 GLfloat))
+  , _iGlobalTime  :: !(StateVar GLfloat)
+  , _startTime    :: !UTCTime
   , _worldDisplay :: !Display
   } deriving Typeable
 
@@ -149,12 +152,14 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     let go = trying id (runReaderT run (System mon opts se)) >>= either print return
         build = do
           screenShader <- compile VertexShader   "screen.vert"
-          whiteShader  <- compile FragmentShader "white.frag"
+          whiteShader  <- compile FragmentShader "dodecahedron.frag"
           scn <- link screenShader whiteShader
           vao <- generate
           res <- the (uniformLocation scn "iResolution")
+          tim <- the (uniformLocation scn "iGlobalTime")
+          clk <- liftIO getCurrentTime
           sanityCheck
-          gets $ World scn vao (uniform res)
+          gets $ World scn vao (uniform res) (xmap Index1 (\(Index1 a) -> a) $ uniform tim) clk
         run = evalStateT build disp >>= evalStateT (forever $ poll >> resize >> render)
         cleanup = do
           glDeleteContext cxt
@@ -184,10 +189,12 @@ render :: (MonadIO m, MonadState s m, HasWorld s) => m ()
 render = do
   w <- use world
   liftIO $ do
-    clearColor &= Color4 0 1 0 1 -- scrub it green so we can see it
+    clearColor &= Color4 0 0 0 1 -- scrub it green so we can see it
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
+    now <- getCurrentTime
     currentProgram &= Just (w^.scene)
     w^.iResolution &= toVertex2 (w^.displayWindowSize)
+    w^.iGlobalTime &= realToFrac (diffUTCTime now $ w^.startTime)
     bindVertexArrayObject &= Just (w^.emptyVAO)
     drawArrays Triangles 0 3
     glFlush

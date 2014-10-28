@@ -49,7 +49,6 @@ module Quine.SDL
   , desktopDisplayMode
   , windowSize
   , makeCurrent
-  , xmapStateVar
   -- * Extensible Exceptions
   , SDLException(..)
   -- * Utilities
@@ -69,6 +68,7 @@ import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Graphics.UI.SDL (GLattr)
 import Prelude hiding (init)
+import Quine.StateVar
 
 #include "SDL.h"
 
@@ -275,11 +275,8 @@ swapInterval = makeStateVar (fromIntegral <$> SDL.glGetSwapInterval) (\a -> SDL.
 attr :: GLattr -> StateVar Int
 attr a = makeStateVar (getAttr a) (setAttr a)
 
-xmapStateVar :: (b -> a) -> (a -> b) -> StateVar a -> StateVar b
-xmapStateVar f g v = makeStateVar (g <$> get v) (\x -> v $= f x)
-
 boolAttr :: GLattr -> StateVar Bool
-boolAttr = xmapStateVar fromEnum toEnum . attr
+boolAttr = xmap fromEnum toEnum . attr
 
 getAttr :: GLattr -> IO Int
 getAttr a = alloca $ \p -> do

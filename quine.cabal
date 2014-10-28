@@ -87,6 +87,7 @@ executable quine
     OpenGLRaw,
     optparse-applicative,
     sdl2 >= 1.1.3,
+    time,
     transformers
 
   default-language: Haskell2010
