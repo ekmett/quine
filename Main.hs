@@ -157,7 +157,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         go = trying id (runReaderT run (System mon opts se fc)) >>= either print return
         build = do
           screenShader <- compile VertexShader   "screen.vert"
-          whiteShader  <- compile FragmentShader "chains.frag"
+          whiteShader  <- compile FragmentShader (opts^.optionsFragment)
           scn <- link screenShader whiteShader
           vao <- generate
           res <- the (uniformLocation scn "iResolution")
@@ -234,11 +234,9 @@ event WindowEvent { eventType = WindowEventClose       } = liftIO $ throw Shutdo
 event WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
 event WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
 event WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
-  liftIO $ hPutStrLn stderr "size changed"
   displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
   displayWindowSizeChanged .= True
 event WindowEvent { eventType = WindowEventResized, windowEventData1 = w, windowEventData2 = h } = do
-  liftIO $ hPutStrLn stderr "resized"
   displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
   displayWindowSizeChanged .= True
 event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
