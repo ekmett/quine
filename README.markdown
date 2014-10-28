@@ -7,6 +7,13 @@ I reserve the right to get bored and go do something else that actually makes mo
 
 ![screenshot of a dodecahedron](https://raw.githubusercontent.com/ekmett/quine/master/data/dodecahedron.png)
 
+Build Instructions
+==================
+
+To build this you'll need my modified version of @polarina's `SDL2` bindings:
+
+http://github.com/ekmett/sdl2.git
+
 Contact Information
 -------------------
 
