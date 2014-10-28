@@ -133,6 +133,10 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     -- start OpenGL
     cxt <- glCreateContext window
     makeCurrent window cxt
+    label "gl.vendor" mon >>= \ lv -> get vendor >>= \v -> assign lv $ v^.packed
+    label "gl.renderer" mon >>= \ lv -> get renderer >>= \v -> assign lv $ v^.packed
+    label "gl.version" mon >>= \ lv -> get glVersion >>= \v -> assign lv $ v^.packed
+    label "gl.shading.version" mon >>= \ lv -> get shadingLanguageVersion >>= \v -> assign lv $ v^.packed
     glEnable gl_FRAMEBUFFER_SRGB
     sanityCheck
     se <- buildShaderEnv opts
