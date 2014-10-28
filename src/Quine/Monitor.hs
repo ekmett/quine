@@ -14,7 +14,7 @@
 --
 --------------------------------------------------------------------
 module Quine.Monitor
-  ( withMonitor
+  ( forkMonitor
   -- * The Monitor
   , Monitor(..)
   , HasMonitor(..)
@@ -43,7 +43,7 @@ module Quine.Monitor
   , monitorUri
   ) where
 
-import Control.Exception
+-- import Control.Exception
 import Control.Lens hiding (Setting)
 import Control.Monad.Trans
 import Control.Monad.Reader
@@ -54,7 +54,7 @@ import Data.Foldable as F
 import Data.Int
 import Data.Text
 import Options.Applicative
-import Quine.Exception
+-- import Quine.Exception
 import System.IO
 import System.Process
 import System.Remote.Monitoring
@@ -167,8 +167,9 @@ counterM l = view monitorServer >>= maybe (return $ Counter Nothing) (liftIO . f
 labelM :: (MonadIO m, MonadReader t m, HasMonitor t) => Text -> m Label
 labelM t = view monitorServer >>= maybe (return $ Label Nothing) (liftIO . fmap (Label . Just) . getLabel t)
 
-withMonitor :: HasMonitorOptions t => t -> (Monitor -> IO a) -> IO a
-withMonitor t k
+-- | Fork the monitor if requested
+forkMonitor :: HasMonitorOptions t => t -> IO Monitor
+forkMonitor t
   | t^.monitorEnabled = do
     server <- forkServer (t^.monitorHost.packedChars) (t^.monitorPort)
     let uri = monitorUri t
@@ -177,5 +178,5 @@ withMonitor t k
       -- TODO: check to see if we're on a mac first
       _ <- system $ "/usr/bin/open " ++ uri
       return ()
-    k (Monitor (t^.monitorOptions) $ Just server) `finally` throwTo (serverThreadId server) Shutdown
-  | otherwise = k $ Monitor (t^.monitorOptions) Nothing
+    return $ Monitor (t^.monitorOptions) $ Just server
+  | otherwise = return $ Monitor (t^.monitorOptions) Nothing

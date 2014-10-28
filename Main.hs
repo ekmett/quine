@@ -103,58 +103,59 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
       exitFailure
 
   -- set up EKG
-  withMonitor opts $ \mon -> do
-    label "sdl.version" mon >>= \ lv -> version >>= assign lv . show
- 
-    -- start SDL
-    init InitFlagEverything
-    contextMajorVersion &= 4
-    contextMinorVersion &= 1
-    contextProfileMask  &= GLProfileCore
-    redSize   &= 5
-    greenSize &= 5
-    blueSize  &= 5
-    depthSize &= 16
-    doubleBuffer &= True
-    let w = opts^.optionsWindowWidth
-        h = opts^.optionsWindowHeight
-        flags = WindowFlagOpenGL
-            .|. WindowFlagShown
-            .|. WindowFlagResizable
-            .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
-            .|. (if opts^.optionsFullScreen then (if opts^.optionsFullScreenNormal then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0)
-    window <- createWindow windowName WindowPosCentered WindowPosCentered (fromIntegral w) (fromIntegral h) flags
+  ekg <- forkMonitor opts
 
-    -- start OpenGL
-    cxt <- glCreateContext window
-    makeCurrent window cxt
-    label "gl.vendor" mon          >>= \ lv -> get vendor >>= assign lv
-    label "gl.renderer" mon        >>= \ lv -> get renderer >>= assign lv
-    label "gl.version" mon         >>= \ lv -> get glVersion >>= assign lv
-    label "gl.shading.version" mon >>= \ lv -> get shadingLanguageVersion >>= assign lv
-    -- glEnable gl_FRAMEBUFFER_SRGB
-    sanityCheck
-    se <- buildShaderEnv opts
-    fc <- counter "quine.frame" mon
-    let sys = System mon opts se fc
-        dsp = Display 
-          { _displayWindow            = window
-          , _displayGL                = cxt
-          , _displayCaches            = def
-          , _displayFullScreen        = opts^.optionsFullScreen
-          , _displayWindowSize        = Size (fromIntegral w) (fromIntegral h)
-          , _displayWindowSizeChanged = True
-          , _displayMinimized         = False
-          , _displayHasMouseFocus     = True
-          , _displayHasKeyboardFocus  = True
-          , _displayVisible           = True
-          }
-    runReaderT (evalStateT core dsp) sys `finally` do
-      glDeleteContext cxt
-      destroyWindow window
-      quit
-      exitSuccess
-    
+  label "sdl.version" ekg >>= \ lv -> version >>= assign lv . show
+ 
+  -- start SDL
+  init InitFlagEverything
+  contextMajorVersion &= 4
+  contextMinorVersion &= 1
+  contextProfileMask  &= GLProfileCore
+  redSize   &= 5
+  greenSize &= 5
+  blueSize  &= 5
+  depthSize &= 16
+  doubleBuffer &= True
+  let w = opts^.optionsWindowWidth
+      h = opts^.optionsWindowHeight
+      flags = WindowFlagOpenGL
+          .|. WindowFlagShown
+          .|. WindowFlagResizable
+          .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
+          .|. (if opts^.optionsFullScreen then (if opts^.optionsFullScreenNormal then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0)
+  window <- createWindow windowName WindowPosCentered WindowPosCentered (fromIntegral w) (fromIntegral h) flags
+
+  -- start OpenGL
+  cxt <- glCreateContext window
+  makeCurrent window cxt
+  label "gl.vendor" ekg          >>= \ lv -> get vendor >>= assign lv
+  label "gl.renderer" ekg        >>= \ lv -> get renderer >>= assign lv
+  label "gl.version" ekg         >>= \ lv -> get glVersion >>= assign lv
+  label "gl.shading.version" ekg >>= \ lv -> get shadingLanguageVersion >>= assign lv
+  -- glEnable gl_FRAMEBUFFER_SRGB
+  sanityCheck
+  se <- buildShaderEnv opts
+  fc <- counter "quine.frame" ekg
+  let sys = System ekg opts se fc
+      dsp = Display 
+        { _displayWindow            = window
+        , _displayGL                = cxt
+        , _displayCaches            = def
+        , _displayFullScreen        = opts^.optionsFullScreen
+        , _displayWindowSize        = Size (fromIntegral w) (fromIntegral h)
+        , _displayWindowSizeChanged = True
+        , _displayMinimized         = False
+        , _displayHasMouseFocus     = True
+        , _displayHasKeyboardFocus  = True
+        , _displayVisible           = True
+        }
+  runReaderT (evalStateT core dsp) sys `finally` do
+    glDeleteContext cxt
+    destroyWindow window
+    quit
+    exitSuccess
+  
 core :: (MonadIO m, MonadState s m, HasDisplay s, HasCaches s, MonadReader e m, HasSystem e, HasOptions e) => m a
 core = do
   screenShader <- compile VertexShader "screen.vert"
@@ -203,7 +204,7 @@ resize = do
 
 render :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do
-  view (system.frameCounter) >>= inc
+  inc =<< view (system.frameCounter)
   liftIO $ do
     clearColor &= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
