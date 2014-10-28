@@ -104,12 +104,12 @@ buildShaderEnv opts = do
       , defines defaultCpphsOptions
       ]
     , boolopts = boolOptions 
-    , includes = [opts^.optionsDataDir]
+    , includes = [opts^.optionsDataDir,"data","."]
     }
 
 boolOptions :: BoolOptions
 boolOptions = defaultBoolOptions 
-  { macros    = False -- might as well leave #defines in
+  { macros    = False
   , locations = False -- #line directives in glsl have a different format
   , hashline  = False
   , pragma    = True
@@ -151,6 +151,7 @@ compile st fp = do
     compiled <- get (compileStatus s)
     unless compiled $ do
       e <- get (shaderInfoLog s)
+      putStrLn source
       deleteObjectName s
       throw $ ShaderException fp e
     return s

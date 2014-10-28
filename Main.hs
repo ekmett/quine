@@ -144,24 +144,23 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           , _displayVisible = True
           }
 
-    let build = do
+
+    let go = trying id (runReaderT run (System mon opts se)) >>= either print return
+        build = do
           screenShader <- compile VertexShader   "screen.vert"
           whiteShader  <- compile FragmentShader "white.frag"
           prog <- link screenShader whiteShader
           emptyVAO <- generate
           sanityCheck
           gets $ World prog emptyVAO
-        
-    let run = evalStateT build disp >>= evalStateT (forever $ poll >> render)
-
-    let cleanup = do
+        run = evalStateT build disp >>= evalStateT (forever $ poll >> render)
+        cleanup = do
           glDeleteContext cxt
           destroyWindow window
           quit
           exitSuccess
 
-    result <- trying _Shutdown $ runReaderT run (System mon opts se) `finally` cleanup
-    either print return result
+    go `finally` cleanup
 -- * Rendering
 
 render :: (MonadIO m, MonadState s m, HasWorld s, HasDisplay s, HasCaches s) => m ()
