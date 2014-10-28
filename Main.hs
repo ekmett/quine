@@ -17,7 +17,7 @@ import Control.Exception.Lens
 import Control.Lens hiding (assign)
 import Control.Monad hiding (forM_)
 import Control.Monad.Reader
-import Control.Monad.State
+import Control.Monad.State hiding (get)
 import Data.Default
 import Data.Monoid
 import Data.Text.Lens
@@ -35,6 +35,7 @@ import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Display
+import Quine.GL.Cache
 import Quine.GL.Shader
 import Quine.Monitor
 import Quine.Options
@@ -63,15 +64,27 @@ instance HasShaderEnv System where
 -- * State
 
 data World = World
-  { _worldProgram :: !Program
- -- , _worldHdr     :: !FramebufferObject
-  , _worldDisplay :: !Display
+  { _worldProgram  :: !Program
+  , _worldDisplay  :: !Display
+  , _worldEmptyVAO :: !VertexArrayObject
   } deriving Typeable
 
 makeClassy ''World
 
 instance HasDisplay World where
   display = worldDisplay
+
+instance HasCaches World where
+  caches = display.caches
+
+data Errors = Errors [Error] deriving (Show,Typeable)
+instance Exception Errors
+
+-- | Check OpenGL for errors, throw them if we find them
+sanityCheck :: MonadIO m => m ()
+sanityCheck = liftIO $ do
+  es <- get errors
+  unless (null es) $ throw $ Errors es
 
 -- * Setup
 
@@ -111,6 +124,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     cxt <- glCreateContext window
     makeCurrent window cxt
     glEnable gl_FRAMEBUFFER_SRGB
+    sanityCheck
     se <- buildShaderEnv opts
     let disp = Display 
           { _displayWindow = window
@@ -125,22 +139,25 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           , _displayVisible = True
           }
 
-    -- System Shutdown Process
+    let run = do
+          screenShader <- compile VertexShader   "screen.vert"
+          whiteShader  <- compile FragmentShader "white.frag"
+          prog <- link screenShader whiteShader
+          emptyVAO <- generate
+          sanityCheck
+          evalStateT (forever $ poll >> render) $ World prog disp emptyVAO
+
     let cleanup = do
           glDeleteContext cxt
           destroyWindow window
           quit
           exitSuccess
 
-    result <- trying _Shutdown $ finally ?? cleanup $ runReaderT ?? System mon opts se $ do
-      screenShader <- compile VertexShader   "screen.vert"
-      whiteShader  <- compile FragmentShader "white.frag"
-      prog <- link screenShader whiteShader
-      evalStateT (forever $ poll >> render) $ World prog disp
+    result <- trying _Shutdown $ runReaderT run (System mon opts se) `finally` cleanup
     either print return result
 -- * Rendering
 
-render :: (MonadIO m, MonadState s m, HasWorld s, HasDisplay s) => m ()
+render :: (MonadIO m, MonadState s m, HasWorld s, HasDisplay s, HasCaches s) => m ()
 render = do
   w <- use displayWindow
   use displayWindowSizeChanged >>= \c -> when c $ do
@@ -148,12 +165,13 @@ render = do
     liftIO $ viewport $= (Position 0 0, sz)
     displayWindowSizeChanged .= False
   liftIO $ do
-    clearColor $= Color4 0 0 0 1
+    clearColor $= Color4 0 1 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
   use worldProgram >>= \p -> liftIO $ currentProgram $= Just p
+  e <- use worldEmptyVAO
   liftIO $ do
-    bindVertexArrayObject $= Nothing
-    drawArrays Triangles 0 3 -- scene shader is attributeless
+    bindVertexArrayObject $= Just e -- Working without binding a VAO is illegal in core profile
+    drawArrays Triangles 0 3
     glFlush
     glSwapWindow w
 

@@ -22,16 +22,17 @@ module Quine.GL.Cache
   ( 
   -- * Cache
     Cache(..)
-  , HasCache(..)
+  , Caches(..)
+  , HasCaches(..)
+  , Cached(..)
   , generate
   , generates
   , delete
   , purge
-  -- * Caches
-  , Caches(..)
-  , HasCaches(..)
+  -- * exposed internals
+  , cachePool
+  , cacheSize
   ) where
-
 
 import Control.Lens
 import Control.Monad.IO.Class
@@ -39,56 +40,13 @@ import Control.Monad.State.Class
 import Data.Data
 import Data.Default
 import Data.Foldable
-import Data.Functor
 import GHC.Generics
 import Graphics.Rendering.OpenGL
 
 data Cache a = Cache { _cachePool :: [a], _cacheSize :: Int }
   deriving (Typeable, Data, Generic, Functor, Foldable, Traversable)
 
-class HasCache t a where
-  cache :: Lens' t (Cache a)
-  cachePool :: Lens' t [a]
-  cachePool = cache.cachePool
-
-instance a ~ b => HasCache (Cache a) b where
-  cache = id
-  cachePool f (Cache xs n) = (`Cache` n) <$> f xs
-
--- | Generate an OpenGL resource, leaning on a local a cache
-generate :: (MonadIO m, MonadState s m, GeneratableObjectName a, HasCache s a) => m a
-generate = use cache >>= \ (Cache p s) -> case p of
-  [] -> do 
-    (x:xs) <- liftIO $ genObjectNames s
-    cachePool .= xs
-    return x 
-  (x:xs) -> do
-    cachePool .= xs
-    return x
-
--- | Generate many OpenGL resources, leaning on a local a cache
-generates :: (MonadIO m, MonadState s m, GeneratableObjectName a, HasCache s a) => Int -> m [a]
-generates n = use cache >>= \ (Cache p s) -> case splitAt n p of
-  (xs,ys) 
-    | l == n -> do
-      cachePool .= ys
-      return xs
-    | otherwise -> do
-      cs <- liftIO (genObjectNames $ max s $ n-l)
-      let (as,bs) = splitAt (n-l) cs
-      cachePool .= bs
-      return $ p ++ as
-    where l = length xs
-
--- | Return an OpenGL resource to the cache
-delete :: (MonadState s m, HasCache s a) => a -> m ()
-delete i = cachePool %= (i:)
-
--- | Purge a cache
-purge :: (MonadState s m, MonadIO m, ObjectName a) => ALens' s (Cache a) -> m ()
-purge c = do
-  xs <- cloneLens c.cachePool <<.= []
-  liftIO $ deleteObjectNames xs
+makeLenses ''Cache
 
 -- | Caches for several OpenGL resource types
 data Caches = Caches
@@ -101,11 +59,14 @@ data Caches = Caches
 
 makeClassy ''Caches
 
-instance HasCache Caches TextureObject      where cache = textures
-instance HasCache Caches BufferObject       where cache = buffers
-instance HasCache Caches QueryObject        where cache = queries
-instance HasCache Caches RenderbufferObject where cache = renderbuffers
-instance HasCache Caches VertexArrayObject  where cache = vertexArrays
+class GeneratableObjectName a => Cached a where
+  cache :: HasCaches t => Lens' t (Cache a)
+
+instance Cached TextureObject where cache = textures
+instance Cached BufferObject where cache = buffers
+instance Cached QueryObject where cache = queries
+instance Cached RenderbufferObject where cache = renderbuffers
+instance Cached VertexArrayObject where cache = vertexArrays
 
 instance Default Caches where
   def = Caches
@@ -115,3 +76,38 @@ instance Default Caches where
     , _renderbuffers = Cache [] 32
     , _vertexArrays  = Cache [] 1024
     }
+
+-- | Generate an OpenGL resource, leaning on a local a cache
+generate :: (MonadIO m, MonadState s m, HasCaches s, Cached a) => m a
+generate = use cache >>= \ (Cache p s) -> case p of
+  [] -> do 
+    (x:xs) <- liftIO $ genObjectNames s
+    cache.cachePool .= xs
+    return x 
+  (x:xs) -> do
+    cache.cachePool .= xs
+    return x
+
+-- | Generate many OpenGL resources, leaning on a local a cache
+generates :: (MonadIO m, MonadState s m, HasCaches s, Cached a) => Int -> m [a]
+generates n = use cache >>= \ (Cache p s) -> case splitAt n p of
+  (xs,ys) 
+    | l == n -> do
+      cache.cachePool .= ys
+      return xs
+    | otherwise -> do
+      cs <- liftIO (genObjectNames $ max s $ n-l)
+      let (as,bs) = splitAt (n-l) cs
+      cache.cachePool .= bs
+      return $ p ++ as
+    where l = length xs
+
+-- | Return an OpenGL resource to the cache
+delete :: (MonadState s m, HasCaches s, Cached a) => a -> m ()
+delete i = cache.cachePool %= (i:)
+
+-- | Purge a cache
+purge :: (MonadState s m, MonadIO m, ObjectName a) => ALens' s (Cache a) -> m ()
+purge c = do
+  xs <- cloneLens c.cachePool <<.= []
+  liftIO $ deleteObjectNames xs
