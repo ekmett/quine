@@ -138,7 +138,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     label "gl.renderer" mon >>= \ lv -> get renderer >>= \v -> assign lv $ v^.packed
     label "gl.version" mon >>= \ lv -> get glVersion >>= \v -> assign lv $ v^.packed
     label "gl.shading.version" mon >>= \ lv -> get shadingLanguageVersion >>= \v -> assign lv $ v^.packed
-    glEnable gl_FRAMEBUFFER_SRGB
+    -- glEnable gl_FRAMEBUFFER_SRGB
     sanityCheck
     se <- buildShaderEnv opts
     fc <- counter "quine.frame" mon
@@ -157,7 +157,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         go = trying id (runReaderT run (System mon opts se fc)) >>= either print return
         build = do
           screenShader <- compile VertexShader   "screen.vert"
-          whiteShader  <- compile FragmentShader "dodecahedron.frag"
+          whiteShader  <- compile FragmentShader "chains.frag"
           scn <- link screenShader whiteShader
           vao <- generate
           res <- the (uniformLocation scn "iResolution")
