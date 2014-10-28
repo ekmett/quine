@@ -49,8 +49,8 @@ parseOptions = do
        <*> option auto (long "scale"  <> short 's' <> help "retina pixel ratio" <> metavar "RATIO" <> value 2.0)
        <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 1024)
        <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 768)
-       <*> option auto (long "data" <> short 'd' <> help "location of the data directory" <> metavar "DIR" <> action "directory" <> value dd)
-       <*> option auto (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> value "chains.frag")
+       <*> strOption (long "data" <> short 'd' <> help "location of the data directory" <> metavar "DIR" <> action "directory" <> value dd)
+       <*> strOption (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> action "file" <> value "chains.frag")
 
 instance Default Options where
   def = Options def False False False 2.0 1024 768 "data" "chains.frag"
