@@ -69,9 +69,10 @@ instance HasShaderEnv System where
 -- * State
 
 data World = World
-  { _worldProgram  :: !Program
-  , _worldEmptyVAO :: !VertexArrayObject
-  , _worldDisplay  :: !Display
+  { _scene        :: !Program
+  , _emptyVAO     :: !VertexArrayObject
+  , _iResolution  :: !(StateVar (Vertex2 GLfloat))
+  , _worldDisplay :: !Display
   } deriving Typeable
 
 makeClassy ''World
@@ -132,28 +133,28 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     sanityCheck
     se <- buildShaderEnv opts
     let disp = Display 
-          { _displayWindow = window
-          , _displayGL     = cxt
-          , _displayCaches = def
-          , _displayFullScreen = opts^.optionsFullScreen
-          , _displayWindowSize = Size (fromIntegral w) (fromIntegral h)
+          { _displayWindow            = window
+          , _displayGL                = cxt
+          , _displayCaches            = def
+          , _displayFullScreen        = opts^.optionsFullScreen
+          , _displayWindowSize        = Size (fromIntegral w) (fromIntegral h)
           , _displayWindowSizeChanged = True
-          , _displayMinimized = False
-          , _displayHasMouseFocus = True
-          , _displayHasKeyboardFocus = True
-          , _displayVisible = True
+          , _displayMinimized         = False
+          , _displayHasMouseFocus     = True
+          , _displayHasKeyboardFocus  = True
+          , _displayVisible           = True
           }
-
 
     let go = trying id (runReaderT run (System mon opts se)) >>= either print return
         build = do
           screenShader <- compile VertexShader   "screen.vert"
           whiteShader  <- compile FragmentShader "white.frag"
-          prog <- link screenShader whiteShader
-          emptyVAO <- generate
+          scn <- link screenShader whiteShader
+          vao <- generate
+          res <- liftIO $ get (uniformLocation scn "iResolution")
           sanityCheck
-          gets $ World prog emptyVAO
-        run = evalStateT build disp >>= evalStateT (forever $ poll >> render)
+          gets $ World scn vao (uniform res)
+        run = evalStateT build disp >>= evalStateT (forever $ poll >> resize >> render)
         cleanup = do
           glDeleteContext cxt
           destroyWindow window
@@ -163,26 +164,33 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     go `finally` cleanup
 -- * Rendering
 
-render :: (MonadIO m, MonadState s m, HasWorld s, HasDisplay s, HasCaches s) => m ()
-render = do
+toVertex2 :: Size -> Vertex2 GLfloat
+toVertex2 (Size w h) = Vertex2 (fromIntegral w) (fromIntegral h)
+
+resize :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
+resize = do
   w <- use displayWindow
+  sz <- liftIO $ get (windowSize w)
+  displayWindowSize .= sz
+  liftIO $ viewport $= (Position 0 0, sz)
+{-
   use displayWindowSizeChanged >>= \c -> when c $ do
     sz <- use displayWindowSize
-    -- awsz <- liftIO $ get (windowSize w)
-    -- liftIO $ viewport $= (Position 0 0, sz)
-    liftIO $ print sz
-    -- displayWindowSize .= sz
     displayWindowSizeChanged .= False
+-}
+
+render :: (MonadIO m, MonadState s m, HasWorld s) => m ()
+render = do
+  w <- use world
   liftIO $ do
-    clearColor $= Color4 0 1 0 1
+    clearColor $= Color4 0 1 0 1 -- scrub it green so we can see it
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
-  use worldProgram >>= \p -> liftIO $ currentProgram $= Just p
-  e <- use worldEmptyVAO
-  liftIO $ do
-    bindVertexArrayObject $= Just e -- Working without binding a VAO is illegal in core profile
+    currentProgram $= Just (w^.scene)
+    w^.iResolution $= toVertex2 (w^.displayWindowSize)
+    bindVertexArrayObject $= Just (w^.emptyVAO)
     drawArrays Triangles 0 3
     glFlush
-    glSwapWindow w
+    glSwapWindow $ w^.displayWindow
 
 -- * Polling
 
@@ -227,4 +235,4 @@ event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{key
     w  <- use displayWindow
     _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsn then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0
     return ()
-event e = liftIO $ hPrint stderr e
+event e = return () -- liftIO $ hPrint stderr e
