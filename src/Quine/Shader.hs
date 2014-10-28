@@ -110,7 +110,7 @@ buildShaderEnv opts = do
 boolOptions :: BoolOptions
 boolOptions = defaultBoolOptions 
   { macros    = True
-  , locations = False -- #line directives in glsl have a different format
+  , locations = False -- #line directives in glsl have a different format, and #line must appear after #version anyways
   , hashline  = False
   , pragma    = True
   , stripEol  = True  -- strip comments
