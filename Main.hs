@@ -3,6 +3,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiWayIf #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -17,8 +18,8 @@ module Main where
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
-import Control.Exception.Lens
 import Control.Lens hiding (assign)
+import Control.Lens.Extras (is)
 import Control.Monad hiding (forM_)
 import Control.Monad.Reader
 import Control.Monad.State hiding (get)
@@ -29,6 +30,7 @@ import Data.Time.Clock
 import Data.Typeable
 import Foreign
 import Foreign.C
+import GHC.Conc
 import System.Exit
 import System.IO
 import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
@@ -55,10 +57,10 @@ data System = System
   { _systemMonitor   :: Monitor
   , _systemOptions   :: Options
   , _systemShaderEnv :: ShaderEnv
-  , _systemFrameCounter :: Counter
+  , _frameCounter    :: Counter
   } deriving Typeable
 
-makeClassy ''System
+makeLenses ''System
 
 instance HasMonitor System where
   monitor = systemMonitor
@@ -69,24 +71,13 @@ instance HasOptions System where
 instance HasShaderEnv System where
   shaderEnv = systemShaderEnv
 
+class (HasShaderEnv t, HasMonitor t, HasOptions t) => HasSystem t where
+  system :: Lens' t System
+
+instance HasSystem System where
+  system = id
+
 -- * State
-
-data World = World
-  { _scene        :: !Program
-  , _emptyVAO     :: !VertexArrayObject
-  , _iResolution  :: !(StateVar (Vertex2 GLfloat))
-  , _iGlobalTime  :: !(StateVar GLfloat)
-  , _startTime    :: !UTCTime
-  , _worldDisplay :: !Display
-  } deriving Typeable
-
-makeClassy ''World
-
-instance HasDisplay World where
-  display = worldDisplay
-
-instance HasCaches World where
-  caches = display.caches
 
 data Errors = Errors [Error] deriving (Show,Typeable)
 instance Exception Errors
@@ -97,9 +88,8 @@ sanityCheck = do
   es <- the errors
   unless (null es) $ liftIO $ throw $ Errors es
 
--- * Setup
-
 main :: IO ()
+-- main is always bound, but what about from ghci?
 main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- parse options
   optsParser <- parseOptions
@@ -107,6 +97,13 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     fullDesc
     <> progDesc "quine"
     <> header "Quine"
+
+  -- be careful with exceptions
+  setUncaughtExceptionHandler $ \ e -> if
+    | is _Shutdown e || is _ShutdownMonitor e -> return ()
+    | otherwise -> do
+      hPrint stderr e
+      exitFailure
 
   -- set up EKG
   withMonitor opts $ \mon -> do -- start up monitoring
@@ -142,7 +139,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     sanityCheck
     se <- buildShaderEnv opts
     fc <- counter "quine.frame" mon
-    let disp = Display 
+    let sys = System mon opts se fc
+        dsp = Display 
           { _displayWindow            = window
           , _displayGL                = cxt
           , _displayCaches            = def
@@ -154,26 +152,43 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           , _displayHasKeyboardFocus  = True
           , _displayVisible           = True
           }
-        go = trying id (runReaderT run (System mon opts se fc)) >>= either print return
-        build = do
-          screenShader <- compile VertexShader   "screen.vert"
-          whiteShader  <- compile FragmentShader (opts^.optionsFragment)
-          scn <- link screenShader whiteShader
-          vao <- generate
-          res <- the (uniformLocation scn "iResolution")
-          tim <- the (uniformLocation scn "iGlobalTime")
-          clk <- liftIO getCurrentTime
-          sanityCheck
-          gets $ World scn vao (uniform res) (xmap Index1 (\(Index1 a) -> a) $ uniform tim) clk
-        run = evalStateT build disp >>= evalStateT (forever $ poll >> resize >> render)
-        cleanup = do
-          glDeleteContext cxt
-          destroyWindow window
-          quit
-          exitSuccess
+    runReaderT (evalStateT core dsp) sys `finally` do
+      glDeleteContext cxt
+      destroyWindow window
+      quit
+      exitSuccess
+    
+core :: (MonadIO m, MonadState s m, HasDisplay s, HasCaches s, MonadReader e m, HasSystem e, HasOptions e) => m a
+core = do
+  screenShader <- compile VertexShader   "screen.vert"
+  whiteShader <- compile FragmentShader =<< view optionsFragment
+  scn <- link screenShader whiteShader
+  emptyVAO <- generate
+  iResolution <- uni  scn "iResolution"
+  iGlobalTime <- unif scn "iGlobalTime"
+  epoch <- liftIO getCurrentTime
+  sanityCheck
+  currentProgram &= Just scn
+  bindVertexArrayObject &= Just emptyVAO
+  forever $ do 
+    poll 
+    resize 
+    render $ do
+      liftIO getCurrentTime >>= \now -> iGlobalTime &= realToFrac (diffUTCTime now epoch)
+      use displayWindowSize >>= \sz -> iResolution &= toVertex2 sz
+      liftIO $ drawArrays Triangles 0 3
 
-    go `finally` cleanup
--- * Rendering
+-- | 
+-- Build a StateVar for getting/setting a uniform
+uni :: (MonadIO m, Uniform a) => Program -> String -> m (StateVar a)
+uni p u = uniform `liftM` the (uniformLocation p u)
+
+-- | 
+-- Build a StateVar for getting/setting a uniform float
+--
+-- Workaround for <https://github.com/haskell-opengl/OpenGL/issues/64>
+unif :: MonadIO m => Program -> String -> m (StateVar GLfloat)
+unif p u = (xmap Index1 (\(Index1 a) -> a) . uniform) `liftM` the (uniformLocation p u)
 
 toVertex2 :: Size -> Vertex2 GLfloat
 toVertex2 (Size w h) = Vertex2 (fromIntegral w) (fromIntegral h)
@@ -185,26 +200,21 @@ resize :: (MonadIO m, MonadReader e m, HasOptions e, MonadState s m, HasDisplay 
 resize = do
   w <- use displayWindow
   opts <- view options
-  sz <- rescale (pointScale opts) `liftM` the (windowSize w)
+  sz <- rescale (pointScale opts) `liftM` the (windowSize w) -- retina
   viewport &= (Position 0 0, sz)
   displayWindowSize .= sz
 
-render :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasWorld s) => m ()
-render = do
-  w <- use world
-  sys <- view system
-  inc $ sys^.systemFrameCounter
+render :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m () -> m ()
+render kernel = do
+  view (system.frameCounter) >>= inc
   liftIO $ do
-    clearColor &= Color4 0 0 0 1 -- scrub it green so we can see it
+    clearColor &= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
-    now <- getCurrentTime
-    currentProgram &= Just (w^.scene)
-    w^.iResolution &= toVertex2 (w^.displayWindowSize)
-    w^.iGlobalTime &= realToFrac (diffUTCTime now $ w^.startTime)
-    bindVertexArrayObject &= Just (w^.emptyVAO)
-    drawArrays Triangles 0 3
+  kernel
+  w <- use displayWindow
+  liftIO $ do
     glFlush
-    glSwapWindow $ w^.displayWindow
+    glSwapWindow w
 
 -- * Polling
 
@@ -248,3 +258,4 @@ event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{key
     _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsn then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0
     return ()
 event _ = return () -- liftIO $ hPrint stderr e
+

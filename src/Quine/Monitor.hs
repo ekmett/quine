@@ -39,9 +39,13 @@ module Quine.Monitor
   , HasMonitorOptions(..)
   , parseMonitorOptions
   , monitorUri
+  -- * Internal exception type
+  , ShutdownMonitor(..)
+  , _ShutdownMonitor
   ) where
 
 import Control.Exception
+import Control.Exception.Lens
 import Control.Lens hiding (Setting)
 import Control.Monad.Trans
 import Control.Monad.Reader
@@ -79,8 +83,9 @@ class Incremental t where
   add _ _ = return ()
 
 data ShutdownMonitor = ShutdownMonitor deriving (Show,Typeable,Data)
-
 instance Exception ShutdownMonitor
+_ShutdownMonitor :: Prism' SomeException ShutdownMonitor
+_ShutdownMonitor = exception
 
 -- | Enable/disable EKG
 
