@@ -48,6 +48,16 @@ you can play with the ratio with `-s`.
 $ quine -r -s 2.0
 ```
 
+Profiling
+---------
+
+By default `ekg` will start on port 5616, and you can connect to monitor the rendering process.
+
+You can run `quine -M` to also have the browser pop open to the page on startup. (On a mac)
+
+Opening the `quine.frame` chart will give you a handy FPS meter.
+
+
 Contact Information
 -------------------
 

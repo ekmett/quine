@@ -55,6 +55,7 @@ data System = System
   { _systemMonitor   :: Monitor
   , _systemOptions   :: Options
   , _systemShaderEnv :: ShaderEnv
+  , _systemFrameCounter :: Counter
   } deriving Typeable
 
 makeClassy ''System
@@ -140,6 +141,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     glEnable gl_FRAMEBUFFER_SRGB
     sanityCheck
     se <- buildShaderEnv opts
+    fc <- counter "quine.frame" mon
     let disp = Display 
           { _displayWindow            = window
           , _displayGL                = cxt
@@ -152,8 +154,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           , _displayHasKeyboardFocus  = True
           , _displayVisible           = True
           }
-
-    let go = trying id (runReaderT run (System mon opts se)) >>= either print return
+        go = trying id (runReaderT run (System mon opts se fc)) >>= either print return
         build = do
           screenShader <- compile VertexShader   "screen.vert"
           whiteShader  <- compile FragmentShader "dodecahedron.frag"
@@ -188,9 +189,11 @@ resize = do
   viewport &= (Position 0 0, sz)
   displayWindowSize .= sz
 
-render :: (MonadIO m, MonadState s m, HasWorld s) => m ()
+render :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasWorld s) => m ()
 render = do
   w <- use world
+  sys <- view system
+  inc $ sys^.systemFrameCounter
   liftIO $ do
     clearColor &= Color4 0 0 0 1 -- scrub it green so we can see it
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
