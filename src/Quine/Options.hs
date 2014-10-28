@@ -25,6 +25,7 @@ data Options = Options
   , _optionsFullScreen       :: !Bool
   , _optionsFullScreenNormal :: !Bool
   , _optionsHighDPI          :: !Bool
+  , _optionsHighDPIRatio     :: !Float
   , _optionsWindowWidth      :: !Int
   , _optionsWindowHeight     :: !Int
   , _optionsDataDir :: !FilePath
@@ -44,9 +45,13 @@ parseOptions = do
        <*> switch (long "full-screen" <> short 'f' <> help "open full-screen on launch")
        <*> switch (long "real-full-screen" <> short 'n' <> help "use real full screen; exiting is buggy on OS X with SDL 2.0.3")
        <*> switch (long "retina" <> short 'r' <> help "exploit a retina display if it available")
+       <*> option auto (long "scale"  <> short 's' <> help "retina pixel ratio" <> metavar "RATIO" <> value 2.0)
        <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 1024)
        <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 768)
        <*> option auto (long "data" <> short 'd' <> help "location of the data directory" <> metavar "DIR" <> action "directory" <> value dd)
 
 instance Default Options where
-  def = Options def False False False 1024 768 "data"
+  def = Options def False False False 2.0 1024 768 "data"
+
+pointScale :: Options -> Float
+pointScale opts = if opts^.optionsHighDPI then opts^.optionsHighDPIRatio else 1

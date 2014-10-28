@@ -173,17 +173,16 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 toVertex2 :: Size -> Vertex2 GLfloat
 toVertex2 (Size w h) = Vertex2 (fromIntegral w) (fromIntegral h)
 
-resize :: (MonadIO m, MonadState s m, HasDisplay s) => m ()
+rescale :: Float -> Size -> Size
+rescale r (Size w h) = Size (floor $ r * fromIntegral w) (floor $ r * fromIntegral h)
+
+resize :: (MonadIO m, MonadReader e m, HasOptions e, MonadState s m, HasDisplay s) => m ()
 resize = do
   w <- use displayWindow
-  sz <- the (windowSize w)
-  displayWindowSize .= sz
+  opts <- view options
+  sz <- rescale (pointScale opts) `liftM` the (windowSize w)
   viewport &= (Position 0 0, sz)
-{-
-  use displayWindowSizeChanged >>= \c -> when c $ do
-    sz <- use displayWindowSize
-    displayWindowSizeChanged .= False
--}
+  displayWindowSize .= sz
 
 render :: (MonadIO m, MonadState s m, HasWorld s) => m ()
 render = do
