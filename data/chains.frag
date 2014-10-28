@@ -22,7 +22,7 @@ layout(location = FRAGMENT_COLOR) out vec4 color;
 #define ENABLE_POINT_LIGHT
 //#define ENABLE_POINT_LIGHT_FLARE
 
-#define kRaymarchMaxIter 128
+#define kRaymarchMaxIter 256
 
 const float kPI = 3.141592654;
 const float kTwoPI = kPI * 2.0;
