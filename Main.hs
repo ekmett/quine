@@ -47,7 +47,7 @@ import Quine.Monitor
 import Quine.Options
 import Quine.SDL
 
-#include "data/locations.h"
+#include "locations.h"
 
 -- * Environment
 data System = System

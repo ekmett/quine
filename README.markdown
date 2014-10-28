@@ -7,9 +7,9 @@ I reserve the right to get bored and go do something else that actually makes mo
 
 A couple of shader toys:
 
-![screenshot of a dodecahedron](https://raw.githubusercontent.com/ekmett/quine/master/data/dodecahedron.png)
+![screenshot of a dodecahedron](https://raw.githubusercontent.com/ekmett/quine/master/dodecahedron.png)
 
-![screenshot of chains](https://raw.githubusercontent.com/ekmett/quine/master/data/chains.png)
+![screenshot of chains](https://raw.githubusercontent.com/ekmett/quine/master/chains.png)
 
 Now I need to make things fast.
 

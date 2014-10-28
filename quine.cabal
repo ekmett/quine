@@ -23,8 +23,9 @@ extra-source-files:
   CHANGELOG.markdown
   README.markdown
 
-data-dir: data
-data-files: *.vert *.glsl *.frag *.png *.h
+data-files:
+  *.vert *.glsl *.h
+  examples/*.frag examples/*.png
 
 source-repository head
   type: git

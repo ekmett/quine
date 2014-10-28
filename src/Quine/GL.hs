@@ -150,7 +150,7 @@ buildShaderEnv opts = do
       , defines defaultCpphsOptions
       ]
     , boolopts = boolOptions 
-    , includes = [opts^.optionsDataDir,"data","."]
+    , includes = [".",opts^.optionsDataDir]
     }
 
 boolOptions :: BoolOptions
