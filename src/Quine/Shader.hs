@@ -48,6 +48,7 @@ import Graphics.Rendering.OpenGL.Raw.ARB.ES2Compatibility
 import Graphics.Rendering.OpenGL.Raw.ARB.FragmentShader
 import Language.Preprocessor.Cpphs
 import Quine.Options
+import Quine.StateVar
 import System.Directory
 import System.FilePath
 import System.IO
@@ -153,9 +154,9 @@ compile st fp = do
     s <- createShader st
     shaderSourceBS s $= UTF8.fromString source
     compileShader s
-    compiled <- get (compileStatus s)
+    compiled <- the (compileStatus s)
     unless compiled $ do
-      e <- get (shaderInfoLog s)
+      e <- the (shaderInfoLog s)
       putStrLn source
       deleteObjectName s
       throw $ ShaderException fp e
@@ -168,9 +169,9 @@ link vs fs = liftIO $ do
   attachShader p vs
   attachShader p fs
   linkProgram p
-  linked <- get $ linkStatus p
+  linked <- the $ linkStatus p
   unless linked $ do
-    e <- get $ programInfoLog p
+    e <- the $ programInfoLog p
     deleteObjectName p
     throw $ ProgramException e
   return p
