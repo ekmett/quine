@@ -5,7 +5,7 @@ This is just me waxing nostalgic and throwing together some code for playing wit
 
 I reserve the right to get bored and go do something else that actually makes money.
 
-![screenshot of a dodecahedron](https://raw.githubusercontent.com/ekmett/quine/master/data/dodecahedron.png Screenshot)
+![screenshot of a dodecahedron](https://raw.githubusercontent.com/ekmett/quine/master/data/dodecahedron.png)
 
 Contact Information
 -------------------
