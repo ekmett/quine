@@ -2,6 +2,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -109,7 +111,7 @@ instance Default MonitorOptions where
 data Monitor = Monitor
   { __monitorOptions :: MonitorOptions
   , _monitorServer   :: Maybe Server
-  }
+  } deriving Typeable
 
 makeClassy ''Monitor
 
@@ -119,15 +121,15 @@ instance HasMonitorOptions Monitor where
 withServer :: HasMonitor t => t -> (Server -> IO ()) -> IO ()
 withServer t = F.forM_ $ t^.monitorServer
 
-newtype Gauge = Gauge { runGauge :: Maybe G.Gauge }
-newtype Label = Label { runLabel :: Maybe L.Label }
-newtype Counter = Counter { runCounter :: Maybe C.Counter }
+newtype Gauge = Gauge { runGauge :: Maybe G.Gauge } deriving Typeable
+newtype Label = Label { runLabel :: Maybe L.Label } deriving Typeable
+newtype Counter = Counter { runCounter :: Maybe C.Counter } deriving Typeable
 
-instance Setting Label Text where
-  assign (Label t) a = liftIO $ maybe (return ()) (L.set ?? a) t
+instance Setting Label String where
+  assign (Label t) a = liftIO $ maybe (return ()) (L.set ?? pack a) t
 
-instance Updating Label Text where
-  update (Label t) f = liftIO $ maybe (return ()) (L.modify f) t
+instance Updating Label String where
+  update (Label t) f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
 
 instance Setting Gauge Int64 where
   assign (Gauge t) a = liftIO $ maybe (return ()) (G.set ?? a) t

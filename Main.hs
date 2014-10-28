@@ -25,7 +25,6 @@ import Control.Monad.Reader
 import Control.Monad.State hiding (get)
 import Data.Default
 import Data.Monoid
-import Data.Text.Lens
 import Data.Time.Clock
 import Data.Typeable
 import Foreign
@@ -104,8 +103,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
       exitFailure
 
   -- set up EKG
-  withMonitor opts $ \mon -> do -- start up monitoring
-    label "sdl.version" mon >>= \ lv -> version >>= \v -> assign lv $ show v ^. packed
+  withMonitor opts $ \mon -> do
+    label "sdl.version" mon >>= \ lv -> version >>= assign lv . show
  
     -- start SDL
     init InitFlagEverything
@@ -129,10 +128,10 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     -- start OpenGL
     cxt <- glCreateContext window
     makeCurrent window cxt
-    label "gl.vendor" mon >>= \ lv -> get vendor >>= \v -> assign lv $ v^.packed
-    label "gl.renderer" mon >>= \ lv -> get renderer >>= \v -> assign lv $ v^.packed
-    label "gl.version" mon >>= \ lv -> get glVersion >>= \v -> assign lv $ v^.packed
-    label "gl.shading.version" mon >>= \ lv -> get shadingLanguageVersion >>= \v -> assign lv $ v^.packed
+    label "gl.vendor" mon          >>= \ lv -> get vendor >>= assign lv
+    label "gl.renderer" mon        >>= \ lv -> get renderer >>= assign lv
+    label "gl.version" mon         >>= \ lv -> get glVersion >>= assign lv
+    label "gl.shading.version" mon >>= \ lv -> get shadingLanguageVersion >>= assign lv
     -- glEnable gl_FRAMEBUFFER_SRGB
     sanityCheck
     se <- buildShaderEnv opts
@@ -158,7 +157,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     
 core :: (MonadIO m, MonadState s m, HasDisplay s, HasCaches s, MonadReader e m, HasSystem e, HasOptions e) => m a
 core = do
-  screenShader <- compile VertexShader   "screen.vert"
+  screenShader <- compile VertexShader "screen.vert"
   whiteShader <- compile FragmentShader =<< view optionsFragment
   scn <- link screenShader whiteShader
   emptyVAO <- generate
