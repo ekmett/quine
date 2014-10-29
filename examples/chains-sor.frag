@@ -1,6 +1,8 @@
 #pragma version 410 core
 #include "locations.h"
 
+#define kRaymarchEpsilon 0.01
+
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 
@@ -9,6 +11,7 @@ layout(location = FRAGMENT_COLOR) out vec4 color;
 // https://www.shadertoy.com/view/Msl3Rn
 
 // chains and gears - @P_Malin
+// hacked to do successive-over-relaxation by @kmett
     
 #define ENABLE_AMBIENT_OCCLUSION
 #define ENABLE_SPECULAR
@@ -17,12 +20,12 @@ layout(location = FRAGMENT_COLOR) out vec4 color;
 #define ENABLE_FOG
 
 //#define ENABLE_DIRECTIONAL_LIGHT
-//#define ENABLE_DIRECTIONAL_LIGHT_FLARE
+#define ENABLE_DIRECTIONAL_LIGHT_FLARE
 
 #define ENABLE_POINT_LIGHT
-//#define ENABLE_POINT_LIGHT_FLARE
+#define ENABLE_POINT_LIGHT_FLARE
 
-#define kRaymarchMaxIter 256
+#define kRaymarchMaxIter 32
 
 const float kPI = 3.141592654;
 const float kTwoPI = kPI * 2.0;
@@ -39,6 +42,7 @@ struct C_HitInfo
 {
     vec3 vPos;
     float fDistance;
+    float fMaxDistance;
     vec3 vObjectId;
     float fError;
 };
@@ -417,6 +421,7 @@ void Raymarch( const in C_Ray ray, out C_HitInfo result, const int maxIter, bool
       }
       if (t > t_max || i > maxIter) break;
       t += stepLength;
+      result.fMaxDistance = vSceneDist.x;
     }
     if ((t > t_max || result.fError > pixelRadius) && !forceHit) {
       result.fDistance = INFINITY;
@@ -424,6 +429,38 @@ void Raymarch( const in C_Ray ray, out C_HitInfo result, const int maxIter, bool
       result.vObjectId.x = 0.0;
     }
 }
+
+// This is an excellent resource on ray marching -> http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
+void Raymarch( const in C_Ray ray, out C_HitInfo result, const int maxIter )
+{
+    result.fDistance = GetRayFirstStep( ray );
+    result.vObjectId.x = 0.0;
+
+    for(int i=0;i<=kRaymarchMaxIter;i++)
+    {
+        result.vPos = ray.vOrigin + ray.vDir * result.fDistance;
+        vec4 vSceneDist = GetDistanceScene( result.vPos );
+        result.vObjectId = vSceneDist.yzw;
+
+        // abs allows backward stepping - should only be necessary for non uniform distance functions
+        if((abs(vSceneDist.x) <= kRaymarchEpsilon) || (result.fDistance >= ray.fLength) || (i > maxIter))
+        {
+            break;
+        }
+
+        result.fDistance = result.fDistance + vSceneDist.x;
+    }
+
+
+    if(result.fDistance >= ray.fLength)
+    {
+        result.fDistance = 1000.0;
+        result.vPos = ray.vOrigin + ray.vDir * result.fDistance;
+        result.vObjectId.x = 0.0;
+    }
+}
+
+
 
 float GetShadow( const in vec3 vPos, const in vec3 vNormal, const in vec3 vLightDir, const in float fLightDistance )
 {
@@ -436,7 +473,7 @@ float GetShadow( const in vec3 vPos, const in vec3 vNormal, const in vec3 vLight
         shadowRay.fLength = fLightDistance - shadowRay.fStartDistance;
     
         C_HitInfo shadowIntersect;
-        Raymarch(shadowRay, shadowIntersect, 32, true, 0.01);
+        Raymarch(shadowRay, shadowIntersect, 32, true, 5/iResolution.x); // , true, 0.01);
         
         float fShadow = step(0.0, shadowIntersect.fDistance) * step(fLightDistance, shadowIntersect.fDistance );
         
@@ -636,7 +673,7 @@ vec3 GetReflection( const in C_Ray ray, const in C_HitInfo hitInfo, const in C_S
 vec3 GetSceneColourSecondary( const in C_Ray ray )
 {
     C_HitInfo hitInfo;
-    Raymarch(ray, hitInfo, 32, false,0.01);
+    Raymarch(ray, hitInfo, 32, true, 1. /iResolution.x);
                         
     vec3 cScene;
 
@@ -666,7 +703,7 @@ vec3 GetSceneColourSecondary( const in C_Ray ray )
 vec3 GetSceneColourPrimary( const in C_Ray ray )
 {                                                          
     C_HitInfo intersection;
-    Raymarch(ray, intersection, 256, false, 0.01);
+    Raymarch(ray, intersection, 256, true, 1 / iResolution.x);
                 
     vec3 cScene;
 
