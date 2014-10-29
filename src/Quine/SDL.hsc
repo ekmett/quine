@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 --------------------------------------------------------------------
@@ -53,6 +54,7 @@ module Quine.SDL
   , SDLException(..)
   -- * Utilities
   , err
+  , module Quine.SDL.Pattern
   ) where
 
 import Control.Exception
@@ -66,11 +68,17 @@ import Foreign.C
 import Graphics.Rendering.OpenGL.GL.CoordTrans
 import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.SDL as SDL
-import Graphics.UI.SDL (GLattr)
 import Prelude hiding (init)
 import Quine.GL
+import Quine.SDL.Pattern
 
 #include "SDL.h"
+
+#if MIN_VERSION_sdl2(1,1,4)
+type InitFlag = SDL.InitFlag
+#else
+type InitFlag = Word32
+#endif
 
 -- | This is thrown in the event of an error in the @Quine.SDL@ combinators
 newtype SDLException = SDLException String
@@ -89,19 +97,19 @@ err e
 
 -- * Initialization
 
-init :: MonadIO m => SDL.InitFlag -> m ()
+init :: MonadIO m => InitFlag -> m ()
 init x = liftIO (SDL.init x >>= err)
 
-initSubSystem :: MonadIO m => SDL.InitFlag -> m ()
+initSubSystem :: MonadIO m => InitFlag -> m ()
 initSubSystem x = liftIO (SDL.initSubSystem x >>= err)
 
 quit :: MonadIO m => m ()
 quit = liftIO SDL.quit
 
-quitSubSystem :: MonadIO m => SDL.InitFlag -> m ()
+quitSubSystem :: MonadIO m => InitFlag -> m ()
 quitSubSystem = liftIO . SDL.quitSubSystem
 
-wasInit :: MonadIO m => SDL.InitFlag -> m SDL.InitFlag
+wasInit :: MonadIO m => InitFlag -> m InitFlag
 wasInit = liftIO . SDL.wasInit
 
 -- * Version
