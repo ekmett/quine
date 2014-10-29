@@ -17,10 +17,10 @@ layout(location = FRAGMENT_COLOR) out vec4 color;
 #define ENABLE_FOG
 
 //#define ENABLE_DIRECTIONAL_LIGHT
-//#define ENABLE_DIRECTIONAL_LIGHT_FLARE
+#define ENABLE_DIRECTIONAL_LIGHT_FLARE
 
 #define ENABLE_POINT_LIGHT
-//#define ENABLE_POINT_LIGHT_FLARE
+#define ENABLE_POINT_LIGHT_FLARE
 
 #define kRaymarchMaxIter 256
 
