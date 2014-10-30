@@ -13,13 +13,6 @@ A couple of shader toys:
 
 Now I need to make things fast.
 
-Build Instructions
-==================
-
-To build this you'll need my modified version of @polarina's `SDL2` bindings:
-
-http://github.com/ekmett/sdl2.git
-
 Usage Instructions
 ==================
 
