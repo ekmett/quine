@@ -68,6 +68,7 @@ library
     OpenGL,
     OpenGLRaw,
     optparse-applicative,
+    primitive,
     process >= 1.2,
     sdl2 >= 1.1.3,
     text,

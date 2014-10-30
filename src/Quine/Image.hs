@@ -1,19 +1,39 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- Transcoding between JuicyPixels and OpenGL
+--------------------------------------------------------------------
 module Quine.Image
-  ( Image2D(..)
+  ( 
+  -- * Uploading to OpenGL
+    Image2D(upload)
+  -- * Downloading from OpenGL
+  , download, downloadM
+  -- * Image formats
   , ImageFormat(..)
   ) where
 
 import Codec.Picture
 import Codec.Picture.Types
-import Data.Vector.Storable
+import Control.Monad.IO.Class
+import Control.Monad.Primitive
+import Data.Proxy
+import Data.Vector.Storable as V
+import Data.Vector.Storable.Mutable as MV
 import Data.Word
-import Graphics.Rendering.OpenGL hiding (imageHeight)
+import Foreign.ForeignPtr
+import Graphics.Rendering.OpenGL hiding (imageHeight, Proxy)
 
-class Image2D i where
-  image2D :: TwoDimensionalTextureTarget t => i -> t -> IO ()
+-- * 2D Image formats
 
--- | Transcode formats between JuicyPixels and OpenGL
 class Storable (PixelBaseComponent a) => ImageFormat a where
   pixelInternalFormat :: p a -> PixelInternalFormat
   pixelFormat         :: p a -> PixelFormat
@@ -59,7 +79,7 @@ instance ImageFormat Word32 where
   pixelFormat         _ = Red
   pixelDataType       _ = UnsignedInt
 
--- | Luminance32F is missing, loads via the Red channel
+-- | Luminance32F is missing, you'll be seeing Red
 --
 -- <https://github.com/haskell-opengl/OpenGL/issues/66>
 instance ImageFormat Float where
@@ -77,29 +97,61 @@ instance ImageFormat PixelYA16 where
   pixelFormat         _ = LuminanceAlpha
   pixelDataType       _ = UnsignedShort
 
+-- * Download
+
+download :: forall m a. (MonadIO m, ImageFormat a) => Position -> Size -> m (Image a)
+download pos sz@(Size w0 h0) 
+  | w <- fromIntegral w0, w >= 0
+  , h <- fromIntegral h0, h >= 0
+  , n <- w * h = liftIO $ do
+    fp <- mallocForeignPtrArray n
+    withForeignPtr fp $ \ p -> readPixels pos sz $
+      PixelData (pixelFormat (Proxy :: Proxy a)) (pixelDataType (Proxy :: Proxy a)) p
+    return $ Image w h $ V.unsafeFromForeignPtr fp 0 n
+  | otherwise = error "download: bad size"
+
+downloadM :: forall m a. (MonadIO m, ImageFormat a) => Position -> MutableImage RealWorld a -> m ()
+downloadM pos (MutableImage w h mv) = liftIO $ MV.unsafeWith mv $ \ p -> readPixels pos (Size (fromIntegral w) (fromIntegral h)) $
+    PixelData (pixelFormat (Proxy :: Proxy a)) (pixelDataType (Proxy :: Proxy a)) p
+
+-- * Upload
+
+class Image2D i where
+  upload :: (MonadIO m, TwoDimensionalTextureTarget t) => i -> t -> m ()
 
 instance ImageFormat a => Image2D (Image a) where
-  image2D i t = unsafeWith (imageData i) $ \p -> 
+  upload i@(Image w h v) t = liftIO $ V.unsafeWith v $ \p -> 
     texImage2D 
       t 
       NoProxy 
       0 -- level
       (pixelInternalFormat i) 
-      (TextureSize2D (fromIntegral $ imageWidth i) (fromIntegral $ imageHeight i))
+      (TextureSize2D (fromIntegral w) (fromIntegral h))
+      0 -- border
+      (PixelData (pixelFormat i) (pixelDataType i) p)
+
+instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
+  upload i@(MutableImage w h v) t = liftIO $ MV.unsafeWith v $ \p -> 
+    texImage2D 
+      t 
+      NoProxy 
+      0 -- level
+      (pixelInternalFormat i) 
+      (TextureSize2D (fromIntegral w) (fromIntegral h))
       0 -- border
       (PixelData (pixelFormat i) (pixelDataType i) p)
 
 instance Image2D DynamicImage where
-  image2D (ImageY8 i)     = image2D i
-  image2D (ImageY16 i)    = image2D i
-  image2D (ImageYF i)     = image2D i
-  image2D (ImageYA8 i)    = image2D i
-  image2D (ImageYA16 i)   = image2D i
-  image2D (ImageRGB8 i)   = image2D i
-  image2D (ImageRGB16 i)  = image2D i
-  image2D (ImageRGBF i)   = image2D i
-  image2D (ImageRGBA8 i)  = image2D i
-  image2D (ImageRGBA16 i) = image2D i
-  image2D (ImageYCbCr8 i) = image2D (convertImage i :: Image PixelRGB8)
-  image2D (ImageCMYK8 i)  = image2D (convertImage i :: Image PixelRGB8)
-  image2D (ImageCMYK16 i) = image2D (convertImage i :: Image PixelRGB16)
+  upload (ImageY8 i)     = upload i
+  upload (ImageY16 i)    = upload i
+  upload (ImageYF i)     = upload i
+  upload (ImageYA8 i)    = upload i
+  upload (ImageYA16 i)   = upload i
+  upload (ImageRGB8 i)   = upload i
+  upload (ImageRGB16 i)  = upload i
+  upload (ImageRGBF i)   = upload i
+  upload (ImageRGBA8 i)  = upload i
+  upload (ImageRGBA16 i) = upload i
+  upload (ImageYCbCr8 i) = upload (convertImage i :: Image PixelRGB8)
+  upload (ImageCMYK8 i)  = upload (convertImage i :: Image PixelRGB8)
+  upload (ImageCMYK16 i) = upload (convertImage i :: Image PixelRGB16)
