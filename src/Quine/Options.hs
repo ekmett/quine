@@ -47,8 +47,8 @@ parseOptions = do
        <*> switch (long "real-full-screen" <> short 'n' <> help "use real full screen; exiting is buggy on OS X with SDL 2.0.3")
        <*> switch (long "retina" <> short 'r' <> help "exploit a retina display if it available")
        <*> option auto (long "scale"  <> short 's' <> help "retina pixel ratio" <> metavar "RATIO" <> value 2.0)
-       <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 1024)
-       <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 768)
+       <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 800)
+       <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 600)
        <*> strOption (long "data" <> short 'd' <> help "location of the data directory" <> metavar "DIR" <> action "directory" <> value dd)
        <*> strOption (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> action "file" <> value "examples/chains.frag")
 
