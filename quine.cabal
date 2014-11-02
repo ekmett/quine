@@ -46,10 +46,6 @@ library
   other-modules:
     Paths_quine
 
-  if os(osx)
-    build-depends: language-c-inline
-    cpp-options: -DOSX=1
-  
   build-depends:
     aeson,
     base >= 4.7 && < 5,
