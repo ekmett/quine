@@ -20,6 +20,7 @@ import Control.Lens
 import Data.Typeable
 import Foreign.C
 import Graphics.UI.SDL
+import Graphics.UI.SDL.Enum.Pattern
 import Graphics.Rendering.OpenGL.GL.CoordTrans
 import Quine.GL
 import Quine.SDL

@@ -34,6 +34,7 @@ import System.Exit
 import System.IO
 import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
 import Graphics.Rendering.OpenGL.Raw as GL
+import Graphics.UI.SDL.Enum.Pattern
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL

@@ -54,7 +54,6 @@ module Quine.SDL
   , SDLException(..)
   -- * Utilities
   , err
-  , module Quine.SDL.Pattern
   ) where
 
 import Control.Exception
@@ -70,7 +69,6 @@ import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Prelude hiding (init)
 import Quine.GL
-import Quine.SDL.Pattern
 
 #include "SDL.h"
 
@@ -280,18 +278,18 @@ swapInterval = makeStateVar (fromIntegral <$> SDL.glGetSwapInterval) (\a -> SDL.
 -- * Utilities
 
 -- | Use a GLattr as a variable
-attr :: GLattr -> StateVar Int
+attr :: SDL.GLattr -> StateVar Int
 attr a = makeStateVar (getAttr a) (setAttr a)
 
-boolAttr :: GLattr -> StateVar Bool
+boolAttr :: SDL.GLattr -> StateVar Bool
 boolAttr = xmap fromEnum toEnum . attr
 
-getAttr :: GLattr -> IO Int
+getAttr :: SDL.GLattr -> IO Int
 getAttr a = alloca $ \p -> do
  SDL.glGetAttribute a p >>= err
  fromIntegral <$> peek p
 
-setAttr :: GLattr -> Int -> IO ()
+setAttr :: SDL.GLattr -> Int -> IO ()
 setAttr a i = SDL.glSetAttribute a (fromIntegral i) >>= err
 
 makeCurrent :: MonadIO m => SDL.Window -> SDL.GLContext -> m ()
