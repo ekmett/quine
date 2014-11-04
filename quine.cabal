@@ -39,6 +39,7 @@ library
     Quine.Exception
     Quine.GL
     Quine.GL.Classes
+    Quine.GL.Error
     Quine.GL.Program
     Quine.GL.Shader
     Quine.Monitor
