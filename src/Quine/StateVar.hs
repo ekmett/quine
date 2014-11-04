@@ -4,9 +4,10 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Quine.StateVar
   ( HasGetter(get)
+  , GettableStateVar
   , HasSetter(($=))
-  , ($=!)
   , SettableStateVar(SettableStateVar)
+  , ($=!)
   , StateVar(StateVar)
   , mapStateVar
   ) where
@@ -60,6 +61,8 @@ instance Decidable SettableStateVar where
 instance HasSetter (SettableStateVar a) a where
   SettableStateVar f $= a = liftIO (f a)
   {-# INLINE ($=) #-}
+
+type GettableStateVar = IO
 
 class HasGetter t a | t -> a where
   get :: MonadIO m => t -> m a
