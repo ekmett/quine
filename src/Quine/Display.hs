@@ -21,8 +21,6 @@ import Data.Typeable
 import Foreign.C
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
-import Graphics.Rendering.OpenGL.GL.CoordTrans
-import Quine.GL
 import Quine.SDL
 import System.IO
 
@@ -31,10 +29,9 @@ import System.IO
 data Display = Display 
   { _displayWindow            :: !Window
   , _displayGL                :: !GLContext
-  , _displayCaches            :: !Caches
   , _displayFullScreen        :: !Bool
-  , _displayWindowSize        :: !Size
-  , _displayWindowSizeChanged :: !Bool -- whenever this changes pretty much everything is borked.
+  , _displayWindowSize        :: (Int, Int)
+  , _displayWindowSizeChanged :: !Bool
   , _displayMinimized         :: !Bool
   , _displayHasMouseFocus     :: !Bool
   , _displayHasKeyboardFocus  :: !Bool
@@ -42,9 +39,6 @@ data Display = Display
   } deriving Typeable
 
 makeClassy ''Display
-
-instance HasCaches Display where
-  caches = displayCaches
 
 -- | complain loudly enough to pop up a window
 warn :: (MonadIO m, MonadState s m, HasDisplay s) => String -> String -> m ()

@@ -34,21 +34,26 @@ source-repository head
 library
   hs-source-dirs: src
   exposed-modules:
+    Quine.Debug
     Quine.Display
     Quine.Exception
-    Quine.Image
     Quine.GL
+    Quine.GL.Classes
+    Quine.GL.Program
+    Quine.GL.Shader
     Quine.Monitor
     Quine.Options
     Quine.SDL
     Quine.StateVar
 
+  --  Quine.Image
   other-modules:
     Paths_quine
 
   build-depends:
     aeson,
     base >= 4.7 && < 5,
+    bytestring,
     cpphs,
     containers,
     contravariant >= 1.2,
@@ -57,12 +62,11 @@ library
     distributive,
     ekg,
     filepath,
+    gl >= 0.4,
     JuicyPixels,
     lens,
     linear,
     mtl,
-    OpenGL,
-    OpenGLRaw,
     optparse-applicative,
     primitive,
     process >= 1.2,

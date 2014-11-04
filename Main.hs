@@ -32,8 +32,8 @@ import Foreign.C
 import GHC.Conc
 import System.Exit
 import System.IO
-import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
-import Graphics.Rendering.OpenGL.Raw as GL
+import Graphics.GL.Raw.Types
+import Graphics.GL.Raw.Profile.Core41
 import Graphics.UI.SDL.Enum.Pattern
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
@@ -84,7 +84,7 @@ instance Exception Errors
 -- | Check OpenGL for errors, throw them if we find them
 sanityCheck :: MonadIO m => m ()
 sanityCheck = do
-  es <- the errors
+  es <- errors
   unless (null es) $ liftIO $ throw $ Errors es
 
 main :: IO ()
@@ -145,7 +145,6 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
       dsp = Display 
         { _displayWindow            = window
         , _displayGL                = cxt
-        , _displayCaches            = def
         , _displayFullScreen        = opts^.optionsFullScreen
         , _displayWindowSize        = Size (fromIntegral w) (fromIntegral h)
         , _displayWindowSizeChanged = True
@@ -160,7 +159,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     quit
     exitSuccess
   
-core :: (MonadIO m, MonadState s m, HasDisplay s, HasCaches s, MonadReader e m, HasSystem e, HasOptions e) => m a
+core :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasSystem e, HasOptions e) => m a
 core = do
   screenShader <- compile VertexShader "screen.vert"
   whiteShader <- compile FragmentShader =<< view optionsFragment

@@ -48,7 +48,7 @@ module Quine.SDL
   , swapInterval
   , windowDisplayMode
   , desktopDisplayMode
-  , windowSize
+  -- , windowSize
   , makeCurrent
   -- * Extensible Exceptions
   , SDLException(..)
@@ -64,11 +64,10 @@ import Data.Typeable
 import Data.Version as Data
 import Foreign
 import Foreign.C
-import Graphics.Rendering.OpenGL.GL.CoordTrans
-import Graphics.Rendering.OpenGL.GL.StateVar
+-- import Graphics.Rendering.OpenGL.GL.CoordTrans
+import Quine.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Prelude hiding (init)
-import Quine.GL
 
 #include "SDL.h"
 
@@ -242,7 +241,7 @@ framebufferSRGBCapable :: StateVar Bool
 framebufferSRGBCapable  = boolAttr SDL.glAttrFramebufferSRGBCapable
 
 windowDisplayMode :: SDL.Window -> StateVar SDL.DisplayMode
-windowDisplayMode w = makeStateVar getWDM setWDM where
+windowDisplayMode w = StateVar getWDM setWDM where
   getWDM = alloca $ \p -> do
     SDL.getWindowDisplayMode w p >>= err
     peek p 
@@ -255,17 +254,19 @@ desktopDisplayMode idx = alloca $ \p -> do
   SDL.getDesktopDisplayMode (fromIntegral idx) p >>= err
   peek p
 
-elemOff :: forall a. Storable a => Ptr a -> Int -> Ptr a
-elemOff p n = p `plusPtr` (n * sizeOf (undefined :: a))
+-- elemOff :: forall a. Storable a => Ptr a -> Int -> Ptr a
+-- elemOff p n = p `plusPtr` (n * sizeOf (undefined :: a))
 
+{-
 windowSize :: SDL.Window -> StateVar Size
-windowSize win = makeStateVar g s where
+windowSize win = StateVar g s where
  g = allocaArray 2 $ \p -> do
    SDL.getWindowSize win p (elemOff p 1)
    w <- peek p
    h <- peekElemOff p 1
    return $ Size (fromIntegral w) (fromIntegral h)
  s (Size w h) = SDL.setWindowSize win (fromIntegral w) (fromIntegral h)
+-}
 
 -- | Abstracts over @SDL_GL_GetSwapInterval@ / @SDL_GL_SetSwapInterval@
 --
@@ -273,16 +274,16 @@ windowSize win = makeStateVar g s where
 -- late swap tearing support can be checked under the @GLX_EXT_swap_control_tear@ extension
 
 swapInterval :: StateVar Int
-swapInterval = makeStateVar (fromIntegral <$> SDL.glGetSwapInterval) (\a -> SDL.glSetSwapInterval (fromIntegral a) >>= err)
+swapInterval = StateVar (fromIntegral <$> SDL.glGetSwapInterval) (\a -> SDL.glSetSwapInterval (fromIntegral a) >>= err)
 
 -- * Utilities
 
 -- | Use a GLattr as a variable
 attr :: SDL.GLattr -> StateVar Int
-attr a = makeStateVar (getAttr a) (setAttr a)
+attr a = StateVar (getAttr a) (setAttr a)
 
 boolAttr :: SDL.GLattr -> StateVar Bool
-boolAttr = xmap fromEnum toEnum . attr
+boolAttr = mapStateVar fromEnum toEnum . attr
 
 getAttr :: SDL.GLattr -> IO Int
 getAttr a = alloca $ \p -> do
