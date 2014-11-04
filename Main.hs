@@ -35,9 +35,9 @@ import System.IO
 import Graphics.Rendering.OpenGL as GL hiding (doubleBuffer)
 import Graphics.Rendering.OpenGL.Raw as GL
 import Graphics.UI.SDL.Enum.Pattern
-import Graphics.UI.SDL.Event as SDL
-import Graphics.UI.SDL.Types as SDL
-import Graphics.UI.SDL.Video as SDL
+import Graphics.UI.SDL as SDL
+-- import Graphics.UI.SDL.Types as SDL
+-- import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Display
@@ -110,15 +110,15 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   label "sdl.version" ekg >>= \ lv -> version >>= assign lv . show
  
   -- start SDL
-  init InitFlagEverything
-  contextMajorVersion &= 4
-  contextMinorVersion &= 1
-  contextProfileMask  &= GLProfileCore
-  redSize   &= 5
-  greenSize &= 5
-  blueSize  &= 5
-  depthSize &= 16
-  doubleBuffer &= True
+  SDL.init InitFlagEverything >>= err
+  glSetAttribute glAttrContextMajorVersion 4 >>= err
+  glSetAttribute glAttrContextMinorVersion 1 >>= err
+  glSetAttribute glAttrContextProfileMask  GLProfileCore >>= err
+  glSetAttribute glAttrRedSize 5 >>= err
+  glSetAttribute glAttrGreenSize 5 >>= err
+  glSetAttribute glAttrBlueSize 5 >>= err
+  glSetAttribute glAttrDepthSize 16 >>= err
+  glSetAttribute glAttrDoubleBuffer 1 >>= err
   let w = opts^.optionsWindowWidth
       h = opts^.optionsWindowHeight
       flags = WindowFlagOpenGL
@@ -157,7 +157,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   runReaderT (evalStateT core dsp) sys `finally` do
     glDeleteContext cxt
     destroyWindow window
-    quit
+    SDL.quit
     exitSuccess
   
 core :: (MonadIO m, MonadState s m, HasDisplay s, HasCaches s, MonadReader e m, HasSystem e, HasOptions e) => m a
