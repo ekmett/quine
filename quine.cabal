@@ -42,6 +42,7 @@ library
     Quine.GL.Error
     Quine.GL.Program
     Quine.GL.Shader
+    Quine.GL.Version
     Quine.Monitor
     Quine.Options
     Quine.SDL
@@ -89,6 +90,7 @@ executable quine
     base >= 4.7 && < 5,
     containers,
     data-default,
+    gl >= 0.4,
     quine,
     lens,
     linear,

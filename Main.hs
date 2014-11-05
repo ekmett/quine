@@ -43,9 +43,13 @@ import Prelude hiding (init)
 import Quine.Display
 import Quine.Exception
 import Quine.GL
+import Quine.GL.Error
+import Quine.GL.Program
+import Quine.GL.Shader
 import Quine.Monitor
 import Quine.Options
 import Quine.SDL
+import Quine.StateVar
 
 #include "locations.h"
 
@@ -78,15 +82,6 @@ instance HasSystem System where
 
 -- * State
 
-data Errors = Errors [Error] deriving (Show,Typeable)
-instance Exception Errors
-
--- | Check OpenGL for errors, throw them if we find them
-sanityCheck :: MonadIO m => m ()
-sanityCheck = do
-  es <- errors
-  unless (null es) $ liftIO $ throw $ Errors es
-
 main :: IO ()
 -- main is always bound, but what about from ghci?
 main = runInBoundThread $ withCString "quine" $ \windowName -> do
@@ -111,14 +106,14 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
  
   -- start SDL
   init InitFlagEverything
-  contextMajorVersion &= 4
-  contextMinorVersion &= 1
-  contextProfileMask  &= GLProfileCore
-  redSize   &= 5
-  greenSize &= 5
-  blueSize  &= 5
-  depthSize &= 16
-  doubleBuffer &= True
+  contextMajorVersion $= 4
+  contextMinorVersion $= 1
+  contextProfileMask  $= GLProfileCore
+  redSize   $= 5
+  greenSize $= 5
+  blueSize  $= 5
+  depthSize $= 16
+  doubleBuffer $= True
   let w = opts^.optionsWindowWidth
       h = opts^.optionsWindowHeight
       flags = WindowFlagOpenGL
@@ -136,7 +131,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   label "gl.version" ekg         >>= \ lv -> get glVersion >>= assign lv
   label "gl.shading.version" ekg >>= \ lv -> get shadingLanguageVersion >>= assign lv
   -- glEnable gl_FRAMEBUFFER_SRGB
-  sanityCheck
+  throwErrors
   se <- buildShaderEnv opts
   fc <- counter "quine.frame" ekg
   vw <- gauge "viewport.width" ekg
@@ -168,51 +163,51 @@ core = do
   iResolution <- uni  scn "iResolution"
   iGlobalTime <- unif scn "iGlobalTime"
   epoch <- liftIO getCurrentTime
-  sanityCheck
-  currentProgram &= Just scn
-  bindVertexArrayObject &= Just emptyVAO
+  throwErrors
+  currentProgram $= Just scn
+  bindVertexArrayObject $= Just emptyVAO
   forever $ do 
     poll 
     resize 
     render $ do
-      liftIO getCurrentTime >>= \now -> iGlobalTime &= realToFrac (diffUTCTime now epoch)
-      use displayWindowSize >>= \sz -> iResolution &= toVertex2 sz
+      liftIO getCurrentTime >>= \now -> iGlobalTime $= realToFrac (diffUTCTime now epoch)
+      use displayWindowSize >>= \sz -> iResolution $= toVertex2 sz
       liftIO $ drawArrays Triangles 0 3
 
 -- | 
 -- Build a StateVar for getting/setting a uniform
 uni :: (MonadIO m, Uniform a) => Program -> String -> m (StateVar a)
-uni p u = uniform `liftM` the (uniformLocation p u)
+uni p u = uniform `liftM` get (uniformLocation p u)
 
 -- | 
 -- Build a StateVar for getting/setting a uniform float
 --
 -- Workaround for <https://github.com/haskell-opengl/OpenGL/issues/64>
 unif :: MonadIO m => Program -> String -> m (StateVar GLfloat)
-unif p u = (xmap Index1 (\(Index1 a) -> a) . uniform) `liftM` the (uniformLocation p u)
+unif p u = (xmap Index1 (\(Index1 a) -> a) . uniform) `liftM` get (uniformLocation p u)
 
 toVertex2 :: Size -> Vertex2 GLfloat
 toVertex2 (Size w h) = Vertex2 (fromIntegral w) (fromIntegral h)
 
-rescale :: Float -> Size -> Size
+rescale :: Float -> (Int, Int) -> (Int, Int)
 rescale r (Size w h) = Size (floor $ r * fromIntegral w) (floor $ r * fromIntegral h)
 
 resize :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m ()
 resize = do
   win  <- use displayWindow
   opts <- view options
-  sz@(Size w h) <- rescale (pointScale opts) `liftM` the (windowSize win) -- retina
+  sz@(Size w h) <- rescale (pointScale opts) `liftM` get (windowSize win) -- retina
   sys <- view system
   assign (sys^.widthGauge)  $ fromIntegral w
   assign (sys^.heightGauge) $ fromIntegral h
-  viewport &= (Position 0 0, sz)
+  viewport $= (Position 0 0, sz)
   displayWindowSize .= sz
 
 render :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do
   inc =<< view (system.frameCounter)
   liftIO $ do
-    clearColor &= Color4 0 0 0 1
+    clearColor $= Color4 0 0 0 1
     clear [ColorBuffer, StencilBuffer, DepthBuffer]
   kernel
   w <- use displayWindow
