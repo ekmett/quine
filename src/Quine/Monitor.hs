@@ -32,7 +32,6 @@ module Quine.Monitor
   , withServer
   , forkServer
   -- * Modifiers
-  , Setting(..)
   , Updating(..)
   , Gauged(..)
   , Incremental(..)
@@ -43,8 +42,7 @@ module Quine.Monitor
   , monitorUri
   ) where
 
--- import Control.Exception
-import Control.Lens hiding (Setting)
+import Control.Lens
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Data.ByteString.Lens
@@ -54,17 +52,13 @@ import Data.Foldable as F
 import Data.Int
 import Data.Text
 import Options.Applicative
--- import Quine.Exception
+import Quine.StateVar
 import System.IO
 import System.Process
 import System.Remote.Monitoring
 import qualified System.Remote.Gauge as G
 import qualified System.Remote.Counter as C
 import qualified System.Remote.Label as L
-
-class Setting t a | t -> a where
-  assign :: MonadIO m => t -> a -> m ()        -- set
-  assign _ _ = return ()
 
 class Updating t a | t -> a where
   update :: MonadIO m => t -> (a -> a) -> m () -- modify
@@ -125,14 +119,14 @@ newtype Gauge = Gauge { runGauge :: Maybe G.Gauge } deriving Typeable
 newtype Label = Label { runLabel :: Maybe L.Label } deriving Typeable
 newtype Counter = Counter { runCounter :: Maybe C.Counter } deriving Typeable
 
-instance Setting Label String where
-  assign (Label t) a = liftIO $ maybe (return ()) (L.set ?? pack a) t
+instance HasSetter Label String where
+  Label t $= a = liftIO $ maybe (return ()) (L.set ?? pack a) t
 
 instance Updating Label String where
   update (Label t) f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
 
-instance Setting Gauge Int64 where
-  assign (Gauge t) a = liftIO $ maybe (return ()) (G.set ?? a) t
+instance HasSetter Gauge Int64 where
+  Gauge t $= a = liftIO $ maybe (return ()) (G.set ?? a) t
 
 instance Gauged Gauge Int64 where
   dec (Gauge t)   = liftIO $ maybe (return ()) G.dec t

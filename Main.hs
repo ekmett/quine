@@ -106,7 +106,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- set up EKG
   ekg <- forkMonitor opts
 
-  label "sdl.version" ekg >>= \ lv -> SDL.version >>= assign lv . show
+  label "sdl.version" ekg >>= ($= show SDL.version)
  
   -- start SDL
   init InitFlagEverything
@@ -133,11 +133,11 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 
   when (opts^.optionsDebug) installDebugHook
 
-  label "gl.vendor" ekg           >>= \ lv -> assign lv vendor
-  label "gl.renderer" ekg         >>= \ lv -> assign lv renderer
-  label "gl.version" ekg          >>= \ lv -> assign lv (show GL.version)
-  label "gl.shading.version" ekg  >>= \ lv -> assign lv (show shadingLanguageVersion)
-  label "gl.shading.versions" ekg >>= \ lv -> assign lv (show shadingLanguageVersions)
+  label "gl.vendor" ekg           >>= ($= vendor)
+  label "gl.renderer" ekg         >>= ($= renderer)
+  label "gl.version" ekg          >>= ($= show GL.version)
+  label "gl.shading.version" ekg  >>= ($= show shadingLanguageVersion)
+  label "gl.shading.versions" ekg >>= ($= show shadingLanguageVersions)
   -- glEnable gl_FRAMEBUFFER_SRGB
   throwErrors
   se <- buildShaderEnv opts
@@ -191,8 +191,8 @@ resize = do
   opts <- view options
   sz@(w,h) <- rescale (pointScale opts) `liftM` get (windowSize win) -- retina
   sys <- view system
-  assign (sys^.widthGauge)  (fromIntegral w)
-  assign (sys^.heightGauge) (fromIntegral h)
+  (sys^.widthGauge)  $= fromIntegral w
+  (sys^.heightGauge) $= fromIntegral h
   glViewport 0 0 (fromIntegral w) (fromIntegral h)
   displayWindowSize .= sz
 

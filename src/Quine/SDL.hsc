@@ -64,10 +64,10 @@ import Data.Typeable
 import Data.Version as Data
 import Foreign
 import Foreign.C
--- import Graphics.Rendering.OpenGL.GL.CoordTrans
 import Quine.StateVar
 import qualified Graphics.UI.SDL as SDL
 import Prelude hiding (init)
+import System.IO.Unsafe
 
 #include "SDL.h"
 
@@ -112,18 +112,21 @@ wasInit = liftIO . SDL.wasInit
 -- * Version
 
 -- | Get the Version (and Revision)
-version :: MonadIO m => m Data.Version
-version = liftIO $ alloca $ \p -> do
+version :: Data.Version
+version = unsafePerformIO $ alloca $ \p -> do
   SDL.getVersion p
   SDL.Version x y z <- peek p
-  w <- revisionNumber
-  return $ Data.Version (fromIntegral <$> [fromIntegral x,fromIntegral y,fromIntegral z, w]) []
+  return $ Data.Version (fromIntegral <$> [fromIntegral x,fromIntegral y,fromIntegral z, revisionNumber]) []
+{-# NOINLINE version #-}
 
-revision :: MonadIO m => m String
-revision = liftIO $ SDL.getRevision >>= peekCString
+revision :: String
+revision = unsafePerformIO $ SDL.getRevision >>= peekCString
+{-# NOINLINE revision #-}
 
-revisionNumber :: MonadIO m => m Int
-revisionNumber = liftIO $ fromIntegral <$> SDL.getRevisionNumber
+revisionNumber :: Int
+revisionNumber = unsafePerformIO $ fromIntegral <$> SDL.getRevisionNumber
+{-# NOINLINE revisionNumber #-}
+
 -- * Attribute StateVars
   
 -- | get\/set @SDL_GL_RED_SIZE@, the minimum number of bits for the red channel of the color buffer; defaults to 3

@@ -23,6 +23,8 @@ import Data.Void
 import Foreign.Ptr
 import Foreign.Storable
 
+infixr 2 $=, $=!
+
 class HasSetter t a | t -> a where
   ($=) :: MonadIO m => t -> a -> m ()
 
