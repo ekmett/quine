@@ -39,7 +39,6 @@ import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL.Raw.Types
 import Graphics.GL.Raw.Profile.Core45
-import Quine.GL.Classes
 import Quine.GL.Object
 import Quine.GL.Shader
 

@@ -39,7 +39,6 @@ import GHC.Generics
 import Graphics.GL.Raw.Types
 import Graphics.GL.Raw.Profile.Core45
 import Quine.StateVar
-import Quine.GL.Classes
 import Quine.GL.Object
 
 -- * Shader types
@@ -64,16 +63,13 @@ instance Show ShaderType where
     GL_COMPUTE_SHADER         -> showString "ComputeShader"
     _ -> showParen (d >= 10) $ showString "ShaderType " . showsPrec 11 t
 
-instance GL ShaderType where
-  _GL = iso ShaderType (\(ShaderType a) -> a)
-
 -- * Shaders
 
 newtype Shader = Shader GLuint deriving
   (Eq,Ord,Show,Read,Typeable,Data,Generic)
 
 instance Object Shader where
-  objectId (Shader s) = s
+  object (Shader s) = s
   isa (Shader s) = (GL_FALSE /=) `liftM` glIsShader s 
   delete (Shader s) = glDeleteShader s
 

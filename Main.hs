@@ -46,9 +46,10 @@ import Quine.GL
 import Quine.GL.Error
 import Quine.GL.Program
 import Quine.GL.Shader
+import Quine.GL.Version as GL
 import Quine.Monitor
 import Quine.Options
-import Quine.SDL
+import Quine.SDL as SDL
 import Quine.StateVar
 
 #include "locations.h"
@@ -102,7 +103,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- set up EKG
   ekg <- forkMonitor opts
 
-  label "sdl.version" ekg >>= \ lv -> version >>= assign lv . show
+  label "sdl.version" ekg >>= \ lv -> SDL.version >>= assign lv . show
  
   -- start SDL
   init InitFlagEverything
@@ -126,10 +127,11 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- start OpenGL
   cxt <- glCreateContext window
   makeCurrent window cxt
-  label "gl.vendor" ekg          >>= \ lv -> get vendor >>= assign lv
-  label "gl.renderer" ekg        >>= \ lv -> get renderer >>= assign lv
-  label "gl.version" ekg         >>= \ lv -> get glVersion >>= assign lv
-  label "gl.shading.version" ekg >>= \ lv -> get shadingLanguageVersion >>= assign lv
+  label "gl.vendor" ekg          >>= \ lv -> vendor >>= assign lv
+  label "gl.renderer" ekg        >>= \ lv -> renderer >>= assign lv
+  label "gl.version" ekg         >>= \ lv -> GL.version >>= assign lv . show
+  label "gl.shading.version" ekg >>= \ lv -> shadingLanguageVersion >>= assign lv . show
+  label "gl.shading.versions" ekg >>= \ lv -> shadingLanguageVersions >>= assign lv . show
   -- glEnable gl_FRAMEBUFFER_SRGB
   throwErrors
   se <- buildShaderEnv opts
@@ -141,7 +143,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         { _displayWindow            = window
         , _displayGL                = cxt
         , _displayFullScreen        = opts^.optionsFullScreen
-        , _displayWindowSize        = Size (fromIntegral w) (fromIntegral h)
+        , _displayWindowSize        = (fromIntegral w, fromIntegral h)
         , _displayWindowSizeChanged = True
         , _displayMinimized         = False
         , _displayHasMouseFocus     = True
@@ -159,7 +161,7 @@ core = do
   screenShader <- compile VertexShader "screen.vert"
   whiteShader <- compile FragmentShader =<< view optionsFragment
   scn <- link screenShader whiteShader
-  emptyVAO <- generate
+  emptyVAO <- alloca $ (>>) <$> glGenVertexArrays 1 <*> peek
   iResolution <- uni  scn "iResolution"
   iGlobalTime <- unif scn "iGlobalTime"
   epoch <- liftIO getCurrentTime

@@ -38,11 +38,12 @@ library
     Quine.Display
     Quine.Exception
     Quine.GL
-    Quine.GL.Classes
     Quine.GL.Error
+    Quine.GL.Object
     Quine.GL.Program
     Quine.GL.Shader
     Quine.GL.Version
+    Quine.GL.VertexArray
     Quine.Monitor
     Quine.Options
     Quine.SDL

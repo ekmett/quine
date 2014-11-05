@@ -3,19 +3,24 @@ module Quine.GL.Object
   , Gen(..)
   ) where
 
-class Object t where
-  {-# MINIMAL objectId, isa, (delete | deletes) #-}
-  objectId :: a -> GLuint
+import Control.Monad
+import Control.Monad.IO.Class
+import Data.Functor
+import Graphics.GL.Raw.Types
+
+class Object a where
+  {-# MINIMAL object, isa, (delete | deletes) #-}
+  object :: a -> GLuint
 
   isa :: MonadIO m => a -> m Bool
 
   delete :: MonadIO m => a -> m ()
-  delete = deletes . pure
+  delete = deletes . return
 
   deletes :: MonadIO m => [a] -> m ()
   deletes xs = liftIO $ forM_ xs delete
 
-class Object t => Gen t where
+class Object a => Gen a where
   {-# MINIMAL gen | gens #-}
   gen :: MonadIO m => m a
   gen = liftIO $ head <$> gens 1
