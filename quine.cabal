@@ -45,6 +45,7 @@ library
     Quine.GL.Uniform
     Quine.GL.Version
     Quine.GL.VertexArray
+    Quine.Image
     Quine.Monitor
     Quine.Options
     Quine.SDL

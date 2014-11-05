@@ -9,7 +9,7 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
--- Transcoding between JuicyPixels and OpenGL
+-- Transcoding between @JuicyPixels@ and @gl@
 --------------------------------------------------------------------
 module Quine.Image
   ( 
@@ -30,116 +30,124 @@ import Data.Vector.Storable as V
 import Data.Vector.Storable.Mutable as MV
 import Data.Word
 import Foreign.ForeignPtr
-import Graphics.Rendering.OpenGL hiding (imageHeight, Proxy)
+import Foreign.Marshal.Array
+import Foreign.Ptr
+import Graphics.GL.Raw.Profile.Core41
+import Graphics.GL.Raw.Types 
 
 -- * 2D Image formats
 
 class Storable (PixelBaseComponent a) => ImageFormat a where
-  pixelInternalFormat :: p a -> PixelInternalFormat
-  pixelFormat         :: p a -> PixelFormat
-  pixelDataType       :: p a -> DataType
+  pixelInternalFormat :: p a -> GLint
+  pixelFormat         :: p a -> GLenum
+  pixelDataType       :: p a -> GLenum
+  pixelSwizzle        :: p a -> GLenum -> IO ()
+  pixelSwizzle _ _ = return ()
 
 instance ImageFormat PixelRGB8 where
-  pixelInternalFormat _ = RGB'
-  pixelFormat         _ = RGB
-  pixelDataType       _ = UnsignedByte
+  pixelInternalFormat _ = GL_RGB8
+  pixelFormat         _ = GL_RGB
+  pixelDataType       _ = GL_UNSIGNED_BYTE
 
 instance ImageFormat PixelRGB16 where
-  pixelInternalFormat _ = RGB16
-  pixelFormat         _ = RGB
-  pixelDataType       _ = UnsignedShort
+  pixelInternalFormat _ = GL_RGB16
+  pixelFormat         _ = GL_RGB
+  pixelDataType       _ = GL_UNSIGNED_SHORT
 
 instance ImageFormat PixelRGBA8 where
-  pixelInternalFormat _ = RGBA'
-  pixelFormat         _ = RGBA
-  pixelDataType       _ = UnsignedByte
+  pixelInternalFormat _ = GL_RGBA8
+  pixelFormat         _ = GL_RGBA
+  pixelDataType       _ = GL_UNSIGNED_BYTE
 
 instance ImageFormat PixelRGBA16 where
-  pixelInternalFormat _ = RGBA16
-  pixelFormat         _ = RGBA
-  pixelDataType       _ = UnsignedShort
+  pixelInternalFormat _ = GL_RGBA16
+  pixelFormat         _ = GL_RGBA
+  pixelDataType       _ = GL_UNSIGNED_SHORT
 
 instance ImageFormat PixelRGBF where
-  pixelInternalFormat _ = RGB32F
-  pixelFormat         _ = RGB
-  pixelDataType       _ = Float
+  pixelInternalFormat _ = GL_RGB32F
+  pixelFormat         _ = GL_RGB
+  pixelDataType       _ = GL_FLOAT
+
+swizzleL :: GLenum -> IO ()
+swizzleL t = do
+  allocaArray 4 $ \p -> do
+    pokeArray p [GL_RED, GL_RED, GL_RED, GL_ONE]
+    glTexParameteriv t GL_TEXTURE_SWIZZLE_RGBA p
+
+swizzleLA :: GLenum -> IO ()
+swizzleLA t = do
+  allocaArray 4 $ \p -> do
+    pokeArray p [GL_RED, GL_RED, GL_RED, GL_GREEN]
+    glTexParameteriv t GL_TEXTURE_SWIZZLE_RGBA p
 
 instance ImageFormat Word8 where
-  pixelInternalFormat _ = Luminance8
-  pixelFormat         _ = Luminance
-  pixelDataType       _ = UnsignedByte
+  pixelInternalFormat _ = GL_R8
+  pixelFormat         _ = GL_RED
+  pixelDataType       _ = GL_UNSIGNED_BYTE
+  pixelSwizzle        _ = swizzleL
 
 instance ImageFormat Word16 where
-  pixelInternalFormat _ = Luminance16
-  pixelFormat         _ = Luminance
-  pixelDataType       _ = UnsignedShort
+  pixelInternalFormat _ = GL_R16
+  pixelFormat         _ = GL_RED
+  pixelDataType       _ = GL_UNSIGNED_SHORT
+  pixelSwizzle        _ = swizzleL
 
-instance ImageFormat Word32 where
-  pixelInternalFormat _ = R32I
-  pixelFormat         _ = Red
-  pixelDataType       _ = UnsignedInt
-
--- | Luminance32F is missing, you'll be seeing Red
---
--- <https://github.com/haskell-opengl/OpenGL/issues/66>
 instance ImageFormat Float where
-  pixelInternalFormat _ = R32F
-  pixelFormat         _ = Red
-  pixelDataType       _ = Float
+  pixelInternalFormat _ = GL_R32F
+  pixelFormat         _ = GL_RED
+  pixelDataType       _ = GL_FLOAT
+  pixelSwizzle        _ = swizzleL
 
 instance ImageFormat PixelYA8 where
-  pixelInternalFormat _ = Luminance8Alpha8
-  pixelFormat         _ = LuminanceAlpha
-  pixelDataType       _ = UnsignedByte
+  pixelInternalFormat _ = GL_RG8
+  pixelFormat         _ = GL_RG
+  pixelDataType       _ = GL_UNSIGNED_BYTE
+  pixelSwizzle        _ = swizzleLA
 
 instance ImageFormat PixelYA16 where
-  pixelInternalFormat _ = Luminance16Alpha16
-  pixelFormat         _ = LuminanceAlpha
-  pixelDataType       _ = UnsignedShort
+  pixelInternalFormat _ = GL_RG16
+  pixelFormat         _ = GL_RG
+  pixelDataType       _ = GL_UNSIGNED_SHORT
+  pixelSwizzle        _ = swizzleLA
 
 -- * Download
 
-download :: forall m a. (MonadIO m, ImageFormat a) => Position -> Size -> m (Image a)
-download pos sz@(Size w0 h0) 
-  | w <- fromIntegral w0, w >= 0
-  , h <- fromIntegral h0, h >= 0
-  , n <- w * h = liftIO $ do
+-- @'download' x y w h@ copies w*h region of the screen starting from position (x,y) into a JuicyPixels image
+download :: forall m a. (MonadIO m, ImageFormat a) => Int -> Int -> Int -> Int -> m (Image a)
+download x y w h
+  | w >= 0, h >= 0, n <- w * h = liftIO $ do
     fp <- mallocForeignPtrArray n
-    withForeignPtr fp $ \ p -> readPixels pos sz $
-      PixelData (pixelFormat (Proxy :: Proxy a)) (pixelDataType (Proxy :: Proxy a)) p
+    withForeignPtr fp $ glReadPixels
+      (fromIntegral x) (fromIntegral y)
+      (fromIntegral w) (fromIntegral h)
+      (pixelFormat   (Proxy :: Proxy a))
+      (pixelDataType (Proxy :: Proxy a)) . castPtr
     return $ Image w h $ V.unsafeFromForeignPtr fp 0 n
   | otherwise = error "download: bad size"
 
-downloadM :: forall m a. (MonadIO m, ImageFormat a) => Position -> MutableImage RealWorld a -> m ()
-downloadM pos (MutableImage w h mv) = liftIO $ MV.unsafeWith mv $ \ p -> readPixels pos (Size (fromIntegral w) (fromIntegral h)) $
-    PixelData (pixelFormat (Proxy :: Proxy a)) (pixelDataType (Proxy :: Proxy a)) p
+-- | @'downloadM' x0 y0@ copies the screen starting at position (x,y) into an existing mutable image
+downloadM :: forall m a. (MonadIO m, ImageFormat a) => Int -> Int -> MutableImage RealWorld a -> m ()
+downloadM x y (MutableImage w h mv) = liftIO $ MV.unsafeWith mv $ glReadPixels
+  (fromIntegral x) (fromIntegral y)
+  (fromIntegral w) (fromIntegral h)
+  (pixelFormat   (Proxy :: Proxy a))
+  (pixelDataType (Proxy :: Proxy a)) . castPtr
 
 -- * Upload
 
 class Image2D i where
-  upload :: (MonadIO m, TwoDimensionalTextureTarget t) => i -> t -> m ()
+  upload :: MonadIO m => i -> GLenum -> m ()
 
 instance ImageFormat a => Image2D (Image a) where
-  upload i@(Image w h v) t = liftIO $ V.unsafeWith v $ \p -> 
-    texImage2D 
-      t 
-      NoProxy 
-      0 -- level
-      (pixelInternalFormat i) 
-      (TextureSize2D (fromIntegral w) (fromIntegral h))
-      0 -- border
-      (PixelData (pixelFormat i) (pixelDataType i) p)
+  upload i@(Image w h v) t = liftIO $ do
+    V.unsafeWith v $ glTexImage2D t 0 (pixelInternalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelDataType i) . castPtr
+    pixelSwizzle i t
 
 instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
-  upload i@(MutableImage w h v) t = liftIO $ MV.unsafeWith v $ \p -> 
-    texImage2D 
-      t 
-      NoProxy 
-      0 -- level
-      (pixelInternalFormat i) 
-      (TextureSize2D (fromIntegral w) (fromIntegral h))
-      0 -- border
-      (PixelData (pixelFormat i) (pixelDataType i) p)
+  upload i@(MutableImage w h v) t = liftIO $ do
+    MV.unsafeWith v $ glTexImage2D t 0 (pixelInternalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelDataType i) . castPtr
+    pixelSwizzle i t
 
 instance Image2D DynamicImage where
   upload (ImageY8 i)     = upload i
