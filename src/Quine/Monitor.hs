@@ -32,7 +32,6 @@ module Quine.Monitor
   , withServer
   , forkServer
   -- * Modifiers
-  , Updating(..)
   , Gauged(..)
   , Incremental(..)
   -- * Options
@@ -59,10 +58,6 @@ import System.Remote.Monitoring
 import qualified System.Remote.Gauge as G
 import qualified System.Remote.Counter as C
 import qualified System.Remote.Label as L
-
-class Updating t a | t -> a where
-  update :: MonadIO m => t -> (a -> a) -> m () -- modify
-  update _ _ = return ()
 
 class Num a => Gauged t a | t -> a where
   dec :: MonadIO m => t -> m ()
@@ -122,8 +117,9 @@ newtype Counter = Counter { runCounter :: Maybe C.Counter } deriving Typeable
 instance HasSetter Label String where
   Label t $= a = liftIO $ maybe (return ()) (L.set ?? pack a) t
 
-instance Updating Label String where
-  update (Label t) f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
+instance HasUpdate Label String where
+  Label t $~ f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
+  Label t $~! f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
 
 instance HasSetter Gauge Int64 where
   Gauge t $= a = liftIO $ maybe (return ()) (G.set ?? a) t

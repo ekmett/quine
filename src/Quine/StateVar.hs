@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DefaultSignatures #-}
 module Quine.StateVar
   ( HasGetter(get)
   , GettableStateVar
@@ -10,6 +11,7 @@ module Quine.StateVar
   , ($=!)
   , StateVar(StateVar)
   , mapStateVar
+  , HasUpdate(($~), ($~!))
   ) where
 
 import Control.Concurrent.STM
@@ -23,7 +25,7 @@ import Data.Void
 import Foreign.Ptr
 import Foreign.Storable
 
-infixr 2 $=, $=!
+infixr 2 $=, $=!, $~, $~!
 
 class HasSetter t a | t -> a where
   ($=) :: MonadIO m => t -> a -> m ()
@@ -92,3 +94,21 @@ instance HasSetter (StateVar a) a where
 mapStateVar :: (b -> a) -> (a -> b) -> StateVar a -> StateVar b
 mapStateVar ba ab (StateVar ga sa) = StateVar (ab <$> ga) (sa . ba)
 {-# INLINE mapStateVar #-}
+
+class HasUpdate t a | t -> a where
+  ($~) :: MonadIO m => t -> (a -> a) -> m ()
+  default ($~) :: (MonadIO m, HasGetter t a, HasSetter t a) => t -> (a -> a) -> m ()
+  r $~ f = liftIO $ do
+    a <- get r
+    r $= f a
+  ($~!) :: MonadIO m => t -> (a -> a) -> m ()
+  default ($~!) :: (MonadIO m, HasGetter t a, HasSetter t a) => t -> (a -> a) -> m ()
+  r $~! f = liftIO $ do
+    a <- get r
+    r $=! f a
+
+instance HasUpdate (StateVar a) a
+instance Storable a => HasUpdate (Ptr a) a
+instance HasUpdate (IORef a) a where
+  r $~ f  = liftIO $ atomicModifyIORef r $ \a -> (f a,())
+  r $~! f = liftIO $ atomicModifyIORef' r $ \a -> (f a,())
