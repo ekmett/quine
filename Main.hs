@@ -38,6 +38,7 @@ import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Options.Applicative
 import Prelude hiding (init)
+import Quine.Debug
 import Quine.Display
 import Quine.Exception
 import Quine.GL
@@ -101,6 +102,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
       hPrint stderr e
       exitFailure
 
+
   -- set up EKG
   ekg <- forkMonitor opts
 
@@ -128,6 +130,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- start OpenGL
   cxt <- glCreateContext window
   makeCurrent window cxt
+
+  when (opts^.optionsDebug) installDebugHook
 
   label "gl.vendor" ekg           >>= \ lv -> assign lv vendor
   label "gl.renderer" ekg         >>= \ lv -> assign lv renderer

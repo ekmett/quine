@@ -30,6 +30,7 @@ data Options = Options
   , _optionsWindowHeight     :: !Int
   , _optionsDataDir          :: !FilePath
   , _optionsFragment         :: !FilePath
+  , _optionsDebug            :: !Bool
   } deriving (Generic,Data,Typeable)
 
 makeClassy ''Options
@@ -51,9 +52,10 @@ parseOptions = do
        <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 600)
        <*> strOption (long "data" <> short 'd' <> help "location of the data directory" <> metavar "DIR" <> action "directory" <> value dd)
        <*> strOption (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> action "file" <> value "examples/chains.frag")
+       <*> switch (long "debug" <> help "turn on synchronous opengl debugging if available")
 
 instance Default Options where
-  def = Options def False False False 2.0 1024 768 "data" "chains.frag"
+  def = Options def False False False 2.0 1024 768 "data" "chains.frag" False
 
 pointScale :: Options -> Float
 pointScale opts = if opts^.optionsHighDPI then opts^.optionsHighDPIRatio else 1

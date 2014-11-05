@@ -3,17 +3,9 @@ module Quine.Debug
   ( installDebugHook
   ) where
 
-import Control.Applicative
-import Control.Exception
-import Control.Monad
 import Control.Monad.IO.Class
-import Data.Bits
-import Data.ByteString (ByteString)
-import Data.Typeable
 import Foreign.C.String
-import Foreign.Marshal.Alloc
 import Foreign.Ptr
-import Foreign.Storable
 import Graphics.GL.Raw.Extension.KHR.Debug
 import Graphics.GL.Raw.Profile.Core33
 import Graphics.GL.Raw.Types
