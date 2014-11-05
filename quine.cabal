@@ -42,6 +42,7 @@ library
     Quine.GL.Object
     Quine.GL.Program
     Quine.GL.Shader
+    Quine.GL.Uniform
     Quine.GL.Version
     Quine.GL.VertexArray
     Quine.Monitor

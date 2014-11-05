@@ -48,7 +48,7 @@ module Quine.SDL
   , swapInterval
   , windowDisplayMode
   , desktopDisplayMode
-  -- , windowSize
+  , windowSize
   , makeCurrent
   -- * Extensible Exceptions
   , SDLException(..)
@@ -254,19 +254,17 @@ desktopDisplayMode idx = alloca $ \p -> do
   SDL.getDesktopDisplayMode (fromIntegral idx) p >>= err
   peek p
 
--- elemOff :: forall a. Storable a => Ptr a -> Int -> Ptr a
--- elemOff p n = p `plusPtr` (n * sizeOf (undefined :: a))
+elemOff :: forall a. Storable a => Ptr a -> Int -> Ptr a
+elemOff p n = p `plusPtr` (n * sizeOf (undefined :: a))
 
-{-
-windowSize :: SDL.Window -> StateVar Size
+windowSize :: SDL.Window -> StateVar (Int, Int)
 windowSize win = StateVar g s where
  g = allocaArray 2 $ \p -> do
    SDL.getWindowSize win p (elemOff p 1)
    w <- peek p
    h <- peekElemOff p 1
-   return $ Size (fromIntegral w) (fromIntegral h)
- s (Size w h) = SDL.setWindowSize win (fromIntegral w) (fromIntegral h)
--}
+   return $ (fromIntegral w, fromIntegral h)
+ s (w, h) = SDL.setWindowSize win (fromIntegral w) (fromIntegral h)
 
 -- | Abstracts over @SDL_GL_GetSwapInterval@ / @SDL_GL_SetSwapInterval@
 --

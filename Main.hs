@@ -23,7 +23,6 @@ import Control.Lens.Extras (is)
 import Control.Monad hiding (forM_)
 import Control.Monad.Reader
 import Control.Monad.State hiding (get)
-import Data.Default
 import Data.Monoid
 import Data.Time.Clock
 import Data.Typeable
@@ -32,7 +31,6 @@ import Foreign.C
 import GHC.Conc
 import System.Exit
 import System.IO
-import Graphics.GL.Raw.Types
 import Graphics.GL.Raw.Profile.Core41
 import Graphics.UI.SDL.Enum.Pattern
 import Graphics.UI.SDL.Event as SDL
@@ -44,9 +42,12 @@ import Quine.Display
 import Quine.Exception
 import Quine.GL
 import Quine.GL.Error
+import Quine.GL.Object
 import Quine.GL.Program
 import Quine.GL.Shader
+import Quine.GL.Uniform
 import Quine.GL.Version as GL
+import Quine.GL.VertexArray
 import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
@@ -127,11 +128,11 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- start OpenGL
   cxt <- glCreateContext window
   makeCurrent window cxt
-  label "gl.vendor" ekg          >>= \ lv -> vendor >>= assign lv
-  label "gl.renderer" ekg        >>= \ lv -> renderer >>= assign lv
-  label "gl.version" ekg         >>= \ lv -> GL.version >>= assign lv . show
-  label "gl.shading.version" ekg >>= \ lv -> shadingLanguageVersion >>= assign lv . show
-  label "gl.shading.versions" ekg >>= \ lv -> shadingLanguageVersions >>= assign lv . show
+  label "gl.vendor" ekg           >>= \ lv -> assign lv vendor
+  label "gl.renderer" ekg         >>= \ lv -> assign lv renderer
+  label "gl.version" ekg          >>= \ lv -> assign lv (show GL.version)
+  label "gl.shading.version" ekg  >>= \ lv -> assign lv (show shadingLanguageVersion)
+  label "gl.shading.versions" ekg >>= \ lv -> assign lv (show shadingLanguageVersions)
   -- glEnable gl_FRAMEBUFFER_SRGB
   throwErrors
   se <- buildShaderEnv opts
@@ -161,61 +162,44 @@ core = do
   screenShader <- compile VertexShader "screen.vert"
   whiteShader <- compile FragmentShader =<< view optionsFragment
   scn <- link screenShader whiteShader
-  emptyVAO <- alloca $ (>>) <$> glGenVertexArrays 1 <*> peek
-  iResolution <- uni  scn "iResolution"
-  iGlobalTime <- unif scn "iGlobalTime"
+  emptyVAO <- gen
+  iResolution <- uniform2f scn "iResolution"
+  iGlobalTime <- uniform1f scn "iGlobalTime"
   epoch <- liftIO getCurrentTime
   throwErrors
-  currentProgram $= Just scn
-  bindVertexArrayObject $= Just emptyVAO
+  currentProgram   $= scn
+  boundVertexArray $= emptyVAO
   forever $ do 
     poll 
     resize 
     render $ do
       liftIO getCurrentTime >>= \now -> iGlobalTime $= realToFrac (diffUTCTime now epoch)
-      use displayWindowSize >>= \sz -> iResolution $= toVertex2 sz
-      liftIO $ drawArrays Triangles 0 3
-
--- | 
--- Build a StateVar for getting/setting a uniform
-uni :: (MonadIO m, Uniform a) => Program -> String -> m (StateVar a)
-uni p u = uniform `liftM` get (uniformLocation p u)
-
--- | 
--- Build a StateVar for getting/setting a uniform float
---
--- Workaround for <https://github.com/haskell-opengl/OpenGL/issues/64>
-unif :: MonadIO m => Program -> String -> m (StateVar GLfloat)
-unif p u = (xmap Index1 (\(Index1 a) -> a) . uniform) `liftM` get (uniformLocation p u)
-
-toVertex2 :: Size -> Vertex2 GLfloat
-toVertex2 (Size w h) = Vertex2 (fromIntegral w) (fromIntegral h)
+      use displayWindowSize >>= \sz  -> iResolution $= bimap fromIntegral fromIntegral sz
+      glDrawArrays GL_TRIANGLES 0 3
 
 rescale :: Float -> (Int, Int) -> (Int, Int)
-rescale r (Size w h) = Size (floor $ r * fromIntegral w) (floor $ r * fromIntegral h)
+rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)
 
 resize :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m ()
 resize = do
   win  <- use displayWindow
   opts <- view options
-  sz@(Size w h) <- rescale (pointScale opts) `liftM` get (windowSize win) -- retina
+  sz@(w,h) <- rescale (pointScale opts) `liftM` get (windowSize win) -- retina
   sys <- view system
-  assign (sys^.widthGauge)  $ fromIntegral w
-  assign (sys^.heightGauge) $ fromIntegral h
-  viewport $= (Position 0 0, sz)
+  assign (sys^.widthGauge)  (fromIntegral w)
+  assign (sys^.heightGauge) (fromIntegral h)
+  glViewport 0 0 (fromIntegral w) (fromIntegral h)
   displayWindowSize .= sz
 
 render :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do
   inc =<< view (system.frameCounter)
-  liftIO $ do
-    clearColor $= Color4 0 0 0 1
-    clear [ColorBuffer, StencilBuffer, DepthBuffer]
+  glClearColor 0 0 0 1
+  glClear $ GL_COLOR_BUFFER_BIT .|. GL_STENCIL_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
   kernel
   w <- use displayWindow
-  liftIO $ do
-    glFlush
-    glSwapWindow w
+  glFlush
+  liftIO $ glSwapWindow w
 
 -- * Polling
 
@@ -245,10 +229,10 @@ event WindowEvent { eventType = WindowEventClose       } = liftIO $ throw Shutdo
 event WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
 event WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
 event WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
-  displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
+  displayWindowSize        .= (fromIntegral w, fromIntegral h)
   displayWindowSizeChanged .= True
 event WindowEvent { eventType = WindowEventResized, windowEventData1 = w, windowEventData2 = h } = do
-  displayWindowSize        .= Size (fromIntegral w) (fromIntegral h)
+  displayWindowSize        .= (fromIntegral w, fromIntegral h)
   displayWindowSizeChanged .= True
 event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q
