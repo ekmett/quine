@@ -31,7 +31,6 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString as Strict
 import qualified Data.ByteString.Internal as Strict
-import Data.Coerce
 import Data.Default
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
@@ -41,6 +40,7 @@ import Graphics.GL.Raw.Types
 import Graphics.GL.Raw.Profile.Core45
 import Quine.GL.Object
 import Quine.GL.Shader
+import Quine.StateVar
 
 newtype Program = Program GLuint
 
@@ -190,5 +190,5 @@ geometryOutputType p = fromIntegral `liftM` getProgram1 p GL_GEOMETRY_OUTPUT_TYP
 
 usedProgram :: StateVar Program
 usedProgram = StateVar
-  (fmap Program $ alloca $ liftM (>>) (glGetIntegerv GL_CURRENT_PROGRAM) peek)
-  (coerce glUseProgram)
+  (fmap (Program . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv GL_CURRENT_PROGRAM) peek)
+  (glUseProgram . object)

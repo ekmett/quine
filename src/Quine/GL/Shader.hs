@@ -25,7 +25,6 @@ module Quine.GL.Shader
 
 import Control.Monad
 import Control.Monad.IO.Class
-import Control.Lens
 import qualified Data.ByteString as Strict
 import qualified Data.ByteString.Internal as Strict
 import qualified Data.ByteString.Lazy as Lazy
@@ -143,5 +142,5 @@ shaderInfoLog s = do
     then return Strict.empty
     else liftIO $ alloca $ \pl -> do
       Strict.createUptoN l' $ \ps -> do
-        glGetShaderInfoLog (objectId s) (fromIntegral l') pl (castPtr ps)
+        glGetShaderInfoLog (object s) (fromIntegral l') pl (castPtr ps)
         return $ l-1
