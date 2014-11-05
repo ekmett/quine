@@ -55,6 +55,7 @@ import Graphics.GL.Raw.Profile.Core41
 import Language.Preprocessor.Cpphs
 import Prelude hiding (concat)
 import Quine.GL.Shader
+import Quine.GL.Object
 import Quine.GL.Program
 import Quine.Options
 import Quine.StateVar
@@ -169,20 +170,20 @@ compile st fp = do
     compiled <- compileStatus s
     unless compiled $ do
       e <- shaderInfoLog s
-      deleteShader s
+      delete s
       throw $ ShaderException fp e
     return s
   
 -- | Link a program and vertex shader to build a program
 link :: MonadIO m => Shader -> Shader -> m Program
 link vs fs = liftIO $ do
-  p <- createProgram
+  p <- gen
   attachShader p vs
   attachShader p fs
   linkProgram p
   linked <- linkStatus p
   unless linked $ do
     e <- programInfoLog p
-    deleteProgram p
+    delete p
     throw $ ProgramException e
   return p

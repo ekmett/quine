@@ -1,9 +1,14 @@
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, PatternSynonyms #-}
 module Quine.GL.Uniform
   ( 
   -- * Uniform Locations
     UniformLocation(..)
   , uniformLocation
+  -- * Uniform Access
+  , uniform1f
+  , uniform2f
+  , uniform3f
+  , uniform4f
   -- * Uniform Types
   , UniformType(..)
   , showUniformType
@@ -16,7 +21,7 @@ module Quine.GL.Uniform
   , pattern UniformIvec2
   , pattern UniformIvec3
   , pattern UniformIvec4
-  , pattern UniformUnsigned
+  , pattern UniformUnsignedInt
   , pattern UniformUvec2
   , pattern UniformUvec3
   , pattern UniformUvec4
@@ -63,7 +68,7 @@ module Quine.GL.Uniform
   , pattern UniformUsampler2D
   , pattern UniformUsampler3D
   , pattern UniformUsamplerCube
-  , pattern UniformUsampler2DArray
+  , pattern UniformUsampler1DArray
   , pattern UniformUsampler2DArray
   , pattern UniformUsampler2DMS
   , pattern UniformUsampler2DMSArray
@@ -114,7 +119,7 @@ module Quine.GL.Uniform
   , pattern UniformUimage2DArray
   , pattern UniformUimage2DMS
   , pattern UniformUimage2DMSArray
-  , pattern UniformAtomicUnsigned
+  , pattern UniformAtomicUnsignedInt
   ) where
 
 import Control.Monad.IO.Class
@@ -175,7 +180,7 @@ pattern UniformInt = UniformType GL_INT
 pattern UniformIvec2 = UniformType GL_INT_VEC2
 pattern UniformIvec3 = UniformType GL_INT_VEC3
 pattern UniformIvec4 = UniformType GL_INT_VEC4
-pattern UniformUnsigned = UniformType int GL_UNSIGNED_INT
+pattern UniformUnsignedInt = UniformType GL_UNSIGNED_INT
 pattern UniformUvec2 = UniformType GL_UNSIGNED_INT_VEC2
 pattern UniformUvec3 = UniformType GL_UNSIGNED_INT_VEC3
 pattern UniformUvec4 = UniformType GL_UNSIGNED_INT_VEC4
@@ -267,7 +272,7 @@ pattern UniformUimage1DArray = UniformType GL_UNSIGNED_INT_IMAGE_1D_ARRAY
 pattern UniformUimage2DArray = UniformType GL_UNSIGNED_INT_IMAGE_2D_ARRAY
 pattern UniformUimage2DMS = UniformType GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE
 pattern UniformUimage2DMSArray = UniformType GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY
-pattern UniformAtomicUnsigned = UniformType GL_UNSIGNED_INT_ATOMIC_COUNTER
+pattern UniformAtomicUnsignedInt = UniformType GL_UNSIGNED_INT_ATOMIC_COUNTER
 
 instance Show UniformType where
   showsPrec d (UniformType t) = case t of
@@ -283,7 +288,7 @@ instance Show UniformType where
     GL_INT_VEC2 -> showString "UniformIvec2"
     GL_INT_VEC3 -> showString "UniformIvec3"
     GL_INT_VEC4 -> showString "UniformIvec4"
-    GL_UNSIGNED_INT -> showString "UniformUnsigned"
+    GL_UNSIGNED_INT -> showString "UniformUnsignedInt"
     GL_UNSIGNED_INT_VEC2 -> showString "UniformUvec2"
     GL_UNSIGNED_INT_VEC3 -> showString "UniformUvec3"
     GL_UNSIGNED_INT_VEC4 -> showString "UniformUvec4"
@@ -375,10 +380,10 @@ instance Show UniformType where
     GL_UNSIGNED_INT_IMAGE_2D_ARRAY -> showString "UniformUimage2DArray"
     GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE -> showString "UniformUimage2DMS"
     GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY -> showString "UniformUimage2DMSArray"
-    GL_UNSIGNED_INT_ATOMIC_COUNTER -> showString "UniformAtomicUnsigned"
-    other -> showParen (d > 10) $ showString "UniformType " . showsPrec 11l other
+    GL_UNSIGNED_INT_ATOMIC_COUNTER -> showString "UniformAtomicUnsignedInt"
+    other -> showParen (d > 10) $ showString "UniformType " . showsPrec 11 other
 
-showUniformType :: UniformType -> String
+showUniformType :: UniformType -> Maybe String
 showUniformType (UniformType e) = case e of
   GL_FLOAT -> Just "float"
   GL_FLOAT_VEC2 -> Just "vec2"
@@ -392,7 +397,7 @@ showUniformType (UniformType e) = case e of
   GL_INT_VEC2 -> Just "ivec2"
   GL_INT_VEC3 -> Just "ivec3"
   GL_INT_VEC4 -> Just "ivec4"
-  GL_UNSIGNED_INT -> Just "unsigned" int
+  GL_UNSIGNED_INT -> Just "unsigned int"
   GL_UNSIGNED_INT_VEC2 -> Just "uvec2"
   GL_UNSIGNED_INT_VEC3 -> Just "uvec3"
   GL_UNSIGNED_INT_VEC4 -> Just "uvec4"

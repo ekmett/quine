@@ -23,7 +23,7 @@ module Quine.GL.Program
   , geometryVerticesOut
   , geometryInputType
   , geometryOutputType
-  , usedProgram
+  , currentProgram
   ) where
 
 import Control.Applicative
@@ -188,7 +188,7 @@ geometryInputType p = fromIntegral `liftM` getProgram1 p GL_GEOMETRY_INPUT_TYPE
 geometryOutputType :: MonadIO m => Program -> m GLenum
 geometryOutputType p = fromIntegral `liftM` getProgram1 p GL_GEOMETRY_OUTPUT_TYPE
 
-usedProgram :: StateVar Program
-usedProgram = StateVar
+currentProgram :: StateVar Program
+currentProgram = StateVar
   (fmap (Program . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv GL_CURRENT_PROGRAM) peek)
   (glUseProgram . object)
