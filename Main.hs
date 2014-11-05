@@ -128,11 +128,14 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- start OpenGL
   cxt <- glCreateContext window
   makeCurrent window cxt
+
+{-
   label "gl.vendor" ekg           >>= \ lv -> assign lv vendor
   label "gl.renderer" ekg         >>= \ lv -> assign lv renderer
   label "gl.version" ekg          >>= \ lv -> assign lv (show GL.version)
   label "gl.shading.version" ekg  >>= \ lv -> assign lv (show shadingLanguageVersion)
   label "gl.shading.versions" ekg >>= \ lv -> assign lv (show shadingLanguageVersions)
+-}
   -- glEnable gl_FRAMEBUFFER_SRGB
   throwErrors
   se <- buildShaderEnv opts

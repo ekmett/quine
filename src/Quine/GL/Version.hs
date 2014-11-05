@@ -42,7 +42,7 @@ versionString = unsafePerformIO $ getString GL_VERSION
 
 -- | Returns a version or release number.
 version :: Version
-version = error "illegal version number" `fromMaybe` parse versionString
+version = Version [] [] `fromMaybe` parse versionString
 
 shadingLanguageVersionString :: String
 shadingLanguageVersionString = unsafePerformIO $ getString GL_SHADING_LANGUAGE_VERSION
@@ -50,7 +50,7 @@ shadingLanguageVersionString = unsafePerformIO $ getString GL_SHADING_LANGUAGE_V
 
 -- | Return the primary shading language version
 shadingLanguageVersion :: Version
-shadingLanguageVersion = error "illegal version number" `fromMaybe` parse shadingLanguageVersionString
+shadingLanguageVersion = Version [] [] `fromMaybe` parse shadingLanguageVersionString
 
 -- | Returns a set of shading language versions supported by this implementation.
 shadingLanguageVersions :: Set Version
