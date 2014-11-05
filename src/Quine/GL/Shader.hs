@@ -19,7 +19,6 @@ module Quine.GL.Shader
   , shaderSourceLength
   , shaderSource
   , shaderInfoLog
-  , deleteShader
   -- * OpenGL 4.1+, OpenGL ES 2+
   , releaseShaderCompiler
   ) where
@@ -41,6 +40,7 @@ import Graphics.GL.Raw.Types
 import Graphics.GL.Raw.Profile.Core45
 import Quine.StateVar
 import Quine.GL.Classes
+import Quine.GL.Object
 
 -- * Shader types
 
@@ -73,7 +73,9 @@ newtype Shader = Shader GLuint deriving
   (Eq,Ord,Show,Read,Typeable,Data,Generic)
 
 instance Object Shader where
-  object (Shader s) = s
+  objectId (Shader s) = s
+  isa (Shader s) = (GL_FALSE /=) `liftM` glIsShader s 
+  delete (Shader s) = glDeleteShader s
 
 -- | Create a shader
 createShader :: MonadIO m => ShaderType -> m Shader
@@ -84,7 +86,7 @@ compileShader :: MonadIO m => Shader -> m ()
 compileShader (Shader s) = glCompileShader s
 
 -- | Available on OpenGL 4.1+, OpenGL ES 2+
-releaseShaderCompiler :: IO ()
+releaseShaderCompiler :: MonadIO m => m ()
 releaseShaderCompiler = glReleaseShaderCompiler
 
 getShader :: MonadIO m => Shader -> GLenum -> m GLint
@@ -145,8 +147,5 @@ shaderInfoLog s = do
     then return Strict.empty
     else liftIO $ alloca $ \pl -> do
       Strict.createUptoN l' $ \ps -> do
-        glGetShaderInfoLog (object s) (fromIntegral l') pl (castPtr ps)
+        glGetShaderInfoLog (objectId s) (fromIntegral l') pl (castPtr ps)
         return $ l-1
-
-deleteShader :: MonadIO m => Shader -> m ()
-deleteShader = glDeleteShader . object
