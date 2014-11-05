@@ -54,16 +54,16 @@ shadingLanguageVersion = Version [] [] `fromMaybe` parse shadingLanguageVersionS
 
 -- | Returns a set of shading language versions supported by this implementation.
 shadingLanguageVersions :: Set Version
-shadingLanguageVersions = unsafePerformIO $ do
-  n <- alloca $ \p -> do
-    poke p 0 -- unsupported until 4.2, so scribble a 0 in first
-    glGetIntegerv GL_NUM_SHADING_LANGUAGE_VERSIONS p
-    peek p
-  versions <- forM [0..fromIntegral n-1] $ \i -> do
-    cs <- glGetStringi GL_SHADING_LANGUAGE_VERSION i
-    parse <$> peekCString (castPtr cs)
-  return $ if n == 0
-    then Set.singleton shadingLanguageVersion
-    else Set.fromList $ catMaybes versions
+shadingLanguageVersions 
+  | version >= Version [4,3] [] = unsafePerformIO $ do
+    n <- alloca $ \p -> do
+      poke p 0 -- unsupported until 4.2, so scribble a 0 in first
+      glGetIntegerv GL_NUM_SHADING_LANGUAGE_VERSIONS p
+      peek p
+    versions <- forM [0..fromIntegral n-1] $ \i -> do
+      cs <- glGetStringi GL_SHADING_LANGUAGE_VERSION i
+      parse <$> peekCString (castPtr cs)
+    return $ Set.fromList $ catMaybes versions
+  | otherwise = Set.singleton shadingLanguageVersion
 
 {-# NOINLINE shadingLanguageVersions #-}
