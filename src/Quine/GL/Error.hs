@@ -21,9 +21,9 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.Data
 import GHC.Generics
-import Graphics.GL.Raw.Types
-import Graphics.GL.Raw.Profile.Core45
-import Graphics.GL.Raw.Extension.ARB.Imaging
+import Graphics.GL.Core45
+import Graphics.GL.Ext.ARB.Imaging
+import Graphics.GL.Types
 
 -- | Used to represent the result of 'glGetError'
 newtype Error = Error GLenum deriving (Typeable, Data, Generic)

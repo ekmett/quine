@@ -35,8 +35,8 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import GHC.Generics
-import Graphics.GL.Raw.Types
-import Graphics.GL.Raw.Profile.Core45
+import Graphics.GL.Core45
+import Graphics.GL.Types
 import Quine.StateVar
 import Quine.GL.Object
 

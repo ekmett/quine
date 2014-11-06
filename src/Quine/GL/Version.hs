@@ -15,8 +15,8 @@ import Foreign.C.String
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
-import Graphics.GL.Raw.Types
-import Graphics.GL.Raw.Profile.Core43
+import Graphics.GL.Core43
+import Graphics.GL.Types
 import System.IO.Unsafe
 import Text.ParserCombinators.ReadP
 

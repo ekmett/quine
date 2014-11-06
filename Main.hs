@@ -31,7 +31,7 @@ import Foreign.C
 import GHC.Conc
 import System.Exit
 import System.IO
-import Graphics.GL.Raw.Profile.Core41
+import Graphics.GL.Core41
 import Graphics.UI.SDL.Enum.Pattern
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL

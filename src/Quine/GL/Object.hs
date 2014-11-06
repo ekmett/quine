@@ -6,7 +6,7 @@ module Quine.GL.Object
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Functor
-import Graphics.GL.Raw.Types
+import Graphics.GL.Types
 
 class Object a where
   {-# MINIMAL object, isa, (delete | deletes) #-}

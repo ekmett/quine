@@ -40,8 +40,10 @@ library
     Quine.GL
     Quine.GL.Error
     Quine.GL.Object
+    Quine.GL.Pixel
     Quine.GL.Program
     Quine.GL.Shader
+    Quine.GL.Texture
     Quine.GL.Uniform
     Quine.GL.Version
     Quine.GL.VertexArray
@@ -67,7 +69,7 @@ library
     distributive,
     ekg,
     filepath,
-    gl >= 0.4,
+    gl >= 0.5,
     JuicyPixels,
     lens,
     linear,
@@ -93,7 +95,7 @@ executable quine
     base >= 4.7 && < 5,
     containers,
     data-default,
-    gl >= 0.4,
+    gl >= 0.5,
     quine,
     lens,
     linear,

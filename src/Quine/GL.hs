@@ -51,7 +51,7 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import GHC.Generics
-import Graphics.GL.Raw.Profile.Core41
+import Graphics.GL.Core41
 import Language.Preprocessor.Cpphs
 import Prelude hiding (concat)
 import Quine.GL.Shader

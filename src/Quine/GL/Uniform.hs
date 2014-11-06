@@ -129,8 +129,8 @@ import Data.Functor
 import Foreign.C.String
 import Foreign.Ptr
 import GHC.Generics
-import Graphics.GL.Raw.Profile.Core45
-import Graphics.GL.Raw.Types
+import Graphics.GL.Core45
+import Graphics.GL.Types
 import Quine.GL.Program
 import Quine.StateVar
 

@@ -6,9 +6,9 @@ module Quine.Debug
 import Control.Monad.IO.Class
 import Foreign.C.String
 import Foreign.Ptr
-import Graphics.GL.Raw.Extension.KHR.Debug
-import Graphics.GL.Raw.Profile.Core33
-import Graphics.GL.Raw.Types
+import Graphics.GL.Core33
+import Graphics.GL.Ext.KHR.Debug
+import Graphics.GL.Types
 import Text.Printf
 
 installDebugHook :: MonadIO m => m ()
