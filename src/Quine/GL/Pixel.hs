@@ -1,29 +1,22 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, PatternSynonyms, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE PatternSynonyms, GeneralizedNewtypeDeriving #-}
 module Quine.GL.Pixel
-  ( InternalFormat(..)
-  , PixelFormat(..)
-  , PixelType(..)
+  ( InternalFormat
+  , PixelFormat
+  , PixelType
   , compSize1D
   , compSize2D
   , compSize3D
   ) where
 
 import Data.Bits
-import Data.Data
-import GHC.Generics
 import Graphics.GL.Standard21
 import Graphics.GL.Core45
 import Graphics.GL.Ext
 import Graphics.GL.Types
 
-newtype InternalFormat = InternalFormat GLint
-  deriving (Eq,Ord,Show,Read,Data,Typeable,Generic,Num)
-
-newtype PixelFormat = PixelFormat GLenum
-  deriving (Eq,Ord,Show,Read,Data,Typeable,Generic,Num)
-
-newtype PixelType = PixelType GLenum
-  deriving (Eq,Ord,Show,Read,Data,Typeable,Generic,Num)
+type InternalFormat = GLint
+type PixelFormat = GLenum
+type PixelType = GLenum
 
 components :: PixelFormat -> Int
 components GL_ABGR_EXT = 4
