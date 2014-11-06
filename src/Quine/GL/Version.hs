@@ -4,10 +4,12 @@ module Quine.GL.Version
   , version
   , shadingLanguageVersion
   , shadingLanguageVersions
+  , gles
   ) where
 
 import Control.Monad
 import Data.Functor
+import Data.List (isPrefixOf)
 import Data.Maybe
 import Data.Set as Set
 import Data.Version
@@ -20,9 +22,19 @@ import Graphics.GL.Types
 import System.IO.Unsafe
 import Text.ParserCombinators.ReadP
 
+-- |
+-- OpenGL ES major.minor <vendor-specific information>.
+-- OpenGL ES major.minor.release <vendor-specific information>.
+-- major.minor
+-- major.minor.release
 parse :: String -> Maybe Version
-parse s = listToMaybe [v | (v,"") <- readP_to_S parseVersion s ]
-  
+parse s = case words s of
+  "OpenGL":"ES":"GLSL":"ES":x:_ -> go x
+  "OpenGL":"ES":x:_             -> go x
+  x:_                           -> go x
+  _ -> Nothing
+  where go xs = listToMaybe [ v | (v,"") <- readP_to_S parseVersion xs ]
+
 getString :: GLenum -> IO String
 getString = glGetString >=> peekCString . castPtr
 
@@ -40,9 +52,12 @@ versionString :: String
 versionString = unsafePerformIO $ getString GL_VERSION
 {-# NOINLINE versionString #-}
 
+gles :: Bool
+gles = "OpenGL ES" `isPrefixOf` versionString
+
 -- | Returns a version or release number.
 version :: Version
-version = Version [] [] `fromMaybe` parse versionString
+version = error ("malformed GL version: " ++ versionString) `fromMaybe` parse versionString
 
 shadingLanguageVersionString :: String
 shadingLanguageVersionString = unsafePerformIO $ getString GL_SHADING_LANGUAGE_VERSION

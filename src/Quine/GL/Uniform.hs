@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -8,29 +9,18 @@ module Quine.GL.Uniform
   -- * Uniform Locations
     UniformLocation
   , uniformLocation
-  -- * Uniform Access
-  , Uniform(..)
-  , uniform
   -- * Uniform Types
   , UniformType
   , showUniformType
   , uniformTypeName
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.IO.Class
-import Data.Coerce
 import Foreign.C.String
-import Foreign.Marshal.Array
 import Foreign.Ptr
-import Foreign.Storable
-import Linear
-import Linear.Affine
 import Graphics.GL.Core45
 import Graphics.GL.Types
 import Quine.GL.Program
-import Quine.StateVar
 
 -- * Uniform Locations
 
@@ -38,57 +28,6 @@ type UniformLocation = GLint
 
 uniformLocation :: MonadIO m => Program -> String -> m UniformLocation
 uniformLocation (Program p) s = liftIO $ withCString s (glGetUniformLocation p . castPtr)
-
--- * Getting/Setting Uniforms
-
-class Uniform a where
-  getUniform :: MonadIO m => Program -> UniformLocation -> m a
-  setUniform :: MonadIO m => UniformLocation -> a -> m ()
-
-uniform :: (MonadIO m, Uniform a) => Program -> String -> m (StateVar a)
-uniform p s = do
-  l <- uniformLocation p s
-  return $ StateVar (getUniform p l) (setUniform l)
-
-instance Uniform Float where
-  getUniform p l = liftIO $ allocaArray 16 $ (>>) <$> glGetUniformfv (coerce p) l <*> peek
-  setUniform = glUniform1f
-
-instance float ~ Float => Uniform (Float,float) where
-  getUniform p l = liftIO $ allocaArray 16 $ \ptr -> do
-    glGetUniformfv (coerce p) l ptr
-    (,) <$> peek ptr <*> peekElemOff ptr 1
-  setUniform l = uncurry (glUniform2f l)
-
-instance Uniform (V2 Float) where
-  getUniform p l = liftIO $ allocaArray 16 $ \ptr -> do
-    glGetUniformfv (coerce p) l (castPtr ptr)
-    peek ptr
-  setUniform l (V2 a b) = glUniform2f l a b
-
-instance Uniform (V3 Float) where
-  getUniform p l = liftIO $ allocaArray 16 $ \ptr -> do
-    glGetUniformfv (coerce p) l (castPtr ptr)
-    peek ptr
-  setUniform l (V3 a b c) = glUniform3f l a b c
-
-instance Uniform (V4 Float) where
-  getUniform p l = liftIO $ allocaArray 16 $ \ptr -> do
-    glGetUniformfv (coerce p) l (castPtr ptr)
-    peek ptr
-  setUniform l (V4 a b c d) = glUniform4f l a b c d
-
-instance Uniform (Quaternion Float) where
-  getUniform p l = liftIO $ allocaArray 16 $ \ptr -> do
-    glGetUniformfv (coerce p) l (castPtr ptr)
-    peek ptr
-  setUniform l (Quaternion a (V3 b c d)) = glUniform4f l a b c d
-
-instance Uniform (f a) => Uniform (Point f a) where
-  getUniform p l = P `liftM` getUniform p l 
-  setUniform l (P a) = setUniform l a
-
--- * Uniform Types
 
 type UniformType = GLenum
 

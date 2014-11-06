@@ -168,8 +168,8 @@ core = do
   whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
   emptyVAO <- gen
-  iResolution :: StateVar (Float, Float) <- uniform scn "iResolution"
-  iGlobalTime :: StateVar Float <- uniform scn "iGlobalTime"
+  iResolution <- uniformLocation scn "iResolution"
+  iGlobalTime <- uniformLocation scn "iGlobalTime"
   epoch <- liftIO getCurrentTime
   throwErrors
   currentProgram   $= scn
@@ -178,8 +178,8 @@ core = do
     poll 
     resize 
     render $ do
-      liftIO getCurrentTime >>= \now -> iGlobalTime $= realToFrac (diffUTCTime now epoch)
-      use displayWindowSize >>= \sz  -> iResolution $= bimap fromIntegral fromIntegral sz
+      liftIO getCurrentTime >>= \now   -> glUniform1f iGlobalTime $ realToFrac $ diffUTCTime now epoch
+      use displayWindowSize >>= \(w,h) -> glUniform2f iResolution (fromIntegral w) (fromIntegral h)
       glDrawArrays GL_TRIANGLES 0 3
 
 rescale :: Float -> (Int, Int) -> (Int, Int)
