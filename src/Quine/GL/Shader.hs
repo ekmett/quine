@@ -2,13 +2,8 @@
 module Quine.GL.Shader
   ( 
   -- * Shader types
-    ShaderType(..)
-  , pattern ComputeShader
-  , pattern VertexShader
-  , pattern FragmentShader
-  , pattern GeometryShader
-  , pattern TessControlShader
-  , pattern TessEvaluationShader
+    ShaderType
+  , showShaderType
   -- * Shaders
   , Shader(..)
   , createShader
@@ -42,25 +37,17 @@ import Quine.GL.Object
 
 -- * Shader types
 
-newtype ShaderType = ShaderType GLenum
-  deriving (Eq,Ord,Typeable,Data,Generic)
+type ShaderType = GLenum
 
-pattern VertexShader         = ShaderType GL_VERTEX_SHADER
-pattern TessControlShader    = ShaderType GL_TESS_CONTROL_SHADER
-pattern TessEvaluationShader = ShaderType GL_TESS_EVALUATION_SHADER
-pattern GeometryShader       = ShaderType GL_GEOMETRY_SHADER
-pattern FragmentShader       = ShaderType GL_FRAGMENT_SHADER
-pattern ComputeShader        = ShaderType GL_COMPUTE_SHADER
-
-instance Show ShaderType where
-  showsPrec d (ShaderType t) = case t of
-    GL_VERTEX_SHADER          -> showString "VertexShader"
-    GL_TESS_CONTROL_SHADER    -> showString "TessControlShader"
-    GL_TESS_EVALUATION_SHADER -> showString "TessEvaluationShader"
-    GL_GEOMETRY_SHADER        -> showString "GeometryShader"
-    GL_FRAGMENT_SHADER        -> showString "FragmentShader"
-    GL_COMPUTE_SHADER         -> showString "ComputeShader"
-    _ -> showParen (d >= 10) $ showString "ShaderType " . showsPrec 11 t
+showShaderType :: Int -> ShaderType -> ShowS
+showShaderType d = \ case
+  GL_VERTEX_SHADER          -> showString "GL_VERTEX_SHADER"
+  GL_TESS_CONTROL_SHADER    -> showString "GL_TESS_CONTROL_SHADER"
+  GL_TESS_EVALUATION_SHADER -> showString "GL_TESS_EVALUATION_SHADER"
+  GL_GEOMETRY_SHADER        -> showString "GL_GEOMETRY_SHADER"
+  GL_FRAGMENT_SHADER        -> showString "GL_FRAGMENT_SHADER"
+  GL_COMPUTE_SHADER         -> showString "GL_COMPUTE_SHADER"
+  t -> showsPrec d t
 
 -- * Shaders
 
@@ -74,7 +61,7 @@ instance Object Shader where
 
 -- | Create a shader
 createShader :: MonadIO m => ShaderType -> m Shader
-createShader (ShaderType t) = Shader `liftM` glCreateShader t
+createShader = liftM Shader . glCreateShader
 
 -- | Compile a shader
 compileShader :: MonadIO m => Shader -> m ()
@@ -89,7 +76,7 @@ getShader (Shader s) p = liftIO $ alloca $ \q -> glGetShaderiv s p q >> peek q
 
 -- | Ask OpenGL for the 'ShaderType'
 shaderType :: MonadIO m => Shader -> m ShaderType
-shaderType s = liftM (ShaderType . fromIntegral) $ getShader s GL_SHADER_TYPE
+shaderType s = fromIntegral `liftM` getShader s GL_SHADER_TYPE
 
 -- | Check if the shader is deleted in OpenGL
 shaderIsDeleted :: MonadIO m => Shader -> m Bool

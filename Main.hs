@@ -45,7 +45,6 @@ import Quine.GL
 import Quine.GL.Error
 import Quine.GL.Object
 import Quine.GL.Program
-import Quine.GL.Shader
 import Quine.GL.Uniform
 import Quine.GL.Version as GL
 import Quine.GL.VertexArray
@@ -164,8 +163,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   
 core :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasSystem e, HasOptions e) => m a
 core = do
-  screenShader <- compile VertexShader "screen.vert"
-  whiteShader <- compile FragmentShader =<< view optionsFragment
+  screenShader <- compile GL_VERTEX_SHADER "screen.vert"
+  whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
   emptyVAO <- gen
   iResolution <- uniform2f scn "iResolution"
