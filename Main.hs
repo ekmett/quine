@@ -3,6 +3,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiWayIf #-}
 --------------------------------------------------------------------
 -- |
@@ -167,8 +168,8 @@ core = do
   whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
   emptyVAO <- gen
-  iResolution <- uniform2f scn "iResolution"
-  iGlobalTime <- uniform1f scn "iGlobalTime"
+  iResolution :: StateVar (Float, Float) <- uniform scn "iResolution"
+  iGlobalTime :: StateVar Float <- uniform scn "iGlobalTime"
   epoch <- liftIO getCurrentTime
   throwErrors
   currentProgram   $= scn
