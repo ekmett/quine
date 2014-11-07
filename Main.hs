@@ -24,6 +24,7 @@ import Control.Lens.Extras (is)
 import Control.Monad hiding (forM_)
 import Control.Monad.Reader
 import Control.Monad.State hiding (get)
+import Data.Default
 import Data.Monoid
 import Data.Time.Clock
 import Data.Typeable
@@ -49,6 +50,7 @@ import Quine.GL.Program
 import Quine.GL.Uniform
 import Quine.GL.Version as GL
 import Quine.GL.VertexArray
+import Quine.Input
 import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
@@ -57,28 +59,47 @@ import Quine.StateVar
 #include "locations.h"
 
 -- * Environment
-data System = System
-  { _systemMonitor   :: Monitor
-  , _systemOptions   :: Options
-  , _systemShaderEnv :: ShaderEnv
+data Env = Env
+  { _envMonitor   :: Monitor
+  , _envOptions   :: Options
+  , _envShaderEnv :: ShaderEnv
   , _frameCounter    :: Counter
   , _widthGauge      :: Gauge
   , _heightGauge     :: Gauge
   } deriving Typeable
 
+makeLenses ''Env
+
+instance HasMonitor Env where
+  monitor = envMonitor
+
+instance HasOptions Env where
+  options = envOptions
+
+instance HasShaderEnv Env where
+  shaderEnv = envShaderEnv
+
+class (HasShaderEnv t, HasMonitor t, HasOptions t) => HasEnv t where
+  env :: Lens' t Env
+
+instance HasEnv Env where
+  env = id
+
+data System = System
+  { _systemDisplay :: Display
+  , _systemInput   :: Input
+  } deriving Typeable
+
 makeLenses ''System
 
-instance HasMonitor System where
-  monitor = systemMonitor
-
-instance HasOptions System where
-  options = systemOptions
-
-instance HasShaderEnv System where
-  shaderEnv = systemShaderEnv
-
-class (HasShaderEnv t, HasMonitor t, HasOptions t) => HasSystem t where
+class (HasDisplay t, HasInput t) => HasSystem t where
   system :: Lens' t System
+
+instance HasDisplay System where
+  display = systemDisplay
+
+instance HasInput System where
+  input = systemInput
 
 instance HasSystem System where
   system = id
@@ -102,7 +123,6 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
       hPrint stderr e
       exitFailure
 
-
   -- set up EKG
   ekg <- forkMonitor opts
 
@@ -124,7 +144,9 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           .|. WindowFlagShown
           .|. WindowFlagResizable
           .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
-          .|. (if opts^.optionsFullScreen then (if opts^.optionsFullScreenNormal then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0)
+          .|. (if | not (opts^.optionsFullScreen) -> 0
+                  | opts^.optionsFullScreenNormal -> WindowFlagFullscreen 
+                  | otherwise                     -> WindowFlagFullscreenDesktop)
   window <- createWindow windowName WindowPosCentered WindowPosCentered (fromIntegral w) (fromIntegral h) flags
 
   -- start OpenGL
@@ -144,7 +166,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   fc <- counter "quine.frame" ekg
   vw <- gauge "viewport.width" ekg
   vh <- gauge "viewport.height" ekg
-  let sys = System ekg opts se fc vw vh
+  let sys = Env ekg opts se fc vw vh
       dsp = Display 
         { _displayWindow            = window
         , _displayGL                = cxt
@@ -156,14 +178,15 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayHasKeyboardFocus  = True
         , _displayVisible           = True
         }
-  runReaderT (evalStateT core dsp) sys `finally` do
+  runReaderT (evalStateT core $ System dsp def) sys `finally` do
     glDeleteContext cxt
     destroyWindow window
     quit
     exitSuccess
   
-core :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasSystem e, HasOptions e) => m a
+core :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
+  relativeMouseMode $= True -- collect relative mouse data for mouselook
   screenShader <- compile GL_VERTEX_SHADER "screen.vert"
   whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
@@ -185,20 +208,20 @@ core = do
 rescale :: Float -> (Int, Int) -> (Int, Int)
 rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)
 
-resize :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m ()
+resize :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m ()
 resize = do
   win  <- use displayWindow
   opts <- view options
   sz@(w,h) <- rescale (pointScale opts) `liftM` get (windowSize win) -- retina
-  sys <- view system
+  sys <- view env
   (sys^.widthGauge)  $= fromIntegral w
   (sys^.heightGauge) $= fromIntegral h
   glViewport 0 0 (fromIntegral w) (fromIntegral h)
   displayWindowSize .= sz
 
-render :: (MonadIO m, MonadReader e m, HasSystem e, MonadState s m, HasDisplay s) => m () -> m ()
+render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do
-  inc =<< view (system.frameCounter)
+  inc =<< view (env.frameCounter)
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_STENCIL_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
   kernel
@@ -208,44 +231,50 @@ render kernel = do
 
 -- * Polling
 
-poll :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => m ()
+poll :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasOptions e) => m ()
 poll = do
   me <- liftIO $ alloca $ \ep -> do
     r <- pollEvent ep
     if r /= 0 then Just <$> peek ep
               else return Nothing
   case me of
-    Just e  -> event e >> poll
+    Just e  -> do
+      handleWindowEvent e
+      handleInputEvent e
+      poll
     Nothing -> return ()
 
-event :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
-event QuitEvent{} = throw Shutdown
-event WindowEvent { eventType = WindowEventEnter       } = displayHasMouseFocus .= True
-event WindowEvent { eventType = WindowEventLeave       } = displayHasMouseFocus .= False
-event WindowEvent { eventType = WindowEventFocusGained } = displayHasKeyboardFocus .= True
-event WindowEvent { eventType = WindowEventFocusLost   } = displayHasKeyboardFocus .= False
-event WindowEvent { eventType = WindowEventMinimized   } = displayVisible .= False
-event WindowEvent { eventType = WindowEventMaximized   } = displayVisible .= True
-event WindowEvent { eventType = WindowEventHidden      } = displayVisible .= False
-event WindowEvent { eventType = WindowEventExposed     } = displayVisible .= True
-event WindowEvent { eventType = WindowEventRestored    } = displayVisible .= True -- unminimized
-event WindowEvent { eventType = WindowEventShown       } = displayVisible .= True
-event WindowEvent { eventType = WindowEventClose       } = liftIO $ throw Shutdown
-event WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
-event WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
-event WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
+-- discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
+handleWindowEvent :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
+handleWindowEvent QuitEvent{} = throw Shutdown
+handleWindowEvent WindowEvent { eventType = WindowEventEnter       } = displayHasMouseFocus .= True
+handleWindowEvent WindowEvent { eventType = WindowEventLeave       } = displayHasMouseFocus .= False
+handleWindowEvent WindowEvent { eventType = WindowEventFocusGained } = displayHasKeyboardFocus .= True
+handleWindowEvent WindowEvent { eventType = WindowEventFocusLost   } = displayHasKeyboardFocus .= False
+handleWindowEvent WindowEvent { eventType = WindowEventMinimized   } = displayVisible .= False
+handleWindowEvent WindowEvent { eventType = WindowEventMaximized   } = displayVisible .= True
+handleWindowEvent WindowEvent { eventType = WindowEventHidden      } = displayVisible .= False
+handleWindowEvent WindowEvent { eventType = WindowEventExposed     } = displayVisible .= True
+handleWindowEvent WindowEvent { eventType = WindowEventRestored    } = displayVisible .= True -- unminimized
+handleWindowEvent WindowEvent { eventType = WindowEventShown       } = displayVisible .= True
+handleWindowEvent WindowEvent { eventType = WindowEventClose       } = liftIO $ throw Shutdown
+handleWindowEvent WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
+handleWindowEvent WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
+handleWindowEvent WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
   displayWindowSize        .= (fromIntegral w, fromIntegral h)
   displayWindowSizeChanged .= True
-event WindowEvent { eventType = WindowEventResized, windowEventData1 = w, windowEventData2 = h } = do
+handleWindowEvent WindowEvent { eventType = WindowEventResized, windowEventData1 = w, windowEventData2 = h } = do
   displayWindowSize        .= (fromIntegral w, fromIntegral h)
   displayWindowSizeChanged .= True
-event KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
-  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q
+handleWindowEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
+  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q, use keycode "Q" so it can move when they remap
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeReturn = do             -- CUA Cmd-Return
     fs <- displayFullScreen <%= not
     fsn <- view optionsFullScreenNormal
     w  <- use displayWindow
-    _ <- liftIO $ setWindowFullscreen w $ if fs then (if fsn then WindowFlagFullscreen else WindowFlagFullscreenDesktop) else 0
+    _ <- liftIO $ setWindowFullscreen w $ if 
+      | not fs    -> 0
+      | fsn       -> WindowFlagFullscreen 
+      | otherwise -> WindowFlagFullscreenDesktop
     return ()
-event _ = return () -- liftIO $ hPrint stderr e
-
+handleWindowEvent _ = return () -- liftIO $ hPrint stderr e

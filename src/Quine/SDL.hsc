@@ -95,7 +95,7 @@ err e
 
 -- | Get/Set relative mouse mode. When enabled we get relative mouse position events even at the screen edge.
 relativeMouseMode :: StateVar Bool
-relativeMouseMode = StateVar getRelativeMouseMode (setRelativeMouseMode >=> err)
+relativeMouseMode = StateVar SDL.getRelativeMouseMode (SDL.setRelativeMouseMode >=> err)
 
 -- * Initialization
 

@@ -44,10 +44,12 @@ library
     Quine.GL.Program
     Quine.GL.Shader
     Quine.GL.Texture
+    Quine.GL.Types
     Quine.GL.Uniform
     Quine.GL.Version
     Quine.GL.VertexArray
     Quine.Image
+    Quine.Input
     Quine.Monitor
     Quine.Options
     Quine.SDL
