@@ -50,6 +50,7 @@ module Quine.SDL
   , desktopDisplayMode
   , windowSize
   , makeCurrent
+  , relativeMouseMode
   -- * Extensible Exceptions
   , SDLException(..)
   -- * Utilities
@@ -91,6 +92,10 @@ err e
     SDL.clearError
     when (msg /= "") $ throw $ SDLException msg
   | otherwise = return ()
+
+-- | Get/Set relative mouse mode. When enabled we get relative mouse position events even at the screen edge.
+relativeMouseMode :: StateVar Bool
+relativeMouseMode = StateVar getRelativeMouseMode (setRelativeMouseMode >=> err)
 
 -- * Initialization
 
