@@ -170,10 +170,9 @@ core = do
       glUniform2f iResolution wf hf
 
       c <- use camera
-      uniformMat4 iPerspective $ perspective (c^.fov) (wf/hf) 1 65536
+      uniformMat4 iPerspective $ perspective (c^.fov) (wf/hf) 0.1 65536
       let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
-      uniformMat4 iView $ m33_to_m44 (fromQuaternion cameraQuat)
-                   -- !*! translate (-c^.cameraPos)
+      uniformMat4 iView        $ m33_to_m44 $ fromQuaternion cameraQuat
 
       now <- liftIO getCurrentTime
       glUniform1f iGlobalTime $ realToFrac $ diffUTCTime now epoch

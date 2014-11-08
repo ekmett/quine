@@ -5,6 +5,7 @@ uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 uniform mat4 iPerspective;
 uniform mat4 iView;
+uniform mat4 iInverseView;
 
 layout(location = FRAGMENT_COLOR) out vec4 color;
 
@@ -691,7 +692,7 @@ void GetCameraRay( const in vec3 vPos, const in vec3 vForwards, const in vec3 vW
     vec3 vRight = normalize(cross(vForwards, vWorldUp));
     vec3 vUp = cross(vRight, vForwards);
         
-    ray.vDir = normalize( vRight * vViewCoord.x + vUp * vViewCoord.y + vForwards); 
+    ray.vDir = normalize( vRight * vViewCoord.x + vUp * vViewCoord.y + vForwards) * mat3(iView);
     ray.fStartDistance = 0.0;
     ray.fLength = kFarClip;      
 }
@@ -724,11 +725,7 @@ vec3 Tonemap( const in vec3 cCol )
 void main( void )
 {
     C_Ray ray;
-
-    // GetCameraRayLookat( OrbitPoint(iGlobalTime * 0.3, cos(iGlobalTime * 0.2) * 0.3 + 0.4) * 7.0, vec3(0.0, 0.0, 0.0), ray);
-    GetCameraRayLookat( OrbitPoint(0.0, 0.0 + 0.0), vec3(0.0, 0.0, 0.0), ray);
-
-    ray.vDir = ray.vDir * mat3(iView);
+    GetCameraRay(vec3(0,0,1), vec3(0,0,-1), vec3(0,1,0), ray);
 
     vec3 cScene = GetSceneColourPrimary( ray );  
 
