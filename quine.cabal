@@ -34,8 +34,10 @@ source-repository head
 library
   hs-source-dirs: src
   exposed-modules:
+    Quine.Camera
     Quine.Debug
     Quine.Display
+    Quine.Env
     Quine.Exception
     Quine.GL
     Quine.GL.Error
@@ -54,6 +56,7 @@ library
     Quine.Options
     Quine.SDL
     Quine.StateVar
+    Quine.System
 
   --  Quine.Image
   other-modules:

@@ -1,7 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiWayIf #-}
@@ -27,7 +26,6 @@ import Control.Monad.State hiding (get)
 import Data.Default
 import Data.Monoid
 import Data.Time.Clock
-import Data.Typeable
 import Foreign
 import Foreign.C
 import GHC.Conc
@@ -41,6 +39,8 @@ import Graphics.UI.SDL.Video as SDL
 import Linear
 import Options.Applicative
 import Prelude hiding (init)
+import Quine.Camera
+import Quine.Env
 import Quine.Debug
 import Quine.Display
 import Quine.Exception
@@ -57,75 +57,9 @@ import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
 import Quine.StateVar
+import Quine.System
 
 #include "locations.h"
-
--- * Environment
-
-data Env = Env
-  { _envMonitor   :: Monitor
-  , _envOptions   :: Options
-  , _envShaderEnv :: ShaderEnv
-  , _frameCounter    :: Counter
-  , _widthGauge      :: Gauge
-  , _heightGauge     :: Gauge
-  } deriving Typeable
-
-makeLenses ''Env
-
-instance HasMonitor Env where
-  monitor = envMonitor
-
-instance HasOptions Env where
-  options = envOptions
-
-instance HasShaderEnv Env where
-  shaderEnv = envShaderEnv
-
-class (HasShaderEnv t, HasMonitor t, HasOptions t) => HasEnv t where
-  env :: Lens' t Env
-
-instance HasEnv Env where
-  env = id
-
--- * Camera
-
-data Camera = Camera
-  { _fov, _yaw, _pitch :: Float -- in radians
-  , _cameraPos :: Vec3
-  , _cameraVel :: Vec3
-  } deriving Typeable
-
-makeClassy ''Camera
-
-instance Default Camera where
-  def = Camera (pi/2) 0 0 0 0
-
--- * System
-
-data System = System
-  { _systemDisplay :: Display
-  , _systemInput   :: Input
-  , _systemCamera  :: Camera
-  , _focused       :: Bool
-  } deriving Typeable
-
-makeLenses ''System
-
-class (HasDisplay t, HasInput t, HasCamera t) => HasSystem t where
-  system :: Lens' t System
-
-instance HasDisplay System where
-  display = systemDisplay
-
-instance HasInput System where
-  input = systemInput
-
-instance HasCamera System where
-  camera = systemCamera
-
-instance HasSystem System where
-  system = id
 
 -- * State
 
@@ -183,7 +117,9 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   label "gl.version" ekg          >>= ($= show GL.version)
   label "gl.shading.version" ekg  >>= ($= show shadingLanguageVersion)
   label "gl.shading.versions" ekg >>= ($= show shadingLanguageVersions)
+  
   -- glEnable gl_FRAMEBUFFER_SRGB
+
   throwErrors
   se <- buildShaderEnv opts
   fc <- counter "quine.frame" ekg
@@ -202,7 +138,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayVisible           = True
         }
   relativeMouseMode $= True -- switch to relative mouse mouse initially
-  runReaderT (evalStateT core $ System dsp def def True) sys `finally` do
+  runReaderT (evalStateT core $ System dsp def def) sys `finally` do
     glDeleteContext cxt
     destroyWindow window
     quit
@@ -245,18 +181,6 @@ core = do
       glUniform1f iGlobalTime $ realToFrac $ diffUTCTime now epoch
 
       glDrawArrays GL_TRIANGLES 0 3
-
-fmod :: Float -> Float -> Float
-fmod a b = b * snd (properFraction $ a / b)
-
-updateCamera :: (MonadState s m, HasCamera s, HasInput s) => m ()
-updateCamera = do
-  let ysensitivity = pi/180 -- negate for inverted mouse
-      xsensitivity = pi/180
-  V2 dx dy <- mouseRel <<.= 0
-  -- calculate mouse look
-  pitch %= \x -> max (-pi/2) $ min (pi/2) (x + fromIntegral dy * ysensitivity) -- [-pi/2..pi/2]
-  yaw   %= \y -> fmod (y + fromIntegral dx * xsensitivity) (2*pi)              -- [0..2*pi)
 
 rescale :: Float -> (Int, Int) -> (Int, Int)
 rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)

@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
@@ -21,7 +20,7 @@
 module Quine.GL
   ( 
   -- * Shader compilation environment
-    ShaderEnv
+    ShaderEnv(..)
   , HasShaderEnv(..)
   , buildShaderEnv
   -- * Compiling and Linking
@@ -50,7 +49,6 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
-import GHC.Generics
 import Graphics.GL.Core41
 import Language.Preprocessor.Cpphs
 import Prelude hiding (concat)
@@ -68,7 +66,7 @@ import System.IO
 data ShaderException = ShaderException
   { shaderExceptionFileName :: String
   , shaderExceptionLog :: Strict.ByteString
-  } deriving (Show,Typeable,Generic)
+  } deriving (Show,Typeable)
 
 instance Exception ShaderException
 
@@ -86,7 +84,7 @@ _ProgramException = exception
 data ShaderEnv = ShaderEnv
   { _shaderEnvFragmentHighPrecisionAvailable   :: !Bool
   , _shaderEnvCpphsOpts :: CpphsOptions
-  } deriving Typeable
+  }
 
 makeClassy ''ShaderEnv
 

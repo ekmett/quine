@@ -1,7 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE DeriveGeneric #-}
 -- | 
 -- Do we need to hook window entry to get a better state summary of the mouse buttons to avoid the common 'sticky mouse' problems in games?
 -- 
@@ -17,12 +15,10 @@ import Control.Monad
 import Control.Monad.State.Class
 import Data.Bits
 import Data.Bits.Lens
-import Data.Data
 import Data.Default
 import Data.Int
 import Data.Set
 import Data.Word
-import GHC.Generics
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
 import Linear
@@ -35,7 +31,7 @@ data Input = Input
   , _mouseButtonMask :: !Word32
   , _mouseRel        :: !(V2 Int32) -- relative since last reset
   , _mouseWheel      :: !(V2 Int32) -- relative since last reset
-  } deriving (Show, Typeable, Generic)
+  } deriving Show
 
 makeClassy ''Input
 

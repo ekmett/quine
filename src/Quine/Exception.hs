@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -16,10 +16,9 @@ module Quine.Exception
 import Control.Exception
 import Control.Exception.Lens
 import Control.Lens
-import Data.Data
-import GHC.Generics
+import Data.Typeable
 
-data Shutdown = Shutdown deriving (Show,Typeable,Data,Generic)
+data Shutdown = Shutdown deriving (Show,Typeable)
 instance Exception Shutdown
 
 _Shutdown :: Prism' SomeException Shutdown

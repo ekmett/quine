@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -17,7 +17,6 @@ module Quine.Display
 import Control.Monad.IO.Class
 import Control.Monad.State
 import Control.Lens
-import Data.Typeable
 import Foreign.C
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
@@ -36,7 +35,7 @@ data Display = Display
   , _displayHasMouseFocus     :: !Bool
   , _displayHasKeyboardFocus  :: !Bool
   , _displayVisible           :: !Bool
-  } deriving Typeable
+  }
 
 makeClassy ''Display
 

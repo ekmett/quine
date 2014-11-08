@@ -1,7 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 --------------------------------------------------------------------
@@ -45,7 +44,6 @@ import Control.Lens
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Data.ByteString.Lens
-import Data.Data
 import Data.Default
 import Data.Foldable as F
 import Data.Int
@@ -77,7 +75,7 @@ data MonitorOptions = MonitorOptions
   , _monitorPort    :: Int
   , _monitorEnabled :: Bool
   , _monitorOpen    :: Bool
-  } deriving (Eq,Ord,Show,Read,Data,Typeable)
+  } deriving (Eq,Ord,Show,Read)
 
 makeClassy ''MonitorOptions
 
@@ -100,7 +98,7 @@ instance Default MonitorOptions where
 data Monitor = Monitor
   { __monitorOptions :: MonitorOptions
   , _monitorServer   :: Maybe Server
-  } deriving Typeable
+  }
 
 makeClassy ''Monitor
 
@@ -110,9 +108,9 @@ instance HasMonitorOptions Monitor where
 withServer :: HasMonitor t => t -> (Server -> IO ()) -> IO ()
 withServer t = F.forM_ $ t^.monitorServer
 
-newtype Gauge = Gauge { runGauge :: Maybe G.Gauge } deriving Typeable
-newtype Label = Label { runLabel :: Maybe L.Label } deriving Typeable
-newtype Counter = Counter { runCounter :: Maybe C.Counter } deriving Typeable
+newtype Gauge = Gauge { runGauge :: Maybe G.Gauge }
+newtype Label = Label { runLabel :: Maybe L.Label }
+newtype Counter = Counter { runCounter :: Maybe C.Counter }
 
 instance HasSetter Label String where
   Label t $= a = liftIO $ maybe (return ()) (L.set ?? pack a) t

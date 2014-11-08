@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -12,9 +12,7 @@ module Quine.Options where
 
 import Control.Applicative
 import Control.Lens
-import Data.Data
 import Data.Default
-import GHC.Generics
 import Options.Applicative
 import Paths_quine
 import Prelude hiding (init)
@@ -31,7 +29,7 @@ data Options = Options
   , _optionsDataDir          :: !FilePath
   , _optionsFragment         :: !FilePath
   , _optionsDebug            :: !Bool
-  } deriving (Generic,Data,Typeable)
+  }
 
 makeClassy ''Options
 
