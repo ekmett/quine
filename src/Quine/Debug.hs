@@ -11,6 +11,7 @@ import Graphics.GL.Ext.KHR.Debug
 import Graphics.GL.Types
 import Text.Printf
 
+-- | This will install a synchronous debugging hook to allow OpenGL to notify us if we're doing anything deprecated, non-portable, undefined, etc.
 installDebugHook :: MonadIO m => m ()
 installDebugHook
   | gl_KHR_debug = do
