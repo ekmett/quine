@@ -8,56 +8,65 @@
 </head>
 <body>
 <pre><a name="line-1"></a><span class='hs-comment'>{-# LANGUAGE PatternSynonyms #-}</span>
-<a name="line-2"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Debug</span>
-<a name="line-3"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>installDebugHook</span>
-<a name="line-4"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-5"></a>
-<a name="line-6"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
-<a name="line-7"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Foreign</span><span class='hs-varop'>.</span><span class='hs-conid'>C</span><span class='hs-varop'>.</span><span class='hs-conid'>String</span>
-<a name="line-8"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Foreign</span><span class='hs-varop'>.</span><span class='hs-conid'>Ptr</span>
-<a name="line-9"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Core33</span>
-<a name="line-10"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Ext</span><span class='hs-varop'>.</span><span class='hs-conid'>KHR</span><span class='hs-varop'>.</span><span class='hs-conid'>Debug</span>
-<a name="line-11"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
-<a name="line-12"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Text</span><span class='hs-varop'>.</span><span class='hs-conid'>Printf</span>
-<a name="line-13"></a>
-<a name="line-14"></a><a name="installDebugHook"></a><span class='hs-comment'>-- | This will install a synchronous debugging hook to allow OpenGL to notify us if we're doing anything deprecated, non-portable, undefined, etc.</span>
-<a name="line-15"></a><span class='hs-definition'>installDebugHook</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
-<a name="line-16"></a><span class='hs-definition'>installDebugHook</span>
-<a name="line-17"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>gl_KHR_debug</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
-<a name="line-18"></a>    <span class='hs-varid'>cb</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>mkGLDEBUGPROC</span> <span class='hs-varid'>glCallback</span>
-<a name="line-19"></a>    <span class='hs-varid'>glDebugMessageCallback</span> <span class='hs-varid'>cb</span> <span class='hs-varid'>nullPtr</span>
-<a name="line-20"></a>    <span class='hs-varid'>glEnable</span> <span class='hs-conid'>GL_DEBUG_OUTPUT_SYNCHRONOUS</span>
-<a name="line-21"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>otherwise</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>return</span> <span class='hs-conid'>()</span>
+<a name="line-2"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-3"></a><span class='hs-comment'>-- |</span>
+<a name="line-4"></a><span class='hs-comment'>-- Copyright :  (c) 2014 Edward Kmett</span>
+<a name="line-5"></a><span class='hs-comment'>-- License   :  BSD2</span>
+<a name="line-6"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
+<a name="line-7"></a><span class='hs-comment'>-- Stability :  experimental</span>
+<a name="line-8"></a><span class='hs-comment'>-- Portability: non-portable</span>
+<a name="line-9"></a><span class='hs-comment'>--</span>
+<a name="line-10"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-11"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Debug</span>
+<a name="line-12"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>installDebugHook</span>
+<a name="line-13"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-14"></a>
+<a name="line-15"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
+<a name="line-16"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Foreign</span><span class='hs-varop'>.</span><span class='hs-conid'>C</span><span class='hs-varop'>.</span><span class='hs-conid'>String</span>
+<a name="line-17"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Foreign</span><span class='hs-varop'>.</span><span class='hs-conid'>Ptr</span>
+<a name="line-18"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Core33</span>
+<a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Ext</span><span class='hs-varop'>.</span><span class='hs-conid'>KHR</span><span class='hs-varop'>.</span><span class='hs-conid'>Debug</span>
+<a name="line-20"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
+<a name="line-21"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Text</span><span class='hs-varop'>.</span><span class='hs-conid'>Printf</span>
 <a name="line-22"></a>
-<a name="line-23"></a><a name="glCallback"></a><span class='hs-definition'>glCallback</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLuint</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLsizei</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>GLchar</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>()</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-conid'>()</span>
-<a name="line-24"></a><span class='hs-definition'>glCallback</span> <span class='hs-varid'>source</span> <span class='hs-varid'>t</span> <span class='hs-varid'>ident</span> <span class='hs-varid'>severity</span> <span class='hs-keyword'>_</span> <span class='hs-varid'>message</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
-<a name="line-25"></a>  <span class='hs-varid'>message'</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>peekCString</span> <span class='hs-varid'>message</span>
-<a name="line-26"></a>  <span class='hs-varid'>putStrLn</span> <span class='hs-varop'>$</span> <span class='hs-varid'>printf</span> <span class='hs-str'>"opengl %s [%s] %s (%s): %s"</span> <span class='hs-varid'>t'</span> <span class='hs-varid'>severity'</span> <span class='hs-varid'>source'</span> <span class='hs-layout'>(</span><span class='hs-varid'>show</span> <span class='hs-varid'>ident</span><span class='hs-layout'>)</span> <span class='hs-varid'>message'</span>
-<a name="line-27"></a> <span class='hs-keyword'>where</span>
-<a name="line-28"></a>  <span class='hs-varid'>source'</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>source</span> <span class='hs-keyword'>of</span>
-<a name="line-29"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_API</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"API"</span>
-<a name="line-30"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_WINDOW_SYSTEM</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Window System"</span>
-<a name="line-31"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_SHADER_COMPILER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Shader Compiler"</span>
-<a name="line-32"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_THIRD_PARTY</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Third Party"</span>
-<a name="line-33"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_APPLICATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Application"</span>
-<a name="line-34"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_OTHER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Other"</span>
-<a name="line-35"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Unknown"</span>
-<a name="line-36"></a>
-<a name="line-37"></a>  <span class='hs-varid'>t'</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>t</span> <span class='hs-keyword'>of</span>
-<a name="line-38"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_ERROR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Error"</span>
-<a name="line-39"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Deprecated Behaviour"</span>
-<a name="line-40"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Undefined Behaviour"</span>
-<a name="line-41"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_PORTABILITY</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Portability"</span>
-<a name="line-42"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_PERFORMANCE</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Performance"</span>
-<a name="line-43"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_OTHER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Other"</span>
-<a name="line-44"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_MARKER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Marker"</span>
-<a name="line-45"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Unknown"</span>
-<a name="line-46"></a>
-<a name="line-47"></a>  <span class='hs-varid'>severity'</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>severity</span> <span class='hs-keyword'>of</span>
-<a name="line-48"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_HIGH</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"High"</span>
-<a name="line-49"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_MEDIUM</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Medium"</span>
-<a name="line-50"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_LOW</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Low"</span>
-<a name="line-51"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_NOTIFICATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Notification"</span>
-<a name="line-52"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Unknown"</span>
+<a name="line-23"></a><a name="installDebugHook"></a><span class='hs-comment'>-- | This will install a synchronous debugging hook to allow OpenGL to notify us if we're doing anything deprecated, non-portable, undefined, etc.</span>
+<a name="line-24"></a><span class='hs-definition'>installDebugHook</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
+<a name="line-25"></a><span class='hs-definition'>installDebugHook</span>
+<a name="line-26"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>gl_KHR_debug</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
+<a name="line-27"></a>    <span class='hs-varid'>cb</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>mkGLDEBUGPROC</span> <span class='hs-varid'>glCallback</span>
+<a name="line-28"></a>    <span class='hs-varid'>glDebugMessageCallback</span> <span class='hs-varid'>cb</span> <span class='hs-varid'>nullPtr</span>
+<a name="line-29"></a>    <span class='hs-varid'>glEnable</span> <span class='hs-conid'>GL_DEBUG_OUTPUT_SYNCHRONOUS</span>
+<a name="line-30"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>otherwise</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>return</span> <span class='hs-conid'>()</span>
+<a name="line-31"></a>
+<a name="line-32"></a><a name="glCallback"></a><span class='hs-definition'>glCallback</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLuint</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>GLsizei</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>GLchar</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>()</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-conid'>()</span>
+<a name="line-33"></a><span class='hs-definition'>glCallback</span> <span class='hs-varid'>source</span> <span class='hs-varid'>t</span> <span class='hs-varid'>ident</span> <span class='hs-varid'>severity</span> <span class='hs-keyword'>_</span> <span class='hs-varid'>message</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
+<a name="line-34"></a>  <span class='hs-varid'>message'</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>peekCString</span> <span class='hs-varid'>message</span>
+<a name="line-35"></a>  <span class='hs-varid'>putStrLn</span> <span class='hs-varop'>$</span> <span class='hs-varid'>printf</span> <span class='hs-str'>"opengl %s [%s] %s (%s): %s"</span> <span class='hs-varid'>t'</span> <span class='hs-varid'>severity'</span> <span class='hs-varid'>source'</span> <span class='hs-layout'>(</span><span class='hs-varid'>show</span> <span class='hs-varid'>ident</span><span class='hs-layout'>)</span> <span class='hs-varid'>message'</span>
+<a name="line-36"></a> <span class='hs-keyword'>where</span>
+<a name="line-37"></a>  <span class='hs-varid'>source'</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>source</span> <span class='hs-keyword'>of</span>
+<a name="line-38"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_API</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"API"</span>
+<a name="line-39"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_WINDOW_SYSTEM</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Window System"</span>
+<a name="line-40"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_SHADER_COMPILER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Shader Compiler"</span>
+<a name="line-41"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_THIRD_PARTY</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Third Party"</span>
+<a name="line-42"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_APPLICATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Application"</span>
+<a name="line-43"></a>    <span class='hs-conid'>GL_DEBUG_SOURCE_OTHER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Other"</span>
+<a name="line-44"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Unknown"</span>
+<a name="line-45"></a>
+<a name="line-46"></a>  <span class='hs-varid'>t'</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>t</span> <span class='hs-keyword'>of</span>
+<a name="line-47"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_ERROR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Error"</span>
+<a name="line-48"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Deprecated Behaviour"</span>
+<a name="line-49"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Undefined Behaviour"</span>
+<a name="line-50"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_PORTABILITY</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Portability"</span>
+<a name="line-51"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_PERFORMANCE</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Performance"</span>
+<a name="line-52"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_OTHER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Other"</span>
+<a name="line-53"></a>    <span class='hs-conid'>GL_DEBUG_TYPE_MARKER</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Marker"</span>
+<a name="line-54"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Unknown"</span>
+<a name="line-55"></a>
+<a name="line-56"></a>  <span class='hs-varid'>severity'</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>severity</span> <span class='hs-keyword'>of</span>
+<a name="line-57"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_HIGH</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"High"</span>
+<a name="line-58"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_MEDIUM</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Medium"</span>
+<a name="line-59"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_LOW</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Low"</span>
+<a name="line-60"></a>    <span class='hs-conid'>GL_DEBUG_SEVERITY_NOTIFICATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Notification"</span>
+<a name="line-61"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-str'>"Unknown"</span>
 </pre></body>
 </html>

@@ -8,109 +8,118 @@
 </head>
 <body>
 <pre><a name="line-1"></a><span class='hs-comment'>{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, PatternSynonyms #-}</span>
-<a name="line-2"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Error</span>
-<a name="line-3"></a>  <span class='hs-layout'>(</span> <span class='hs-conid'>Error</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-4"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>NoError</span>
-<a name="line-5"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidEnum</span>
-<a name="line-6"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidValue</span>
-<a name="line-7"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidOperation</span>
-<a name="line-8"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidFramebufferOperation</span>
-<a name="line-9"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>OutOfMemory</span>
-<a name="line-10"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>StackOverflow</span>
-<a name="line-11"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>StackUnderflow</span>
-<a name="line-12"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>TableTooLarge</span>
-<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>showError</span>
-<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>errors</span> 
-<a name="line-15"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>throwErrors</span>
-<a name="line-16"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Errors</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-17"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-18"></a>
-<a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Exception</span> <span class='hs-varid'>hiding</span> <span class='hs-layout'>(</span><span class='hs-conid'>StackOverflow</span><span class='hs-layout'>)</span>
-<a name="line-20"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span>
-<a name="line-21"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
-<a name="line-22"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Data</span>
-<a name="line-23"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>GHC</span><span class='hs-varop'>.</span><span class='hs-conid'>Generics</span>
-<a name="line-24"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Core45</span>
-<a name="line-25"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Ext</span><span class='hs-varop'>.</span><span class='hs-conid'>ARB</span><span class='hs-varop'>.</span><span class='hs-conid'>Imaging</span>
-<a name="line-26"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
+<a name="line-2"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-3"></a><span class='hs-comment'>-- |</span>
+<a name="line-4"></a><span class='hs-comment'>-- Copyright :  (c) 2014 Edward Kmett</span>
+<a name="line-5"></a><span class='hs-comment'>-- License   :  BSD2</span>
+<a name="line-6"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
+<a name="line-7"></a><span class='hs-comment'>-- Stability :  experimental</span>
+<a name="line-8"></a><span class='hs-comment'>-- Portability: non-portable</span>
+<a name="line-9"></a><span class='hs-comment'>--</span>
+<a name="line-10"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-11"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Error</span>
+<a name="line-12"></a>  <span class='hs-layout'>(</span> <span class='hs-conid'>Error</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>NoError</span>
+<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidEnum</span>
+<a name="line-15"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidValue</span>
+<a name="line-16"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidOperation</span>
+<a name="line-17"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>InvalidFramebufferOperation</span>
+<a name="line-18"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>OutOfMemory</span>
+<a name="line-19"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>StackOverflow</span>
+<a name="line-20"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>StackUnderflow</span>
+<a name="line-21"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>TableTooLarge</span>
+<a name="line-22"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>showError</span>
+<a name="line-23"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>errors</span> 
+<a name="line-24"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>throwErrors</span>
+<a name="line-25"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Errors</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-26"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
 <a name="line-27"></a>
-<a name="line-28"></a><a name="Error"></a><span class='hs-comment'>-- | Used to represent the result of 'glGetError'</span>
-<a name="line-29"></a><a name="Error"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>Error</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Typeable</span><span class='hs-layout'>,</span> <span class='hs-conid'>Data</span><span class='hs-layout'>,</span> <span class='hs-conid'>Generic</span><span class='hs-layout'>)</span>
-<a name="line-30"></a>
-<a name="line-31"></a><a name="pattern"></a><span class='hs-comment'>-- | No error has been recorded. </span>
-<a name="line-32"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>NoError</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_NO_ERROR</span>
-<a name="line-33"></a>
-<a name="line-34"></a><span class='hs-comment'>-- | An unacceptable value is specified for an enumerated argument.</span>
-<a name="line-35"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidEnum</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_ENUM</span>
+<a name="line-28"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Exception</span> <span class='hs-varid'>hiding</span> <span class='hs-layout'>(</span><span class='hs-conid'>StackOverflow</span><span class='hs-layout'>)</span>
+<a name="line-29"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span>
+<a name="line-30"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
+<a name="line-31"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Data</span>
+<a name="line-32"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>GHC</span><span class='hs-varop'>.</span><span class='hs-conid'>Generics</span>
+<a name="line-33"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Core45</span>
+<a name="line-34"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Ext</span><span class='hs-varop'>.</span><span class='hs-conid'>ARB</span><span class='hs-varop'>.</span><span class='hs-conid'>Imaging</span>
+<a name="line-35"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
 <a name="line-36"></a>
-<a name="line-37"></a><span class='hs-comment'>-- | A numeric argument is out of range.</span>
-<a name="line-38"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidValue</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_VALUE</span>
+<a name="line-37"></a><a name="Error"></a><span class='hs-comment'>-- | Used to represent the result of 'glGetError'</span>
+<a name="line-38"></a><a name="Error"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>Error</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GLenum</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Typeable</span><span class='hs-layout'>,</span> <span class='hs-conid'>Data</span><span class='hs-layout'>,</span> <span class='hs-conid'>Generic</span><span class='hs-layout'>)</span>
 <a name="line-39"></a>
-<a name="line-40"></a><span class='hs-comment'>-- | The specified operation is not allowed in the current state. </span>
-<a name="line-41"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidOperation</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_OPERATION</span>
+<a name="line-40"></a><a name="pattern"></a><span class='hs-comment'>-- | No error has been recorded. </span>
+<a name="line-41"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>NoError</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_NO_ERROR</span>
 <a name="line-42"></a>
-<a name="line-43"></a><span class='hs-comment'>-- | The framebuffer object is not complete.</span>
-<a name="line-44"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidFramebufferOperation</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_FRAMEBUFFER_OPERATION</span>
+<a name="line-43"></a><span class='hs-comment'>-- | An unacceptable value is specified for an enumerated argument.</span>
+<a name="line-44"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidEnum</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_ENUM</span>
 <a name="line-45"></a>
-<a name="line-46"></a><span class='hs-comment'>-- | There is not enough memory left to execute the command.</span>
-<a name="line-47"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>OutOfMemory</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_OUT_OF_MEMORY</span>
+<a name="line-46"></a><span class='hs-comment'>-- | A numeric argument is out of range.</span>
+<a name="line-47"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidValue</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_VALUE</span>
 <a name="line-48"></a>
-<a name="line-49"></a><span class='hs-comment'>-- | This command would cause a stack overflow.</span>
-<a name="line-50"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StackOverflow</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_STACK_OVERFLOW</span>
+<a name="line-49"></a><span class='hs-comment'>-- | The specified operation is not allowed in the current state. </span>
+<a name="line-50"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidOperation</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_OPERATION</span>
 <a name="line-51"></a>
-<a name="line-52"></a><span class='hs-comment'>-- | This command would cause a stack underflow.</span>
-<a name="line-53"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StackUnderflow</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_STACK_UNDERFLOW</span>
+<a name="line-52"></a><span class='hs-comment'>-- | The framebuffer object is not complete.</span>
+<a name="line-53"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>InvalidFramebufferOperation</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_INVALID_FRAMEBUFFER_OPERATION</span>
 <a name="line-54"></a>
-<a name="line-55"></a><span class='hs-comment'>-- | The specified table exceeds the implementation's maximum supported table size.</span>
-<a name="line-56"></a><span class='hs-comment'>--</span>
-<a name="line-57"></a><span class='hs-comment'>-- Used by @Graphics.GL.Raw.Exension.ARB.Imaging@ and @Graphics.GL.Raw.EXT.Histogram@</span>
-<a name="line-58"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>TableTooLarge</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_TABLE_TOO_LARGE</span>
-<a name="line-59"></a>
-<a name="line-60"></a><a name="showError"></a><span class='hs-comment'>-- | Generate a user-friendly version of an OpenGL error.</span>
-<a name="line-61"></a><span class='hs-definition'>showError</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Error</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>String</span>
-<a name="line-62"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>NoError</span>                     <span class='hs-keyglyph'>=</span> <span class='hs-str'>"no error"</span>
-<a name="line-63"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidEnum</span>                 <span class='hs-keyglyph'>=</span> <span class='hs-str'>"invalid enumerated argument"</span>
-<a name="line-64"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidValue</span>                <span class='hs-keyglyph'>=</span> <span class='hs-str'>"numeric argument out of range"</span>
-<a name="line-65"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidOperation</span>            <span class='hs-keyglyph'>=</span> <span class='hs-str'>"operation not allowed in the current state"</span>
-<a name="line-66"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidFramebufferOperation</span> <span class='hs-keyglyph'>=</span> <span class='hs-str'>"framebuffer object not complete"</span>
-<a name="line-67"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>StackOverflow</span>               <span class='hs-keyglyph'>=</span> <span class='hs-str'>"stack overflow"</span>
-<a name="line-68"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>StackUnderflow</span>              <span class='hs-keyglyph'>=</span> <span class='hs-str'>"stack underflow"</span>
-<a name="line-69"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>OutOfMemory</span>                 <span class='hs-keyglyph'>=</span> <span class='hs-str'>"out of memory"</span>
-<a name="line-70"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>TableTooLarge</span>               <span class='hs-keyglyph'>=</span> <span class='hs-str'>"table too large"</span>
-<a name="line-71"></a><span class='hs-definition'>showError</span> <span class='hs-layout'>(</span><span class='hs-conid'>Error</span> <span class='hs-varid'>e</span><span class='hs-layout'>)</span>                   <span class='hs-keyglyph'>=</span> <span class='hs-str'>"unknown error "</span> <span class='hs-varop'>++</span> <span class='hs-varid'>show</span> <span class='hs-varid'>e</span>
-<a name="line-72"></a>
-<a name="line-73"></a><a name="instance%20Show%20Error"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Show</span> <span class='hs-conid'>Error</span> <span class='hs-keyword'>where</span>
-<a name="line-74"></a>  <span class='hs-varid'>showsPrec</span> <span class='hs-varid'>d</span> <span class='hs-layout'>(</span><span class='hs-conid'>Error</span> <span class='hs-varid'>e</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>e</span> <span class='hs-keyword'>of</span>
-<a name="line-75"></a>    <span class='hs-conid'>GL_NO_ERROR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"NoError"</span>
-<a name="line-76"></a>    <span class='hs-conid'>GL_INVALID_ENUM</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidEnum"</span>
-<a name="line-77"></a>    <span class='hs-conid'>GL_INVALID_VALUE</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidValue"</span>
-<a name="line-78"></a>    <span class='hs-conid'>GL_INVALID_OPERATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidOperation"</span>
-<a name="line-79"></a>    <span class='hs-conid'>GL_INVALID_FRAMEBUFFER_OPERATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidFramebufferOperation"</span>
-<a name="line-80"></a>    <span class='hs-conid'>GL_OUT_OF_MEMORY</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"OutOfMemory"</span>
-<a name="line-81"></a>    <span class='hs-conid'>GL_STACK_OVERFLOW</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"StackOverflow"</span>
-<a name="line-82"></a>    <span class='hs-conid'>GL_STACK_UNDERFLOW</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"StackUnderflow"</span>
-<a name="line-83"></a>    <span class='hs-conid'>GL_TABLE_TOO_LARGE</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"TableTooLarge"</span>
-<a name="line-84"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showParen</span> <span class='hs-layout'>(</span><span class='hs-varid'>d</span> <span class='hs-varop'>&gt;</span> <span class='hs-num'>10</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"Error "</span> <span class='hs-varop'>.</span> <span class='hs-varid'>showsPrec</span> <span class='hs-num'>11</span> <span class='hs-varid'>e</span>
-<a name="line-85"></a>
-<a name="line-86"></a><a name="instance%20m%20%5bError%5d%20errors%20=%20liftIO%20$%20go%20%5b%5d"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Exception</span> <span class='hs-conid'>Error</span>
-<a name="line-87"></a>
-<a name="line-88"></a><a name="Errors"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>Errors</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Errors</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>Error</span><span class='hs-keyglyph'>]</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Show</span><span class='hs-layout'>,</span> <span class='hs-conid'>Typeable</span><span class='hs-layout'>,</span> <span class='hs-conid'>Data</span><span class='hs-layout'>,</span> <span class='hs-conid'>Generic</span><span class='hs-layout'>)</span>
-<a name="line-89"></a>
-<a name="line-90"></a><a name="instance%20m%20%5bError%5d%20errors%20=%20liftIO%20$%20go%20%5b%5d"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Exception</span> <span class='hs-conid'>Errors</span>
-<a name="line-91"></a>
-<a name="line-92"></a><a name="errors"></a><span class='hs-comment'>-- | No error in the result list should be 'NoError'!</span>
-<a name="line-93"></a><span class='hs-definition'>errors</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>Error</span><span class='hs-keyglyph'>]</span>
-<a name="line-94"></a><span class='hs-definition'>errors</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>go</span> <span class='hs-conid'>[]</span> <span class='hs-keyword'>where</span>
-<a name="line-95"></a>  <span class='hs-varid'>go</span> <span class='hs-varid'>es</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
-<a name="line-96"></a>    <span class='hs-varid'>e</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>glGetError</span>
-<a name="line-97"></a>    <span class='hs-keyword'>if</span> <span class='hs-varid'>e</span> <span class='hs-varop'>==</span> <span class='hs-conid'>GL_NO_ERROR</span> 
-<a name="line-98"></a>      <span class='hs-keyword'>then</span> <span class='hs-varid'>return</span> <span class='hs-varop'>$</span> <span class='hs-varid'>reverse</span> <span class='hs-varid'>es</span>
-<a name="line-99"></a>      <span class='hs-keyword'>else</span> <span class='hs-varid'>go</span> <span class='hs-varop'>$</span> <span class='hs-conid'>Error</span> <span class='hs-varid'>e</span><span class='hs-conop'>:</span><span class='hs-varid'>es</span>
+<a name="line-55"></a><span class='hs-comment'>-- | There is not enough memory left to execute the command.</span>
+<a name="line-56"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>OutOfMemory</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_OUT_OF_MEMORY</span>
+<a name="line-57"></a>
+<a name="line-58"></a><span class='hs-comment'>-- | This command would cause a stack overflow.</span>
+<a name="line-59"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StackOverflow</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_STACK_OVERFLOW</span>
+<a name="line-60"></a>
+<a name="line-61"></a><span class='hs-comment'>-- | This command would cause a stack underflow.</span>
+<a name="line-62"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StackUnderflow</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_STACK_UNDERFLOW</span>
+<a name="line-63"></a>
+<a name="line-64"></a><span class='hs-comment'>-- | The specified table exceeds the implementation's maximum supported table size.</span>
+<a name="line-65"></a><span class='hs-comment'>--</span>
+<a name="line-66"></a><span class='hs-comment'>-- Used by @Graphics.GL.Raw.Exension.ARB.Imaging@ and @Graphics.GL.Raw.EXT.Histogram@</span>
+<a name="line-67"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>TableTooLarge</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Error</span> <span class='hs-conid'>GL_TABLE_TOO_LARGE</span>
+<a name="line-68"></a>
+<a name="line-69"></a><a name="showError"></a><span class='hs-comment'>-- | Generate a user-friendly version of an OpenGL error.</span>
+<a name="line-70"></a><span class='hs-definition'>showError</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Error</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>String</span>
+<a name="line-71"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>NoError</span>                     <span class='hs-keyglyph'>=</span> <span class='hs-str'>"no error"</span>
+<a name="line-72"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidEnum</span>                 <span class='hs-keyglyph'>=</span> <span class='hs-str'>"invalid enumerated argument"</span>
+<a name="line-73"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidValue</span>                <span class='hs-keyglyph'>=</span> <span class='hs-str'>"numeric argument out of range"</span>
+<a name="line-74"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidOperation</span>            <span class='hs-keyglyph'>=</span> <span class='hs-str'>"operation not allowed in the current state"</span>
+<a name="line-75"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>InvalidFramebufferOperation</span> <span class='hs-keyglyph'>=</span> <span class='hs-str'>"framebuffer object not complete"</span>
+<a name="line-76"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>StackOverflow</span>               <span class='hs-keyglyph'>=</span> <span class='hs-str'>"stack overflow"</span>
+<a name="line-77"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>StackUnderflow</span>              <span class='hs-keyglyph'>=</span> <span class='hs-str'>"stack underflow"</span>
+<a name="line-78"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>OutOfMemory</span>                 <span class='hs-keyglyph'>=</span> <span class='hs-str'>"out of memory"</span>
+<a name="line-79"></a><span class='hs-definition'>showError</span> <span class='hs-conid'>TableTooLarge</span>               <span class='hs-keyglyph'>=</span> <span class='hs-str'>"table too large"</span>
+<a name="line-80"></a><span class='hs-definition'>showError</span> <span class='hs-layout'>(</span><span class='hs-conid'>Error</span> <span class='hs-varid'>e</span><span class='hs-layout'>)</span>                   <span class='hs-keyglyph'>=</span> <span class='hs-str'>"unknown error "</span> <span class='hs-varop'>++</span> <span class='hs-varid'>show</span> <span class='hs-varid'>e</span>
+<a name="line-81"></a>
+<a name="line-82"></a><a name="instance%20Show%20Error"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Show</span> <span class='hs-conid'>Error</span> <span class='hs-keyword'>where</span>
+<a name="line-83"></a>  <span class='hs-varid'>showsPrec</span> <span class='hs-varid'>d</span> <span class='hs-layout'>(</span><span class='hs-conid'>Error</span> <span class='hs-varid'>e</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>case</span> <span class='hs-varid'>e</span> <span class='hs-keyword'>of</span>
+<a name="line-84"></a>    <span class='hs-conid'>GL_NO_ERROR</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"NoError"</span>
+<a name="line-85"></a>    <span class='hs-conid'>GL_INVALID_ENUM</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidEnum"</span>
+<a name="line-86"></a>    <span class='hs-conid'>GL_INVALID_VALUE</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidValue"</span>
+<a name="line-87"></a>    <span class='hs-conid'>GL_INVALID_OPERATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidOperation"</span>
+<a name="line-88"></a>    <span class='hs-conid'>GL_INVALID_FRAMEBUFFER_OPERATION</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"InvalidFramebufferOperation"</span>
+<a name="line-89"></a>    <span class='hs-conid'>GL_OUT_OF_MEMORY</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"OutOfMemory"</span>
+<a name="line-90"></a>    <span class='hs-conid'>GL_STACK_OVERFLOW</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"StackOverflow"</span>
+<a name="line-91"></a>    <span class='hs-conid'>GL_STACK_UNDERFLOW</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"StackUnderflow"</span>
+<a name="line-92"></a>    <span class='hs-conid'>GL_TABLE_TOO_LARGE</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"TableTooLarge"</span>
+<a name="line-93"></a>    <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>showParen</span> <span class='hs-layout'>(</span><span class='hs-varid'>d</span> <span class='hs-varop'>&gt;</span> <span class='hs-num'>10</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-varid'>showString</span> <span class='hs-str'>"Error "</span> <span class='hs-varop'>.</span> <span class='hs-varid'>showsPrec</span> <span class='hs-num'>11</span> <span class='hs-varid'>e</span>
+<a name="line-94"></a>
+<a name="line-95"></a><a name="instance%20m%20%5bError%5d%20errors%20=%20liftIO%20$%20go%20%5b%5d"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Exception</span> <span class='hs-conid'>Error</span>
+<a name="line-96"></a>
+<a name="line-97"></a><a name="Errors"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>Errors</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Errors</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>Error</span><span class='hs-keyglyph'>]</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Show</span><span class='hs-layout'>,</span> <span class='hs-conid'>Typeable</span><span class='hs-layout'>,</span> <span class='hs-conid'>Data</span><span class='hs-layout'>,</span> <span class='hs-conid'>Generic</span><span class='hs-layout'>)</span>
+<a name="line-98"></a>
+<a name="line-99"></a><a name="instance%20m%20%5bError%5d%20errors%20=%20liftIO%20$%20go%20%5b%5d"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Exception</span> <span class='hs-conid'>Errors</span>
 <a name="line-100"></a>
-<a name="line-101"></a><a name="throwErrors"></a><span class='hs-comment'>-- | Throw 'Errors' if we have any</span>
-<a name="line-102"></a><span class='hs-definition'>throwErrors</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
-<a name="line-103"></a><span class='hs-definition'>throwErrors</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
-<a name="line-104"></a>  <span class='hs-varid'>es</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>errors</span>
-<a name="line-105"></a>  <span class='hs-varid'>unless</span> <span class='hs-layout'>(</span><span class='hs-varid'>null</span> <span class='hs-varid'>es</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-varid'>throw</span> <span class='hs-varop'>$</span> <span class='hs-conid'>Errors</span> <span class='hs-varid'>es</span>
+<a name="line-101"></a><a name="errors"></a><span class='hs-comment'>-- | No error in the result list should be 'NoError'!</span>
+<a name="line-102"></a><span class='hs-definition'>errors</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>Error</span><span class='hs-keyglyph'>]</span>
+<a name="line-103"></a><span class='hs-definition'>errors</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>go</span> <span class='hs-conid'>[]</span> <span class='hs-keyword'>where</span>
+<a name="line-104"></a>  <span class='hs-varid'>go</span> <span class='hs-varid'>es</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
+<a name="line-105"></a>    <span class='hs-varid'>e</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>glGetError</span>
+<a name="line-106"></a>    <span class='hs-keyword'>if</span> <span class='hs-varid'>e</span> <span class='hs-varop'>==</span> <span class='hs-conid'>GL_NO_ERROR</span> 
+<a name="line-107"></a>      <span class='hs-keyword'>then</span> <span class='hs-varid'>return</span> <span class='hs-varop'>$</span> <span class='hs-varid'>reverse</span> <span class='hs-varid'>es</span>
+<a name="line-108"></a>      <span class='hs-keyword'>else</span> <span class='hs-varid'>go</span> <span class='hs-varop'>$</span> <span class='hs-conid'>Error</span> <span class='hs-varid'>e</span><span class='hs-conop'>:</span><span class='hs-varid'>es</span>
+<a name="line-109"></a>
+<a name="line-110"></a><a name="throwErrors"></a><span class='hs-comment'>-- | Throw 'Errors' if we have any</span>
+<a name="line-111"></a><span class='hs-definition'>throwErrors</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
+<a name="line-112"></a><span class='hs-definition'>throwErrors</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
+<a name="line-113"></a>  <span class='hs-varid'>es</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>errors</span>
+<a name="line-114"></a>  <span class='hs-varid'>unless</span> <span class='hs-layout'>(</span><span class='hs-varid'>null</span> <span class='hs-varid'>es</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-varid'>throw</span> <span class='hs-varop'>$</span> <span class='hs-conid'>Errors</span> <span class='hs-varid'>es</span>
 </pre></body>
 </html>

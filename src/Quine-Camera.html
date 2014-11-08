@@ -8,41 +8,50 @@
 </head>
 <body>
 <pre><a name="line-1"></a><span class='hs-comment'>{-# LANGUAGE TemplateHaskell #-}</span>
-<a name="line-2"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Camera</span> 
-<a name="line-3"></a>  <span class='hs-layout'>(</span> <span class='hs-conid'>Camera</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-4"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>HasCamera</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-5"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>updateCamera</span>
-<a name="line-6"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-7"></a>
-<a name="line-8"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>State</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
-<a name="line-9"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Lens</span>
-<a name="line-10"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Default</span>
-<a name="line-11"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Linear</span>
-<a name="line-12"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
-<a name="line-13"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Input</span>
-<a name="line-14"></a>
-<a name="line-15"></a><span class='hs-comment'>-- * Camera</span>
+<a name="line-2"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-3"></a><span class='hs-comment'>-- |</span>
+<a name="line-4"></a><span class='hs-comment'>-- Copyright :  (c) 2014 Edward Kmett</span>
+<a name="line-5"></a><span class='hs-comment'>-- License   :  BSD2</span>
+<a name="line-6"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
+<a name="line-7"></a><span class='hs-comment'>-- Stability :  experimental</span>
+<a name="line-8"></a><span class='hs-comment'>-- Portability: non-portable</span>
+<a name="line-9"></a><span class='hs-comment'>--</span>
+<a name="line-10"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-11"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Camera</span> 
+<a name="line-12"></a>  <span class='hs-layout'>(</span> <span class='hs-conid'>Camera</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>HasCamera</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>updateCamera</span>
+<a name="line-15"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
 <a name="line-16"></a>
-<a name="line-17"></a><a name="Camera"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Camera</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Camera</span>
-<a name="line-18"></a>  <span class='hs-layout'>{</span> <span class='hs-sel'>_fov</span><span class='hs-layout'>,</span> <span class='hs-sel'>_yaw</span><span class='hs-layout'>,</span> <span class='hs-sel'>_pitch</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Float</span> <span class='hs-comment'>-- in radians</span>
-<a name="line-19"></a>  <span class='hs-layout'>,</span> <span class='hs-sel'>_cameraPos</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Vec3</span>
-<a name="line-20"></a>  <span class='hs-layout'>,</span> <span class='hs-sel'>_cameraVel</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Vec3</span>
-<a name="line-21"></a>  <span class='hs-layout'>}</span>
-<a name="line-22"></a>
-<a name="line-23"></a><a name="makeClassy"></a><span class='hs-definition'>makeClassy</span> <span class='hs-chr'>'</span><span class='hs-chr'>'</span><span class='hs-conid'>Camera</span>
-<a name="line-24"></a>
-<a name="line-25"></a><a name="instance%20Default%20Camera"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Default</span> <span class='hs-conid'>Camera</span> <span class='hs-keyword'>where</span>
-<a name="line-26"></a>  <span class='hs-varid'>def</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Camera</span> <span class='hs-layout'>(</span><span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>2</span><span class='hs-layout'>)</span> <span class='hs-num'>0</span> <span class='hs-num'>0</span> <span class='hs-num'>0</span> <span class='hs-num'>0</span>
-<a name="line-27"></a>
-<a name="line-28"></a><a name="updateCamera"></a><span class='hs-definition'>updateCamera</span> <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-conid'>MonadState</span> <span class='hs-varid'>s</span> <span class='hs-varid'>m</span><span class='hs-layout'>,</span> <span class='hs-conid'>HasCamera</span> <span class='hs-varid'>s</span><span class='hs-layout'>,</span> <span class='hs-conid'>HasInput</span> <span class='hs-varid'>s</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
-<a name="line-29"></a><span class='hs-definition'>updateCamera</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
-<a name="line-30"></a>  <span class='hs-keyword'>let</span> <span class='hs-varid'>ysensitivity</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>180</span> <span class='hs-comment'>-- negate for inverted mouse, TODO: take from options</span>
-<a name="line-31"></a>      <span class='hs-varid'>xsensitivity</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>180</span>
-<a name="line-32"></a>  <span class='hs-conid'>V2</span> <span class='hs-varid'>dx</span> <span class='hs-varid'>dy</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>mouseRel</span> <span class='hs-varop'>&lt;&lt;.=</span> <span class='hs-num'>0</span>
-<a name="line-33"></a>  <span class='hs-varid'>pitch</span> <span class='hs-varop'>%=</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>x</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>max</span> <span class='hs-layout'>(</span><span class='hs-comment'>-</span><span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>2</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-varid'>min</span> <span class='hs-layout'>(</span><span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>2</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-varid'>x</span> <span class='hs-varop'>+</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>dy</span> <span class='hs-varop'>*</span> <span class='hs-varid'>ysensitivity</span><span class='hs-layout'>)</span> <span class='hs-comment'>-- [-pi/2..pi/2]</span>
-<a name="line-34"></a>  <span class='hs-varid'>yaw</span>   <span class='hs-varop'>%=</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>y</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>fmod</span> <span class='hs-layout'>(</span><span class='hs-varid'>y</span> <span class='hs-varop'>+</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>dx</span> <span class='hs-varop'>*</span> <span class='hs-varid'>xsensitivity</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-num'>2</span><span class='hs-varop'>*</span><span class='hs-varid'>pi</span><span class='hs-layout'>)</span>              <span class='hs-comment'>-- [0..2*pi)</span>
-<a name="line-35"></a>
-<a name="line-36"></a><a name="fmod"></a><span class='hs-definition'>fmod</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Float</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Float</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Float</span>
-<a name="line-37"></a><span class='hs-definition'>fmod</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>b</span> <span class='hs-varop'>*</span> <span class='hs-varid'>snd</span> <span class='hs-layout'>(</span><span class='hs-varid'>properFraction</span> <span class='hs-varop'>$</span> <span class='hs-varid'>a</span> <span class='hs-varop'>/</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-conid'>Int</span><span class='hs-layout'>,</span> <span class='hs-conid'>Float</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
+<a name="line-17"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>State</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
+<a name="line-18"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Lens</span>
+<a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Default</span>
+<a name="line-20"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Linear</span>
+<a name="line-21"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
+<a name="line-22"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Input</span>
+<a name="line-23"></a>
+<a name="line-24"></a><span class='hs-comment'>-- * Camera</span>
+<a name="line-25"></a>
+<a name="line-26"></a><a name="Camera"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Camera</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Camera</span>
+<a name="line-27"></a>  <span class='hs-layout'>{</span> <span class='hs-sel'>_fov</span><span class='hs-layout'>,</span> <span class='hs-sel'>_yaw</span><span class='hs-layout'>,</span> <span class='hs-sel'>_pitch</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Float</span> <span class='hs-comment'>-- in radians</span>
+<a name="line-28"></a>  <span class='hs-layout'>,</span> <span class='hs-sel'>_cameraPos</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Vec3</span>
+<a name="line-29"></a>  <span class='hs-layout'>,</span> <span class='hs-sel'>_cameraVel</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Vec3</span>
+<a name="line-30"></a>  <span class='hs-layout'>}</span>
+<a name="line-31"></a>
+<a name="line-32"></a><a name="makeClassy"></a><span class='hs-definition'>makeClassy</span> <span class='hs-chr'>'</span><span class='hs-chr'>'</span><span class='hs-conid'>Camera</span>
+<a name="line-33"></a>
+<a name="line-34"></a><a name="instance%20Default%20Camera"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Default</span> <span class='hs-conid'>Camera</span> <span class='hs-keyword'>where</span>
+<a name="line-35"></a>  <span class='hs-varid'>def</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Camera</span> <span class='hs-layout'>(</span><span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>2</span><span class='hs-layout'>)</span> <span class='hs-num'>0</span> <span class='hs-num'>0</span> <span class='hs-num'>0</span> <span class='hs-num'>0</span>
+<a name="line-36"></a>
+<a name="line-37"></a><a name="updateCamera"></a><span class='hs-definition'>updateCamera</span> <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-conid'>MonadState</span> <span class='hs-varid'>s</span> <span class='hs-varid'>m</span><span class='hs-layout'>,</span> <span class='hs-conid'>HasCamera</span> <span class='hs-varid'>s</span><span class='hs-layout'>,</span> <span class='hs-conid'>HasInput</span> <span class='hs-varid'>s</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
+<a name="line-38"></a><span class='hs-definition'>updateCamera</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
+<a name="line-39"></a>  <span class='hs-keyword'>let</span> <span class='hs-varid'>ysensitivity</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>180</span> <span class='hs-comment'>-- negate for inverted mouse, TODO: take from options</span>
+<a name="line-40"></a>      <span class='hs-varid'>xsensitivity</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>180</span>
+<a name="line-41"></a>  <span class='hs-conid'>V2</span> <span class='hs-varid'>dx</span> <span class='hs-varid'>dy</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>mouseRel</span> <span class='hs-varop'>&lt;&lt;.=</span> <span class='hs-num'>0</span>
+<a name="line-42"></a>  <span class='hs-varid'>pitch</span> <span class='hs-varop'>%=</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>x</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>max</span> <span class='hs-layout'>(</span><span class='hs-comment'>-</span><span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>2</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-varid'>min</span> <span class='hs-layout'>(</span><span class='hs-varid'>pi</span><span class='hs-varop'>/</span><span class='hs-num'>2</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-varid'>x</span> <span class='hs-varop'>+</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>dy</span> <span class='hs-varop'>*</span> <span class='hs-varid'>ysensitivity</span><span class='hs-layout'>)</span> <span class='hs-comment'>-- [-pi/2..pi/2]</span>
+<a name="line-43"></a>  <span class='hs-varid'>yaw</span>   <span class='hs-varop'>%=</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>y</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>fmod</span> <span class='hs-layout'>(</span><span class='hs-varid'>y</span> <span class='hs-varop'>+</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>dx</span> <span class='hs-varop'>*</span> <span class='hs-varid'>xsensitivity</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-num'>2</span><span class='hs-varop'>*</span><span class='hs-varid'>pi</span><span class='hs-layout'>)</span>              <span class='hs-comment'>-- [0..2*pi)</span>
+<a name="line-44"></a>
+<a name="line-45"></a><a name="fmod"></a><span class='hs-definition'>fmod</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Float</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Float</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Float</span>
+<a name="line-46"></a><span class='hs-definition'>fmod</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>b</span> <span class='hs-varop'>*</span> <span class='hs-varid'>snd</span> <span class='hs-layout'>(</span><span class='hs-varid'>properFraction</span> <span class='hs-varop'>$</span> <span class='hs-varid'>a</span> <span class='hs-varop'>/</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-conid'>Int</span><span class='hs-layout'>,</span> <span class='hs-conid'>Float</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
 </pre></body>
 </html>
