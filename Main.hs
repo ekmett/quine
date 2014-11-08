@@ -192,7 +192,7 @@ render kernel = do
   liftIO $ glSwapWindow w
 
 -- discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
-handleWindowEvent :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
+handleWindowEvent :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
 handleWindowEvent QuitEvent{} = throw Shutdown
 handleWindowEvent WindowEvent { eventType = WindowEventEnter       } = do
   displayHasMouseFocus .= True
