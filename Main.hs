@@ -38,6 +38,7 @@ import Graphics.UI.SDL.Enum.Pattern
 import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
+import Linear
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Debug
@@ -47,6 +48,7 @@ import Quine.GL
 import Quine.GL.Error
 import Quine.GL.Object
 import Quine.GL.Program
+import Quine.GL.Types
 import Quine.GL.Uniform
 import Quine.GL.Version as GL
 import Quine.GL.VertexArray
@@ -59,6 +61,7 @@ import Quine.StateVar
 #include "locations.h"
 
 -- * Environment
+
 data Env = Env
   { _envMonitor   :: Monitor
   , _envOptions   :: Options
@@ -85,15 +88,31 @@ class (HasShaderEnv t, HasMonitor t, HasOptions t) => HasEnv t where
 instance HasEnv Env where
   env = id
 
+-- * Camera
+
+data Camera = Camera
+  { _fov, _yaw, _pitch :: Float -- in radians
+  , _cameraPos :: Vec3
+  , _cameraVel :: Vec3
+  } deriving Typeable
+
+makeClassy ''Camera
+
+instance Default Camera where
+  def = Camera (pi/2) 0 0 0 0
+
+-- * System
+
 data System = System
   { _systemDisplay :: Display
   , _systemInput   :: Input
+  , _systemCamera  :: Camera
   , _focused       :: Bool
   } deriving Typeable
 
 makeLenses ''System
 
-class (HasDisplay t, HasInput t) => HasSystem t where
+class (HasDisplay t, HasInput t, HasCamera t) => HasSystem t where
   system :: Lens' t System
 
 instance HasDisplay System where
@@ -102,9 +121,11 @@ instance HasDisplay System where
 instance HasInput System where
   input = systemInput
 
+instance HasCamera System where
+  camera = systemCamera
+
 instance HasSystem System where
   system = id
-
 
 -- * State
 
@@ -181,20 +202,25 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayVisible           = True
         }
   relativeMouseMode $= True -- switch to relative mouse mouse initially
-  runReaderT (evalStateT core $ System dsp def True) sys `finally` do
+  runReaderT (evalStateT core $ System dsp def def True) sys `finally` do
     glDeleteContext cxt
     destroyWindow window
     quit
     exitSuccess
-  
+
+translate :: Vec3 -> Mat4
+translate v = eye4 & translation .~ v
+
 core :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
   screenShader <- compile GL_VERTEX_SHADER "screen.vert"
   whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
   emptyVAO <- gen
-  iResolution <- uniformLocation scn "iResolution"
-  iGlobalTime <- uniformLocation scn "iGlobalTime"
+  iResolution  <- uniformLocation scn "iResolution"
+  iGlobalTime  <- uniformLocation scn "iGlobalTime"
+  iPerspective <- uniformLocation scn "iPerspective"
+  iView        <- uniformLocation scn "iView"
   epoch <- liftIO getCurrentTime
   throwErrors
   currentProgram   $= scn
@@ -202,10 +228,35 @@ core = do
   forever $ do 
     poll 
     resize 
+    updateCamera
     render $ do
-      liftIO getCurrentTime >>= \now   -> glUniform1f iGlobalTime $ realToFrac $ diffUTCTime now epoch
-      use displayWindowSize >>= \(w,h) -> glUniform2f iResolution (fromIntegral w) (fromIntegral h)
+      (w,h) <- use displayWindowSize
+      let wf = fromIntegral w
+          hf = fromIntegral h
+      glUniform2f iResolution wf hf
+
+      c <- use camera
+      uniformMat4 iPerspective $ perspective (c^.fov) (wf/hf) 1 65536
+      let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
+      uniformMat4 iView $ m33_to_m44 (fromQuaternion cameraQuat)
+                   -- !*! translate (-c^.cameraPos)
+
+      now <- liftIO getCurrentTime
+      glUniform1f iGlobalTime $ realToFrac $ diffUTCTime now epoch
+
       glDrawArrays GL_TRIANGLES 0 3
+
+fmod :: Float -> Float -> Float
+fmod a b = b * snd (properFraction $ a / b)
+
+updateCamera :: (MonadState s m, HasCamera s, HasInput s) => m ()
+updateCamera = do
+  let ysensitivity = pi/180 -- negate for inverted mouse
+      xsensitivity = pi/180
+  V2 dx dy <- mouseRel <<.= 0
+  -- calculate mouse look
+  pitch %= \x -> max (-pi/2) $ min (pi/2) (x + fromIntegral dy * ysensitivity) -- [-pi/2..pi/2]
+  yaw   %= \y -> fmod (y + fromIntegral dx * xsensitivity) (2*pi)              -- [0..2*pi)
 
 rescale :: Float -> (Int, Int) -> (Int, Int)
 rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)
@@ -214,7 +265,7 @@ resize :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) =
 resize = do
   win  <- use displayWindow
   opts <- view options
-  sz@(w,h) <- rescale (pointScale opts) `liftM` get (windowSize win) -- retina
+  sz@(w,h) <- rescale (pointScale opts) `liftM` get (windowSize win)
   sys <- view env
   (sys^.widthGauge)  $= fromIntegral w
   (sys^.heightGauge) $= fromIntegral h

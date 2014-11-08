@@ -3,6 +3,8 @@
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
+uniform mat4 iPerspective;
+uniform mat4 iView;
 
 layout(location = FRAGMENT_COLOR) out vec4 color;
 
@@ -723,7 +725,10 @@ void main( void )
 {
     C_Ray ray;
 
-    GetCameraRayLookat( OrbitPoint(iGlobalTime * 0.3, cos(iGlobalTime * 0.2) * 0.3 + 0.4) * 7.0, vec3(0.0, 0.0, 0.0), ray);
+    // GetCameraRayLookat( OrbitPoint(iGlobalTime * 0.3, cos(iGlobalTime * 0.2) * 0.3 + 0.4) * 7.0, vec3(0.0, 0.0, 0.0), ray);
+    GetCameraRayLookat( OrbitPoint(0.0, 0.0 + 0.0), vec3(0.0, 0.0, 0.0), ray);
+
+    ray.vDir = ray.vDir * mat3(iView);
 
     vec3 cScene = GetSceneColourPrimary( ray );  
 
