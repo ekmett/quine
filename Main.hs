@@ -88,6 +88,7 @@ instance HasEnv Env where
 data System = System
   { _systemDisplay :: Display
   , _systemInput   :: Input
+  , _focused       :: Bool
   } deriving Typeable
 
 makeLenses ''System
@@ -103,6 +104,7 @@ instance HasInput System where
 
 instance HasSystem System where
   system = id
+
 
 -- * State
 
@@ -178,7 +180,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayHasKeyboardFocus  = True
         , _displayVisible           = True
         }
-  runReaderT (evalStateT core $ System dsp def) sys `finally` do
+  relativeMouseMode $= True -- collect relative mouse data for mouselook
+  runReaderT (evalStateT core $ System dsp def True) sys `finally` do
     glDeleteContext cxt
     destroyWindow window
     quit
@@ -186,7 +189,6 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   
 core :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
-  relativeMouseMode $= True -- collect relative mouse data for mouselook
   screenShader <- compile GL_VERTEX_SHADER "screen.vert"
   whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
@@ -247,16 +249,40 @@ poll = do
 -- discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
 handleWindowEvent :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
 handleWindowEvent QuitEvent{} = throw Shutdown
-handleWindowEvent WindowEvent { eventType = WindowEventEnter       } = displayHasMouseFocus .= True
-handleWindowEvent WindowEvent { eventType = WindowEventLeave       } = displayHasMouseFocus .= False
-handleWindowEvent WindowEvent { eventType = WindowEventFocusGained } = displayHasKeyboardFocus .= True
-handleWindowEvent WindowEvent { eventType = WindowEventFocusLost   } = displayHasKeyboardFocus .= False
-handleWindowEvent WindowEvent { eventType = WindowEventMinimized   } = displayVisible .= False
-handleWindowEvent WindowEvent { eventType = WindowEventMaximized   } = displayVisible .= True
-handleWindowEvent WindowEvent { eventType = WindowEventHidden      } = displayVisible .= False
-handleWindowEvent WindowEvent { eventType = WindowEventExposed     } = displayVisible .= True
-handleWindowEvent WindowEvent { eventType = WindowEventRestored    } = displayVisible .= True -- unminimized
-handleWindowEvent WindowEvent { eventType = WindowEventShown       } = displayVisible .= True
+handleWindowEvent WindowEvent { eventType = WindowEventEnter       } = do
+  displayHasMouseFocus .= True
+  relativeMouseMode    $= True
+handleWindowEvent WindowEvent { eventType = WindowEventLeave       } = do
+  displayHasMouseFocus .= False
+  relativeMouseMode    $= False
+handleWindowEvent WindowEvent { eventType = WindowEventFocusGained } = do
+  displayHasKeyboardFocus .= True
+  relativeMouseMode       $= False
+handleWindowEvent WindowEvent { eventType = WindowEventFocusLost   } = do
+  displayHasKeyboardFocus .= False
+  relativeMouseMode       $= False
+handleWindowEvent WindowEvent { eventType = WindowEventMinimized   } = do
+  displayHasKeyboardFocus .= False
+  displayVisible          .= False
+  relativeMouseMode       $= False
+handleWindowEvent WindowEvent { eventType = WindowEventMaximized   } = do
+  displayHasKeyboardFocus .= True
+  displayVisible          .= True
+  relativeMouseMode       $= True
+handleWindowEvent WindowEvent { eventType = WindowEventHidden      } = do
+  displayVisible          .= False
+  displayHasKeyboardFocus .= False
+  relativeMouseMode       $= False
+handleWindowEvent WindowEvent { eventType = WindowEventExposed     } = do
+  displayVisible .= True
+handleWindowEvent WindowEvent { eventType = WindowEventRestored    } = do
+  displayVisible          .= True -- unminimized
+  displayHasKeyboardFocus .= True
+  relativeMouseMode       $= True
+handleWindowEvent WindowEvent { eventType = WindowEventShown       } = do
+  displayHasKeyboardFocus .= True
+  displayVisible          .= True
+  relativeMouseMode       $= True
 handleWindowEvent WindowEvent { eventType = WindowEventClose       } = liftIO $ throw Shutdown
 handleWindowEvent WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
 handleWindowEvent WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
@@ -266,6 +292,9 @@ handleWindowEvent WindowEvent { eventType = WindowEventSizeChanged, windowEventD
 handleWindowEvent WindowEvent { eventType = WindowEventResized, windowEventData1 = w, windowEventData2 = h } = do
   displayWindowSize        .= (fromIntegral w, fromIntegral h)
   displayWindowSizeChanged .= True
+handleWindowEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = KeycodeEscape }} =
+  relativeMouseMode $= False -- let escape give us back our mouse pointer
+handleWindowEvent MouseButtonEvent {} = relativeMouseMode $= True -- but clicking anywhere can take it back over
 handleWindowEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q, use keycode "Q" so it can move when they remap
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeReturn = do             -- CUA Cmd-Return
