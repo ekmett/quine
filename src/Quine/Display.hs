@@ -36,8 +36,7 @@ import Quine.StateVar
 import System.IO
 import Graphics.GL.Core41
 
--- basic opengl + sdl display for the screen, etc.
-
+-- | Basic OpenGL + SDL display that provides the screen and various bits of metadata about the act of displaying data
 data Display = Display 
   { _displayWindow            :: !Window
   , _displayGL                :: !GLContext
@@ -52,7 +51,7 @@ data Display = Display
 
 makeClassy ''Display
 
--- | complain loudly enough to pop up a window
+-- | Complain loudly enough to pop up a window
 warn :: (MonadIO m, MonadState s m, HasDisplay s) => String -> String -> m ()
 warn t m = do
   window <- use displayWindow
@@ -64,6 +63,7 @@ warn t m = do
 rescale :: Float -> (Int, Int) -> (Int, Int)
 rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)
 
+-- | Recalculate the actual OpenGL viewport size considering Retina
 resizeDisplay :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m ()
 resizeDisplay = do
   win  <- use displayWindow
@@ -75,7 +75,7 @@ resizeDisplay = do
   glViewport 0 0 (fromIntegral w) (fromIntegral h)
   displayWindowSize .= sz
 
--- discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
+-- | Discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
 handleDisplayEvent :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => Event -> m ()
 handleDisplayEvent QuitEvent{} = throw Shutdown
 handleDisplayEvent WindowEvent { eventType = WindowEventEnter       } = do
