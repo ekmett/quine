@@ -58,7 +58,6 @@ library
     Quine.StateVar
     Quine.System
 
-  --  Quine.Image
   other-modules:
     Paths_quine
 
