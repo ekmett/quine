@@ -12,16 +12,23 @@ module Quine.Display
   ( Display(..)
   , HasDisplay(..)
   , warn
+  , resizeDisplay
   ) where
 
+import Control.Monad (liftM)
 import Control.Monad.IO.Class
-import Control.Monad.State
+import Control.Monad.Reader.Class
+import Control.Monad.State.Class hiding (get)
 import Control.Lens
 import Foreign.C
 import Graphics.UI.SDL
 import Graphics.UI.SDL.Enum.Pattern
+import Quine.Env
+import Quine.Options
 import Quine.SDL
+import Quine.StateVar
 import System.IO
+import Graphics.GL.Core41
 
 -- basic opengl + sdl display for the screen, etc.
 
@@ -47,3 +54,17 @@ warn t m = do
     hPutStrLn stderr $ "Warning: " ++ t ++ ": " ++ m
     withCString t $ \title -> withCString m $ \message ->
       showSimpleMessageBox MessageBoxFlagWarning title message window >>= err
+
+rescale :: Float -> (Int, Int) -> (Int, Int)
+rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)
+
+resizeDisplay :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m ()
+resizeDisplay = do
+  win  <- use displayWindow
+  opts <- view options
+  sz@(w,h) <- rescale (pointScale opts) `liftM` get (windowSize win)
+  sys <- view env
+  sys^.widthGauge  $= fromIntegral w
+  sys^.heightGauge $= fromIntegral h
+  glViewport 0 0 (fromIntegral w) (fromIntegral h)
+  displayWindowSize .= sz

@@ -162,8 +162,8 @@ core = do
   currentProgram   $= scn
   boundVertexArray $= emptyVAO
   forever $ do 
-    poll 
-    resize 
+    poll $ \e -> handleWindowEvent e >> handleInputEvent e
+    resizeDisplay 
     updateCamera
     render $ do
       (w,h) <- use displayWindowSize
@@ -182,20 +182,6 @@ core = do
 
       glDrawArrays GL_TRIANGLES 0 3
 
-rescale :: Float -> (Int, Int) -> (Int, Int)
-rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)
-
-resize :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m ()
-resize = do
-  win  <- use displayWindow
-  opts <- view options
-  sz@(w,h) <- rescale (pointScale opts) `liftM` get (windowSize win)
-  sys <- view env
-  (sys^.widthGauge)  $= fromIntegral w
-  (sys^.heightGauge) $= fromIntegral h
-  glViewport 0 0 (fromIntegral w) (fromIntegral h)
-  displayWindowSize .= sz
-
 render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do
   inc =<< view (env.frameCounter)
@@ -208,17 +194,14 @@ render kernel = do
 
 -- * Polling
 
-poll :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasOptions e) => m ()
-poll = do
+poll :: MonadIO m => (Event -> m ()) -> m ()
+poll h = do
   me <- liftIO $ alloca $ \ep -> do
     r <- pollEvent ep
     if r /= 0 then Just <$> peek ep
               else return Nothing
   case me of
-    Just e  -> do
-      handleWindowEvent e
-      handleInputEvent e
-      poll
+    Just e  -> h e >> poll h
     Nothing -> return ()
 
 -- discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
