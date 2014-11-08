@@ -18,6 +18,7 @@ module Main where
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
+import Control.Exception.Lens
 import Control.Lens hiding (assign)
 import Control.Lens.Extras (is)
 import Control.Monad hiding (forM_)
@@ -62,7 +63,6 @@ import Quine.System
 -- * State
 
 main :: IO ()
--- main is always bound, but what about from ghci?
 main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- parse options
   optsParser <- parseOptions
@@ -136,7 +136,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayVisible           = True
         }
   relativeMouseMode $= True -- switch to relative mouse mouse initially
-  runReaderT (evalStateT core $ System dsp def def) sys `finally` do
+  handling id print (runReaderT (evalStateT core $ System dsp def def) sys) `finally` do
     glDeleteContext cxt
     destroyWindow window
     quit
