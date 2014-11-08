@@ -54,6 +54,7 @@ module Quine.SDL
   -- * Extensible Exceptions
   , SDLException(..)
   -- * Utilities
+  , poll
   , err
   ) where
 
@@ -302,3 +303,13 @@ setAttr a i = SDL.glSetAttribute a (fromIntegral i) >>= err
 makeCurrent :: MonadIO m => SDL.Window -> SDL.GLContext -> m ()
 makeCurrent w c = liftIO (SDL.glMakeCurrent w c >>= err)
 
+-- | Poll events using a given handler repeatedly in a loop
+poll :: MonadIO m => (SDL.Event -> m ()) -> m ()
+poll h = do
+  me <- liftIO $ alloca $ \ep -> do
+    r <- SDL.pollEvent ep
+    if r /= 0 then Just <$> peek ep
+              else return Nothing
+  case me of
+    Just e  -> h e >> poll h
+    Nothing -> return ()

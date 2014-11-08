@@ -33,7 +33,6 @@ import System.Exit
 import System.IO
 import Graphics.GL.Core41
 import Graphics.UI.SDL.Enum.Pattern
-import Graphics.UI.SDL.Event as SDL
 import Graphics.UI.SDL.Types as SDL
 import Graphics.UI.SDL.Video as SDL
 import Linear
@@ -191,18 +190,6 @@ render kernel = do
   w <- use displayWindow
   glFlush
   liftIO $ glSwapWindow w
-
--- * Polling
-
-poll :: MonadIO m => (Event -> m ()) -> m ()
-poll h = do
-  me <- liftIO $ alloca $ \ep -> do
-    r <- pollEvent ep
-    if r /= 0 then Just <$> peek ep
-              else return Nothing
-  case me of
-    Just e  -> h e >> poll h
-    Nothing -> return ()
 
 -- discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
 handleWindowEvent :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasOptions e) => SDL.Event -> m ()
