@@ -9,6 +9,8 @@ module Quine.GL.Uniform
   -- * Uniform Locations
     UniformLocation
   , uniformLocation
+  , uniformMat4s
+  , uniformMat4
   -- * Uniform Types
   , UniformType
   , showUniformType
@@ -16,11 +18,20 @@ module Quine.GL.Uniform
   ) where
 
 import Control.Monad.IO.Class
+import Data.Distributive
+import Data.Foldable
+import Data.Functor
+import Data.Version
 import Foreign.C.String
+import Foreign.Marshal.Array
 import Foreign.Ptr
+import Foreign.Storable
 import Graphics.GL.Core45
 import Graphics.GL.Types
+import Linear
 import Quine.GL.Program
+import Quine.GL.Types
+import Quine.GL.Version
 
 -- * Uniform Locations
 
@@ -28,6 +39,26 @@ type UniformLocation = GLint
 
 uniformLocation :: MonadIO m => Program -> String -> m UniformLocation
 uniformLocation (Program p) s = liftIO $ withCString s (glGetUniformLocation p . castPtr)
+
+canTranspose :: Bool
+canTranspose = not (gles && version < Version [3,1] []) -- older opengl es doesn't support transpose in glUniformMatrix
+
+uniformMatrices
+  :: (MonadIO m, Foldable f, Storable (g (h a)), Storable (h (g a)), Distributive h, Functor g)
+  => (GLint -> GLsizei -> GLboolean -> Ptr x -> IO ())
+  -> (GLint -> GLsizei -> GLboolean -> Ptr y -> IO ())
+  -> UniformLocation -> f (g (h a)) -> m ()
+uniformMatrices rowMajor columnMajor loc xs 
+  | canTranspose = liftIO $ withArrayLen (              toList xs) $ \n p -> rowMajor    loc (fromIntegral n) GL_TRUE  (castPtr p)
+  | otherwise    = liftIO $ withArrayLen (transpose <$> toList xs) $ \n p -> columnMajor loc (fromIntegral n) GL_FALSE (castPtr p)
+
+data Id a = Id a deriving Foldable
+
+uniformMat4s :: (MonadIO m, Foldable f)  => UniformLocation -> f Mat4 -> m ()
+uniformMat4s = uniformMatrices glUniformMatrix4fv glUniformMatrix4fv
+
+uniformMat4 :: MonadIO m  => UniformLocation -> Mat4 -> m ()
+uniformMat4 l = uniformMat4s l . Id
 
 type UniformType = GLenum
 
