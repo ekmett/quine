@@ -180,7 +180,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayHasKeyboardFocus  = True
         , _displayVisible           = True
         }
-  relativeMouseMode $= True -- collect relative mouse data for mouselook
+  relativeMouseMode $= True -- switch to relative mouse mouse initially
   runReaderT (evalStateT core $ System dsp def True) sys `finally` do
     glDeleteContext cxt
     destroyWindow window
@@ -294,7 +294,8 @@ handleWindowEvent WindowEvent { eventType = WindowEventResized, windowEventData1
   displayWindowSizeChanged .= True
 handleWindowEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = KeycodeEscape }} =
   relativeMouseMode $= False -- let escape give us back our mouse pointer
-handleWindowEvent MouseButtonEvent {} = relativeMouseMode $= True -- but clicking anywhere can take it back over
+handleWindowEvent MouseButtonEvent{} =
+  relativeMouseMode $= True -- and clicking anywhere can take it over, too
 handleWindowEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q, use keycode "Q" so it can move when they remap
   | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeReturn = do             -- CUA Cmd-Return
@@ -305,5 +306,7 @@ handleWindowEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysy
       | not fs    -> 0
       | fsn       -> WindowFlagFullscreen 
       | otherwise -> WindowFlagFullscreenDesktop
+    relativeMouseMode $= True -- steal mouse pointer
     return ()
+  | otherwise = relativeMouseMode $= True -- everything else steals back mouse pointer too
 handleWindowEvent _ = return () -- liftIO $ hPrint stderr e
