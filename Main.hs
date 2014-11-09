@@ -160,8 +160,9 @@ core = do
   throwErrors
   currentProgram   $= scn
   boundVertexArray $= emptyVAO
+  let handleEvents = poll $ \e -> handleDisplayEvent e >> handleInputEvent e
   forever $ do 
-    poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+    handleEvents
     resizeDisplay 
     updateCamera
     render $ do
