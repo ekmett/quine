@@ -155,6 +155,7 @@ core = do
   iGlobalTime  <- uniformLocation scn "iGlobalTime"
   iPerspective <- uniformLocation scn "iPerspective"
   iView        <- uniformLocation scn "iView"
+  iCamera      <- uniformLocation scn "iCamera"
   epoch <- liftIO getCurrentTime
   throwErrors
   currentProgram   $= scn
@@ -173,6 +174,7 @@ core = do
       uniformMat4 iPerspective $ perspective (c^.fov) (wf/hf) 0.1 65536
       let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
       uniformMat4 iView        $ m33_to_m44 $ fromQuaternion cameraQuat
+      glUniform2f iCamera (c^.yaw) (c^.pitch)
 
       now <- liftIO getCurrentTime
       glUniform1f iGlobalTime $ realToFrac $ diffUTCTime now epoch
