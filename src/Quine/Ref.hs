@@ -1,4 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
 module Quine.Ref
   ( Ref(..)
   , newRef
@@ -14,13 +17,13 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
+import Data.Foldable
 import Data.IORef
+import Data.Traversable
 
 -- | reference counting
 data Ref a = Ref (IO ()) a !(IORef Int)
-
-instance Functor Ref where
-  fmap g (Ref f a r) = Ref f (g a) r
+  deriving (Functor, Foldable, Traversable)
 
 instance Comonad Ref where
   extract (Ref _ a _) = a
@@ -32,12 +35,12 @@ newRef f a = liftIO $ Ref f a <$> newIORef 1
 
 -- | Increase the reference count of a living ref by 1
 acquireRef :: MonadIO m => Ref a -> m a
-acquireRef (Ref _ a r) = liftIO $ atomicModifyIORef' r $ \r -> (r + 1, a)
+acquireRef (Ref _ a r) = liftIO $ atomicModifyIORef' r $ \i -> (i + 1, a)
 
 -- | Decrease the reference count of a living ref by 1, releasing it if it hits 0
 releaseRef :: MonadIO m => Ref a -> m ()
-releaseRef (Ref f a r) = liftIO $ do
-  c <- atomicModifyIORef' r $ \r -> let r' = r + 1 in (r',r')
+releaseRef (Ref f _ r) = liftIO $ do
+  c <- atomicModifyIORef' r $ \i -> let i' = i + 1 in i' `seq` (i',i')
   when (c == 0) f
 
 -- | Check if the Ref has any references and can still be used

@@ -5,14 +5,13 @@ module Quine.Clock
   ) where
 
 import Control.Monad.IO.Class
-import Data.Int
 import System.Clock
 
-type Time      = Int64
-type DeltaTime = Int64
+type Time      = Double
+type DeltaTime = Double
 
--- | A simple monotonic system clock counting in nanoseconds with an undefined origin
+-- | A simple monotonic system clock in seconds with undefined origin
 now :: MonadIO m => m Time
 now = liftIO $ do
   TimeSpec s ns <- getTime Monotonic
-  return $ fromIntegral s * 1000000000 + fromIntegral ns
+  return $ fromIntegral s + fromIntegral ns * 1.0e-9

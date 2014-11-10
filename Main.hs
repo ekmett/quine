@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE FlexibleContexts #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -55,6 +56,7 @@ import Quine.Input
 import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
+import Quine.Simulation
 import Quine.StateVar
 import Quine.System
 
@@ -136,7 +138,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayVisible           = True
         }
   relativeMouseMode $= True -- switch to relative mouse mouse initially
-  handling id print (runReaderT (evalStateT core $ System dsp def def) sys) `finally` do
+  sim <- createSimulation () ()
+  handling id print (runReaderT (evalStateT core $ System dsp def def sim) sys) `finally` do
     glDeleteContext cxt
     destroyWindow window
     quit
@@ -145,7 +148,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 translate :: Vec3 -> Mat4
 translate v = eye4 & translation .~ v
 
-core :: (MonadIO m, MonadState s m, HasSystem s, MonadReader e m, HasEnv e, HasOptions e) => m a
+core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
   screenShader <- compile GL_VERTEX_SHADER "screen.vert"
   whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
@@ -160,11 +163,12 @@ core = do
   throwErrors
   currentProgram   $= scn
   boundVertexArray $= emptyVAO
-  let handleEvents = poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+  let handleEvents = do
+        poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+        updateCamera
   forever $ do 
     handleEvents
     resizeDisplay 
-    updateCamera
     render $ do
       (w,h) <- use displayWindowSize
       let wf = fromIntegral w
