@@ -167,7 +167,7 @@ core = do
         poll $ \e -> handleDisplayEvent e >> handleInputEvent e
         updateCamera
   forever $ do 
-    handleEvents
+    simulate handleEvents
     resizeDisplay 
     render $ do
       (w,h) <- use displayWindowSize
