@@ -27,7 +27,6 @@ import Control.Monad.Reader
 import Control.Monad.State hiding (get)
 import Data.Default
 import Data.Monoid
-import Data.Time.Clock
 import Foreign
 import Foreign.C
 import GHC.Conc
@@ -139,7 +138,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayVisible           = True
         }
   relativeMouseMode $= True -- switch to relative mouse mouse initially
-  sim <- createSimulation () ()
+  sim <- createSimulation ekg () ()
   handling id print (runReaderT (evalStateT core $ System dsp def def sim) sys) `finally` do
     glDeleteContext cxt
     destroyWindow window
@@ -155,22 +154,23 @@ core = do
   whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
   emptyVAO <- gen
-  iResolution  <- uniformLocation scn "iResolution"
-  iGlobalTime  <- uniformLocation scn "iGlobalTime"
-  iPerspective <- uniformLocation scn "iPerspective"
-  iView        <- uniformLocation scn "iView"
-  iCamera      <- uniformLocation scn "iCamera"
-  epoch <- liftIO getCurrentTime
+  iResolution   <- uniformLocation scn "iResolution"
+  iGlobalTime   <- uniformLocation scn "iGlobalTime"
+  iPerspective  <- uniformLocation scn "iPerspective"
+  iPhysicsAlpha <- uniformLocation scn "iPhysicsAlpha"
+  iView         <- uniformLocation scn "iView"
+  iInverseView  <- uniformLocation scn "iInverseView"
+  iCamera       <- uniformLocation scn "iCamera" -- yaw, pitch, fov
   throwErrors
   currentProgram   $= scn
   boundVertexArray $= emptyVAO
-  let handleEvents = do
-        poll $ \e -> handleDisplayEvent e >> handleInputEvent e
-        updateCamera
   forever $ do 
-    dt <- simulate handleEvents
+    (alpha,t) <- simulate $ do
+      poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+    updateCamera
     resizeDisplay 
-    render dt $ do
+    render $ do
+      liftIO $ putStrLn $ showFFloat (Just 4) alpha . showChar ' ' . showsPrec 11 (t * simulationFPS) $ ""
       (w,h) <- use displayWindowSize
       let wf = fromIntegral w
           hf = fromIntegral h
@@ -179,17 +179,17 @@ core = do
       c <- use camera
       uniformMat4 iPerspective $ perspective (c^.fov) (wf/hf) 0.1 65536
       let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
-      uniformMat4 iView        $ m33_to_m44 $ fromQuaternion cameraQuat
-      glUniform2f iCamera (c^.yaw) (c^.pitch)
-
-      now <- liftIO getCurrentTime
-      glUniform1f iGlobalTime $ realToFrac $ diffUTCTime now epoch
+      uniformMat4 iView $ m33_to_m44 $ fromQuaternion cameraQuat
+      let inverseCameraQuat = axisAngle (V3 0 1 0) (-c^.yaw) * axisAngle (V3 1 0 0) (-c^.pitch)
+      uniformMat4 iInverseView $ m33_to_m44 $ fromQuaternion inverseCameraQuat
+      glUniform3f iCamera (c^.yaw) (c^.pitch) (c^.fov)
+      glUniform1f iGlobalTime (realToFrac t)
+      glUniform1f iPhysicsAlpha (realToFrac alpha)
 
       glDrawArrays GL_TRIANGLES 0 3
 
-render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => Double -> m () -> m ()
-render dt kernel = do
-  liftIO $ putStrLn $ showFFloat (Just 4) dt ""
+render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
+render kernel = do
   inc =<< view (env.frameCounter)
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_STENCIL_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT

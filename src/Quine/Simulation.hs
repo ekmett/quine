@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
@@ -29,6 +30,7 @@ import Control.Monad.State.Class
 import Control.Lens
 import Data.Foldable
 import Quine.Clock
+import Quine.Monitor
 import Quine.Ref
 
 -- | 25 fps
@@ -38,15 +40,16 @@ simulationFPS = 25
 simulationSPF :: DeltaTime
 simulationSPF = recip simulationFPS
 
--- | Catch up, up to 25 frames at a time
+-- | Catch up, up to 25 frames at a time, if we're at less than a frame every second, we're hurting!
 simulationBurstRate :: Int
 simulationBurstRate = 25
 
 data Simulation a = Simulation
-  { _simulationStart :: !Time
-  , _simulationTime  :: !Time
-  , _simulationOld   :: !(Ref a)
-  , _simulationState :: !(Ref a)
+  { _simulationStart        :: !Time    -- environment?
+  , _simulationTime         :: !Time
+  , _simulationFrameCounter :: !Counter -- as well?
+  , _simulationOld          :: !(Ref a)
+  , _simulationState        :: !(Ref a)
   } deriving (Functor, Foldable, Traversable)
 
 makeClassy ''Simulation
@@ -63,26 +66,28 @@ instance (Simulated a, Simulated b) => Simulated (a, b) where
   newState (ao,bo) (ac,bc) = liftM2 (,) (newState ao ac) (newState bo bc)
   deleteState (ao,bo)      = deleteState ao >> deleteState bo
 
-createSimulation :: Simulated a => a -> a -> IO (Simulation a)
-createSimulation a b = do
+createSimulation :: Simulated a => Monitor -> a -> a -> IO (Simulation a)
+createSimulation ekg a b = do
   s  <- now
+  ff <- counter "physics.frame" ekg
   ra <- newRef (deleteState a) a
   rb <- newRef (deleteState b) b
-  return $ Simulation s s ra rb
+  return $ Simulation s s ff ra rb
 
 -- run up to a burst worth of simulation frames w/ interleaved polling
-simulate :: (MonadIO m, MonadState s m, HasSimulation s a, Simulated a) => m () -> m Double
+simulate :: (MonadIO m, MonadState s m, HasSimulation s a, Simulated a) => m () -> m (Double, Time)
 simulate poll = go simulationBurstRate
  where
   go b = do
     poll -- run this between physics frames
     t <- now 
-    Simulation t0 tn ro rc <- use simulation 
+    Simulation t0 tn ff ro rc <- use simulation 
     let tn' = tn + simulationSPF
     if b > 0 && tn' <= t 
       then do
         rn <- newState (extract ro) (extract rc) >>= \n -> newRef (deleteState n) n
         releaseRef ro
-        simulation .= Simulation t0 tn' rc rn
+        inc ff
+        simulation .= Simulation t0 tn' ff rc rn
         go $! b - 1
-      else return $ (t - tn) * simulationFPS
+      else return $ ((t-tn) * simulationFPS, t - t0)
