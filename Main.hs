@@ -31,6 +31,7 @@ import Data.Time.Clock
 import Foreign
 import Foreign.C
 import GHC.Conc
+import Numeric (showFFloat)
 import System.Exit
 import System.IO
 import Graphics.GL.Core41
@@ -167,9 +168,9 @@ core = do
         poll $ \e -> handleDisplayEvent e >> handleInputEvent e
         updateCamera
   forever $ do 
-    simulate handleEvents
+    dt <- simulate handleEvents
     resizeDisplay 
-    render $ do
+    render dt $ do
       (w,h) <- use displayWindowSize
       let wf = fromIntegral w
           hf = fromIntegral h
@@ -186,8 +187,9 @@ core = do
 
       glDrawArrays GL_TRIANGLES 0 3
 
-render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
-render kernel = do
+render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => Double -> m () -> m ()
+render dt kernel = do
+  liftIO $ putStrLn $ showFFloat (Just 4) dt ""
   inc =<< view (env.frameCounter)
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_STENCIL_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT

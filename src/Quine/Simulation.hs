@@ -71,7 +71,7 @@ createSimulation a b = do
   return $ Simulation s s ra rb
 
 -- run up to a burst worth of simulation frames w/ interleaved polling
-simulate :: (MonadIO m, MonadState s m, HasSimulation s a, Simulated a) => m () -> m ()
+simulate :: (MonadIO m, MonadState s m, HasSimulation s a, Simulated a) => m () -> m Double
 simulate poll = go simulationBurstRate
  where
   go b = do
@@ -79,8 +79,10 @@ simulate poll = go simulationBurstRate
     t <- now 
     Simulation t0 tn ro rc <- use simulation 
     let tn' = tn + simulationSPF
-    when (b > 0 && tn' <= t) $ do
-      rn <- newState (extract ro) (extract rc) >>= \n -> newRef (deleteState n) n
-      releaseRef ro
-      simulation .= Simulation t0 tn' rc rn
-      go $! b - 1
+    if b > 0 && tn' <= t 
+      then do
+        rn <- newState (extract ro) (extract rc) >>= \n -> newRef (deleteState n) n
+        releaseRef ro
+        simulation .= Simulation t0 tn' rc rn
+        go $! b - 1
+      else return $ (t - tn) * simulationFPS
