@@ -32,10 +32,14 @@ import System.IO.Unsafe
 import Text.ParserCombinators.ReadP
 
 -- |
--- OpenGL ES major.minor <vendor-specific information>.
--- OpenGL ES major.minor.release <vendor-specific information>.
--- major.minor
--- major.minor.release
+-- @
+-- major.minor <vendor-specific information>
+-- major.minor.release <vendor-specific information>
+-- OpenGL ES major.minor <vendor-specific information>
+-- OpenGL ES major.minor.release <vendor-specific information>
+-- OpenGL ES GLSL ES major.minor <vendor-specific information>
+-- OpenGL ES GLSL ES major.minor.release <vendor-specific information>
+-- @
 parse :: String -> Maybe Version
 parse s = case words s of
   "OpenGL":"ES":"GLSL":"ES":x:_ -> go x
