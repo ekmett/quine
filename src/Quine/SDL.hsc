@@ -273,7 +273,7 @@ setAttr :: GLattr -> Int -> IO ()
 setAttr a i = glSetAttribute a (fromIntegral i) >>= err
 
 makeCurrent :: MonadIO m => Window -> GLContext -> m ()
-makeCurrent w c = liftIO (glMakeCurrent w c >>= err)
+makeCurrent w c = glMakeCurrent w c >>= err
 
 -- | Poll events using a given handler repeatedly in a loop
 poll :: MonadIO m => (Event -> m ()) -> m ()
