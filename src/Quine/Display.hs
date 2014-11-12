@@ -27,7 +27,6 @@ import Control.Lens
 import Data.Bits
 import Foreign.C
 import Graphics.UI.SDL
-import Graphics.UI.SDL.Enum.Pattern
 import Quine.Env
 import Quine.Exception
 import Quine.Options
@@ -58,7 +57,7 @@ warn t m = do
   liftIO $ do 
     hPutStrLn stderr $ "Warning: " ++ t ++ ": " ++ m
     withCString t $ \title -> withCString m $ \message ->
-      showSimpleMessageBox MessageBoxFlagWarning title message window >>= err
+      showSimpleMessageBox SDL_MESSAGEBOX_WARNING title message window >>= err
 
 rescale :: Float -> (Int, Int) -> (Int, Int)
 rescale r (w, h) = (floor $ r * fromIntegral w, floor $ r * fromIntegral h)
@@ -78,63 +77,63 @@ resizeDisplay = do
 -- | Discharge events we should always handle correctly, e.g. CUA concerns for quitting, going full-screen, etc.
 handleDisplayEvent :: (MonadIO m, MonadState s m, HasDisplay s, MonadReader e m, HasOptions e) => Event -> m ()
 handleDisplayEvent QuitEvent{} = throw Shutdown
-handleDisplayEvent WindowEvent { eventType = WindowEventEnter       } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_ENTER } = do
   displayHasMouseFocus .= True
   relativeMouseMode    $= True
-handleDisplayEvent WindowEvent { eventType = WindowEventLeave       } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_LEAVE } = do
   displayHasMouseFocus .= False
   relativeMouseMode    $= False
-handleDisplayEvent WindowEvent { eventType = WindowEventFocusGained } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_FOCUS_GAINED } = do
   displayHasKeyboardFocus .= True
   relativeMouseMode       $= False
-handleDisplayEvent WindowEvent { eventType = WindowEventFocusLost   } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_FOCUS_LOST } = do
   displayHasKeyboardFocus .= False
   relativeMouseMode       $= False
-handleDisplayEvent WindowEvent { eventType = WindowEventMinimized   } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_MINIMIZED } = do
   displayHasKeyboardFocus .= False
   displayVisible          .= False
   relativeMouseMode       $= False
-handleDisplayEvent WindowEvent { eventType = WindowEventMaximized   } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_MAXIMIZED } = do
   displayHasKeyboardFocus .= True
   displayVisible          .= True
   relativeMouseMode       $= True
-handleDisplayEvent WindowEvent { eventType = WindowEventHidden      } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_HIDDEN } = do
   displayVisible          .= False
   displayHasKeyboardFocus .= False
   relativeMouseMode       $= False
-handleDisplayEvent WindowEvent { eventType = WindowEventExposed     } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_EXPOSED } = do
   displayVisible .= True
-handleDisplayEvent WindowEvent { eventType = WindowEventRestored    } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_RESTORED } = do
   displayVisible          .= True -- unminimized
   displayHasKeyboardFocus .= True
   relativeMouseMode       $= True
-handleDisplayEvent WindowEvent { eventType = WindowEventShown       } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_SHOWN } = do
   displayHasKeyboardFocus .= True
   displayVisible          .= True
   relativeMouseMode       $= True
-handleDisplayEvent WindowEvent { eventType = WindowEventClose       } = liftIO $ throw Shutdown
-handleDisplayEvent WindowEvent { eventType = WindowEventMoved       } = return () -- who cares?
-handleDisplayEvent WindowEvent { eventType = WindowEventNone        } = return () -- who cares?
-handleDisplayEvent WindowEvent { eventType = WindowEventSizeChanged, windowEventData1 = w, windowEventData2 = h } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_CLOSE } = liftIO $ throw Shutdown
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_MOVED } = return () -- who cares?
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_NONE } = return () -- who cares?
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_SIZE_CHANGED, windowEventData1 = w, windowEventData2 = h } = do
   displayWindowSize        .= (fromIntegral w, fromIntegral h)
   displayWindowSizeChanged .= True
-handleDisplayEvent WindowEvent { eventType = WindowEventResized, windowEventData1 = w, windowEventData2 = h } = do
+handleDisplayEvent WindowEvent { eventType = SDL_WINDOWEVENT_RESIZED, windowEventData1 = w, windowEventData2 = h } = do
   displayWindowSize        .= (fromIntegral w, fromIntegral h)
   displayWindowSizeChanged .= True
-handleDisplayEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = KeycodeEscape }} =
+handleDisplayEvent KeyboardEvent{eventType = SDL_KEYDOWN, keyboardEventKeysym=Keysym{keysymKeycode = SDLK_ESCAPE }} =
   relativeMouseMode $= False -- let escape give us back our mouse pointer
 handleDisplayEvent MouseButtonEvent{} =
   relativeMouseMode $= True -- and clicking anywhere can take it over, too
-handleDisplayEvent KeyboardEvent{eventType = EventTypeKeyDown, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
-  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeQ      = throw Shutdown -- CUA Cmd-Q, use keycode "Q" so it can move when they remap
-  | m .&. (KeymodRGUI .|. KeymodLGUI) /= 0, k == KeycodeReturn = do             -- CUA Cmd-Return
+handleDisplayEvent KeyboardEvent{eventType = SDL_KEYDOWN, keyboardEventKeysym=Keysym{keysymKeycode = k, keysymMod = m }}
+  | m .&. KMOD_GUI /= 0, k == SDLK_q = throw Shutdown -- CUA Cmd-Q, use keycode "Q" so it can move when they remap
+  | m .&. KMOD_GUI /= 0, k == SDLK_RETURN = do        -- CUA Cmd-Return
     fs <- displayFullScreen <%= not
     fsn <- view optionsFullScreenNormal
     w  <- use displayWindow
-    _ <- liftIO $ setWindowFullscreen w $ if 
+    _ <- setWindowFullscreen w $ if 
       | not fs    -> 0
-      | fsn       -> WindowFlagFullscreen 
-      | otherwise -> WindowFlagFullscreenDesktop
+      | fsn       -> SDL_WINDOW_FULLSCREEN
+      | otherwise -> SDL_WINDOW_FULLSCREEN_DESKTOP
     relativeMouseMode $= True -- steal mouse pointer
     return ()
   | otherwise = relativeMouseMode $= True -- everything else steals back mouse pointer too

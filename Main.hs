@@ -34,8 +34,7 @@ import Numeric (showFFloat)
 import System.Exit
 import System.IO
 import Graphics.GL.Core41
-import Graphics.UI.SDL.Enum.Pattern
-import Graphics.UI.SDL.Video as SDL
+import Graphics.UI.SDL as SDL
 import Linear
 import Options.Applicative
 import Prelude hiding (init)
@@ -86,10 +85,10 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   label "sdl.version" ekg >>= ($= show SDL.version)
  
   -- start SDL
-  init InitFlagEverything
+  init SDL_INIT_EVERYTHING >>= err
   contextMajorVersion $= 4
   contextMinorVersion $= 1
-  contextProfileMask  $= GLProfileCore
+  contextProfileMask  $= SDL_GL_CONTEXT_PROFILE_CORE
   redSize   $= 5
   greenSize $= 5
   blueSize  $= 5
@@ -97,14 +96,14 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   doubleBuffer $= True
   let w = opts^.optionsWindowWidth
       h = opts^.optionsWindowHeight
-      flags = WindowFlagOpenGL
-          .|. WindowFlagShown
-          .|. WindowFlagResizable
-          .|. (if opts^.optionsHighDPI then WindowFlagAllowHighDPI else 0)
+      flags = SDL_WINDOW_OPENGL
+          .|. SDL_WINDOW_SHOWN
+          .|. SDL_WINDOW_RESIZABLE
+          .|. (if opts^.optionsHighDPI then SDL_WINDOW_ALLOW_HIGHDPI else 0)
           .|. (if | not (opts^.optionsFullScreen) -> 0
-                  | opts^.optionsFullScreenNormal -> WindowFlagFullscreen 
-                  | otherwise                     -> WindowFlagFullscreenDesktop)
-  window <- createWindow windowName WindowPosCentered WindowPosCentered (fromIntegral w) (fromIntegral h) flags
+                  | opts^.optionsFullScreenNormal -> SDL_WINDOW_FULLSCREEN
+                  | otherwise                     -> SDL_WINDOW_FULLSCREEN_DESKTOP)
+  window <- createWindow windowName SDL_WINDOWPOS_CENTERED SDL_WINDOWPOS_CENTERED (fromIntegral w) (fromIntegral h) flags
 
   -- start OpenGL
   cxt <- glCreateContext window
