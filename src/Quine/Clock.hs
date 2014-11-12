@@ -5,13 +5,17 @@ module Quine.Clock
   ) where
 
 import Control.Monad.IO.Class
-import System.Clock
+import Data.Functor
+import Graphics.UI.SDL
+import System.IO.Unsafe
 
 type Time      = Double
 type DeltaTime = Double
 
+granularity :: Double
+granularity = unsafePerformIO (recip . fromIntegral <$> getPerformanceFrequency)
+{-# NOINLINE granularity #-}
+
 -- | A simple monotonic system clock in seconds with undefined origin
 now :: MonadIO m => m Time
-now = liftIO $ do
-  TimeSpec s ns <- getTime Monotonic
-  return $ fromIntegral s + fromIntegral ns * 1.0e-9
+now = liftIO $ (granularity *) . fromIntegral <$> getPerformanceCounter
