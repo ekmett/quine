@@ -75,9 +75,9 @@ newtype SDLException = SDLException String
 instance Exception SDLException
 
 -- | Treat negative return codes as prompting an error check.
-err :: CInt -> IO ()
+err :: MonadIO m => CInt -> m ()
 err e 
-  | e < 0 = do
+  | e < 0 = liftIO $ do
     msg <- getError >>= peekCString
     clearError
     when (msg /= "") $ throw $ SDLException msg
