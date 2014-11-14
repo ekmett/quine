@@ -1,12 +1,11 @@
-#pragma version 410 core
-#include "locations.h"
+#version 410 core
 
 #define kRaymarchEpsilon 0.01
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 
-layout(location = FRAGMENT_COLOR) out vec4 color;
+out vec4 color;
 
 // https://www.shadertoy.com/view/Msl3Rn
 

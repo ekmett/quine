@@ -1,11 +1,10 @@
-#pragma version 410 core
-#include "locations.h"
+#version 410 core
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 uniform vec4 iMouse = vec4(0.);
 
-layout(location = FRAGMENT_COLOR) out vec4 outColor;
+out vec4 outColor;
 
 // Hey all here is the amazing cartoon code copy and pasted from a website
 // "Fractal Cartoon" - former "DE edge detection" by Kali

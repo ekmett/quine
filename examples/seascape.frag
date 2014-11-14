@@ -1,5 +1,4 @@
-#pragma version 410 core
-#include "locations.h"
+#version 410
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;

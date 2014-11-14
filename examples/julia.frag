@@ -1,4 +1,4 @@
-#version 410 core
+#version 410
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;

@@ -3,13 +3,12 @@
 
 // https://www.shadertoy.com/view/4s23zW
 
-#pragma version 410 core
-#include "locations.h"
+#version 410
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 
-layout(location = FRAGMENT_COLOR) out vec4 color;
+out vec4 color;
 
 #define time iGlobalTime*0.5
 #define size iResolution
