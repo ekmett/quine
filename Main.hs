@@ -32,7 +32,6 @@ import Data.Monoid
 import Foreign
 import Foreign.C
 import GHC.Conc
-import Numeric (showFFloat)
 import System.Exit
 import System.FilePath
 import System.IO
@@ -173,7 +172,6 @@ core = do
     updateCamera
     resizeDisplay 
     render $ do
-      liftIO $ putStrLn $ showFFloat (Just 4) alpha . showChar ' ' . showsPrec 11 (t * simulationFPS) $ ""
       (w,h) <- use displayWindowSize
       let wf = fromIntegral w
           hf = fromIntegral h
