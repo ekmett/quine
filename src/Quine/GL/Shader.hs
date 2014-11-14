@@ -165,7 +165,6 @@ buildNamedStrings :: MonadIO m => [(FilePath, Strict.ByteString)] -> FilePath ->
 buildNamedStrings fallback fp tweak = liftIO $ when gl_ARB_shading_language_include $ do
   includes <- getDir fp 
   forM_ (if null includes then fallback else includes) $ \(fp',body) -> do
-    let fp'' = tweak fp'
     withCStringLen (tweak fp') $ \ (name, namelen) ->
       Strict.unsafeUseAsCString body $ \string -> do
         glNamedStringARB GL_SHADER_INCLUDE_ARB (fromIntegral namelen) name (fromIntegral $ Strict.length body) string
