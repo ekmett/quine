@@ -35,16 +35,16 @@ import Quine.Meter
 import Quine.Monitor
 import Quine.Ref
 
--- | 25 fps
+-- | # of fps
 simulationFPS :: Double
-simulationFPS = 25
+simulationFPS = 60
 
 simulationSPF :: DeltaTime
 simulationSPF = recip simulationFPS
 
--- | Catch up, up to 25 frames at a time, if we're at less than a frame every second, we're hurting!
+-- | Catch up rate, if we're at less than a frame every second, we're hurting!
 simulationBurstRate :: Int
-simulationBurstRate = 25
+simulationBurstRate = 60
 
 data Simulation a = Simulation
   { _simulationStart        :: !Time    -- environment?
