@@ -166,7 +166,6 @@ buildNamedStrings fallback fp tweak = liftIO $ when gl_ARB_shading_language_incl
   includes <- getDir fp 
   forM_ (if null includes then fallback else includes) $ \(fp',body) -> do
     let fp'' = tweak fp'
-    print (fp'', body)
     withCStringLen (tweak fp') $ \ (name, namelen) ->
       Strict.unsafeUseAsCString body $ \string -> do
         glNamedStringARB GL_SHADER_INCLUDE_ARB (fromIntegral namelen) name (fromIntegral $ Strict.length body) string
