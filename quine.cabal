@@ -65,6 +65,7 @@ library
     Quine.GL.VertexArray
     Quine.Image
     Quine.Input
+    Quine.Meter
     Quine.Monitor
     Quine.Options
     Quine.Ref
@@ -89,6 +90,7 @@ library
     ekg,
     file-embed,
     filepath,
+    fingertree,
     gl >= 0.5,
     JuicyPixels,
     lens,

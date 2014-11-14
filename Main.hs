@@ -38,6 +38,7 @@ import System.IO
 import Graphics.GL.Core41
 import Graphics.UI.SDL as SDL
 import Linear
+import Numeric (showFFloat)
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Camera
@@ -55,6 +56,7 @@ import Quine.GL.Uniform
 import Quine.GL.Version as GL
 import Quine.GL.VertexArray
 import Quine.Input
+import Quine.Meter
 import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
@@ -137,6 +139,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
         , _displayHasMouseFocus     = True
         , _displayHasKeyboardFocus  = True
         , _displayVisible           = True
+        , _displayMeter             = def
         }
   relativeMouseMode $= True -- switch to relative mouse mouse initially
   sim <- createSimulation ekg () ()
@@ -169,6 +172,16 @@ core = do
   forever $ do 
     (alpha,t) <- simulate $ do
       poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+    displayMeter %= tick t
+    
+    displayFPS <- uses displayMeter fps 
+    physicsFPS <- uses simulationMeter fps
+    let title = showString "quine (display " 
+            $ showFFloat (Just 1) displayFPS
+            $ showString " fps, physics "
+            $ showFFloat (Just 1) physicsFPS ")"
+    use displayWindow >>= liftIO . withCString title . setWindowTitle
+
     updateCamera
     resizeDisplay 
     render $ do
@@ -186,7 +199,6 @@ core = do
       glUniform3f iCamera (c^.yaw) (c^.pitch) (c^.fov)
       glUniform1f iGlobalTime (realToFrac t)
       glUniform1f iPhysicsAlpha (realToFrac alpha)
-
       glDrawArrays GL_TRIANGLES 0 3
 
 render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
@@ -198,4 +210,3 @@ render kernel = do
   w <- use displayWindow
   glFlush
   liftIO $ glSwapWindow w
-

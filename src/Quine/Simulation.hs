@@ -28,8 +28,10 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.State.Class
 import Control.Lens
+import Data.Default
 import Data.Foldable
 import Quine.Clock
+import Quine.Meter
 import Quine.Monitor
 import Quine.Ref
 
@@ -50,6 +52,7 @@ data Simulation a = Simulation
   , _simulationFrameCounter :: !Counter -- as well?
   , _simulationOld          :: !(Ref a)
   , _simulationState        :: !(Ref a)
+  , _simulationMeter        :: !Meter
   } deriving (Functor, Foldable, Traversable)
 
 makeClassy ''Simulation
@@ -72,7 +75,7 @@ createSimulation ekg a b = do
   ff <- counter "physics.frame" ekg
   ra <- newRef (deleteState a) a
   rb <- newRef (deleteState b) b
-  return $ Simulation s s ff ra rb
+  return $ Simulation s s ff ra rb def
 
 -- run up to a burst worth of simulation frames w/ interleaved polling
 simulate :: (MonadIO m, MonadState s m, HasSimulation s a, Simulated a) => m () -> m (Double, Time)
@@ -81,13 +84,13 @@ simulate poll = go simulationBurstRate
   go b = do
     poll -- run this between physics frames
     t <- now 
-    Simulation t0 tn ff ro rc <- use simulation 
+    Simulation t0 tn ff ro rc m <- use simulation 
     let tn' = tn + simulationSPF
     if b > 0 && tn' <= t 
       then do
         rn <- newState (extract ro) (extract rc) >>= \n -> newRef (deleteState n) n
         releaseRef ro
         inc ff
-        simulation .= Simulation t0 tn' ff rc rn
+        simulation .= Simulation t0 tn' ff rc rn (tick tn' m)
         go $! b - 1
       else return $ ((t-tn) * simulationFPS, t - t0)

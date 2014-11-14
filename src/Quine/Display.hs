@@ -29,6 +29,7 @@ import Foreign.C
 import Graphics.UI.SDL
 import Quine.Env
 import Quine.Exception
+import Quine.Meter
 import Quine.Options
 import Quine.SDL
 import Quine.StateVar
@@ -46,6 +47,7 @@ data Display = Display
   , _displayHasMouseFocus     :: !Bool
   , _displayHasKeyboardFocus  :: !Bool
   , _displayVisible           :: !Bool
+  , _displayMeter             :: !Meter
   }
 
 makeClassy ''Display
