@@ -1,10 +1,9 @@
-#pragma version 410 core
-#include "locations.h"
+#version 410 core
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 
-layout(location = FRAGMENT_COLOR) out vec4 color;
+out vec4 color;
 
 // Created by inigo quilez - iq/2013
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
