@@ -39,7 +39,8 @@ instance HasMonitorOptions Options where
 -- we need to set up the data directory first
 parseOptions :: IO (Parser Options)
 parseOptions = do
-  dd <- getDataDir
+  -- dd <- getDataDir
+  let dd = "."
   return $ Options 
        <$> parseMonitorOptions
        <*> switch (long "full-screen" <> short 'f' <> help "open full-screen on launch")

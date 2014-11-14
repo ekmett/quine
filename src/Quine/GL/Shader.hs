@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, LambdaCase, PatternSynonyms #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, LambdaCase, PatternSynonyms, BangPatterns #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -23,6 +23,9 @@ module Quine.GL.Shader
   , shaderSourceLength
   , shaderSource
   , shaderInfoLog
+  -- * GL_ARB_shading_language_include
+  , buildNamedStrings
+  , compileShaderInclude
   -- * OpenGL 4.1+, OpenGL ES 2+
   , releaseShaderCompiler
   ) where
@@ -30,9 +33,12 @@ module Quine.GL.Shader
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString as Strict
+import qualified Data.ByteString.Unsafe as Strict
 import qualified Data.ByteString.Internal as Strict
 import qualified Data.ByteString.Lazy as Lazy
 import Data.Data
+import Data.FileEmbed
+import Foreign.C.String
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
@@ -40,9 +46,11 @@ import Foreign.Ptr
 import Foreign.Storable
 import GHC.Generics
 import Graphics.GL.Core45
+import Graphics.GL.Ext.ARB.ShadingLanguageInclude
 import Graphics.GL.Types
-import Quine.StateVar
 import Quine.GL.Object
+import Quine.StateVar
+import System.Directory
 
 -- * Shader types
 
@@ -75,6 +83,13 @@ createShader = liftM Shader . glCreateShader
 -- | Compile a shader
 compileShader :: MonadIO m => Shader -> m ()
 compileShader (Shader s) = glCompileShader s
+
+withCStrings :: [String] -> (Int -> Ptr CString -> IO a) -> IO a
+withCStrings all_xs f = go 0 [] all_xs where
+  go !n acc (x:xs) = withCString x $ \s -> go (n + 1) (s:acc) xs
+  go !n acc [] = allocaArray n $ \p -> do
+    pokeArray p (reverse acc)
+    f n p
 
 -- | Available on OpenGL 4.1+, OpenGL ES 2+
 releaseShaderCompiler :: MonadIO m => m ()
@@ -140,3 +155,37 @@ shaderInfoLog s = do
       Strict.createUptoN l' $ \ps -> do
         glGetShaderInfoLog (object s) (fromIntegral l') pl (castPtr ps)
         return $ l-1
+
+-- | 
+-- @
+-- buildNamedStrings $(embedDir "foo") "foo" ('/':)
+-- @
+--
+-- Falls back to doing nothing if 'gl_ARB_shading_langauge_include' isn't available.
+buildNamedStrings :: MonadIO m => [(FilePath, Strict.ByteString)] -> FilePath -> (FilePath -> String) -> m ()
+buildNamedStrings fallback fp tweak = liftIO $ when gl_ARB_shading_language_include $ do
+  includes <- getDir fp 
+  forM_ (if null includes then fallback else includes) $ \(fp',body) -> do
+    let fp'' = tweak fp'
+    print (fp'', body)
+    withCStringLen (tweak fp') $ \ (name, namelen) ->
+      Strict.unsafeUseAsCString body $ \string -> do
+        glNamedStringARB GL_SHADER_INCLUDE_ARB (fromIntegral namelen) name (fromIntegral $ Strict.length body) string
+
+-- | Compile a shader with @#include@ support (if available).
+--
+-- Remember to use
+--
+-- @
+-- #extension GL_ARB_shading_language_include : <behavior>
+-- @
+--
+-- as appropriate within your shader.
+--
+-- Falls back to 'compileShader' if 'gl_ARB_shading_language_include' isn't available.
+compileShaderInclude :: MonadIO m => Shader -> [FilePath] -> m ()
+compileShaderInclude (Shader s) path
+  | gl_ARB_shading_language_include = 
+    liftIO $ withCStrings path $ \n cpcs -> glCompileShaderIncludeARB s (fromIntegral n) cpcs nullPtr
+  | otherwise = glCompileShader s
+

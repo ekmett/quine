@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -26,12 +27,14 @@ import Control.Monad hiding (forM_)
 import Control.Monad.Reader
 import Control.Monad.State hiding (get)
 import Data.Default
+import Data.FileEmbed
 import Data.Monoid
 import Foreign
 import Foreign.C
 import GHC.Conc
 import Numeric (showFFloat)
 import System.Exit
+import System.FilePath
 import System.IO
 import Graphics.GL.Core41
 import Graphics.UI.SDL as SDL
@@ -47,6 +50,7 @@ import Quine.GL
 import Quine.GL.Error
 import Quine.GL.Object
 import Quine.GL.Program
+import Quine.GL.Shader
 import Quine.GL.Types
 import Quine.GL.Uniform
 import Quine.GL.Version as GL
@@ -120,11 +124,10 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
   -- glEnable gl_FRAMEBUFFER_SRGB
 
   throwErrors
-  se <- buildShaderEnv opts
   fc <- counter "quine.frame" ekg
   vw <- gauge "viewport.width" ekg
   vh <- gauge "viewport.height" ekg
-  let sys = Env ekg opts se fc vw vh
+  let sys = Env ekg opts fc vw vh
       dsp = Display 
         { _displayWindow            = window
         , _displayGL                = cxt
@@ -149,8 +152,9 @@ translate v = eye4 & translation .~ v
 
 core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
+  view optionsDataDir >>= \dd -> buildNamedStrings $(embedDir "includes") (dd </> "includes") ("/includes"</>)
   screenShader <- compile GL_VERTEX_SHADER "screen.vert"
-  whiteShader <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
+  whiteShader  <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link screenShader whiteShader
   emptyVAO <- gen
   iResolution   <- uniformLocation scn "iResolution"

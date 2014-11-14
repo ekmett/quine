@@ -1,5 +1,6 @@
-#pragma version 410 core
-#include "locations.h"
+#version 410 core
+#extension GL_ARB_shading_language_include : require
+#include <locations.h>
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
@@ -7,7 +8,7 @@ uniform mat4 iPerspective;
 uniform mat4 iView;
 uniform mat4 iInverseView;
 
-layout(location = FRAGMENT_COLOR) out vec4 color;
+out vec4 color;
 
 // https://www.shadertoy.com/view/Msl3Rn
 
