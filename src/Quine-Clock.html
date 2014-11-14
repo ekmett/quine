@@ -14,15 +14,19 @@
 <a name="line-5"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
 <a name="line-6"></a>
 <a name="line-7"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
-<a name="line-8"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>System</span><span class='hs-varop'>.</span><span class='hs-conid'>Clock</span>
-<a name="line-9"></a>
-<a name="line-10"></a><a name="Time"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Time</span>      <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
-<a name="line-11"></a><a name="DeltaTime"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>DeltaTime</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
-<a name="line-12"></a>
-<a name="line-13"></a><a name="now"></a><span class='hs-comment'>-- | A simple monotonic system clock in seconds with undefined origin</span>
-<a name="line-14"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>Time</span>
-<a name="line-15"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-keyword'>do</span>
-<a name="line-16"></a>  <span class='hs-conid'>TimeSpec</span> <span class='hs-varid'>s</span> <span class='hs-varid'>ns</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>getTime</span> <span class='hs-conid'>Monotonic</span>
-<a name="line-17"></a>  <span class='hs-varid'>return</span> <span class='hs-varop'>$</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>s</span> <span class='hs-varop'>+</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>ns</span> <span class='hs-varop'>*</span> <span class='hs-num'>1.0e-9</span>
+<a name="line-8"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Functor</span>
+<a name="line-9"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>UI</span><span class='hs-varop'>.</span><span class='hs-conid'>SDL</span>
+<a name="line-10"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>System</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Unsafe</span>
+<a name="line-11"></a>
+<a name="line-12"></a><a name="Time"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Time</span>      <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
+<a name="line-13"></a><a name="DeltaTime"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>DeltaTime</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
+<a name="line-14"></a>
+<a name="line-15"></a><a name="granularity"></a><span class='hs-definition'>granularity</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Double</span>
+<a name="line-16"></a><span class='hs-definition'>granularity</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>unsafePerformIO</span> <span class='hs-layout'>(</span><span class='hs-varid'>recip</span> <span class='hs-varop'>.</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>&lt;$&gt;</span> <span class='hs-varid'>getPerformanceFrequency</span><span class='hs-layout'>)</span>
+<a name="line-17"></a><span class='hs-comment'>{-# NOINLINE granularity #-}</span>
+<a name="line-18"></a>
+<a name="line-19"></a><a name="now"></a><span class='hs-comment'>-- | A simple monotonic system clock in seconds with undefined origin</span>
+<a name="line-20"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>Time</span>
+<a name="line-21"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-layout'>(</span><span class='hs-varid'>granularity</span> <span class='hs-varop'>*</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>&lt;$&gt;</span> <span class='hs-varid'>getPerformanceCounter</span>
 </pre></body>
 </html>
