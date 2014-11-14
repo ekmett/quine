@@ -73,7 +73,6 @@ compile st fp = do
   unless compiled $ do
     e <- shaderInfoLog s
     delete s
-    liftIO $ print s
     throw $ ShaderException fp e
   return s
   
