@@ -50,7 +50,6 @@ import Graphics.GL.Ext.ARB.ShadingLanguageInclude
 import Graphics.GL.Types
 import Quine.GL.Object
 import Quine.StateVar
-import System.Directory
 
 -- * Shader types
 

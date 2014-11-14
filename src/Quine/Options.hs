@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 --------------------------------------------------------------------
 -- |
@@ -8,13 +9,20 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Quine.Options where
+module Quine.Options
+  ( Options(..)
+  , HasOptions(..)
+  , parseOptions
+  , pointScale
+  ) where
 
 import Control.Applicative
 import Control.Lens
 import Data.Default
 import Options.Applicative
+#ifdef RELEASE
 import Paths_quine
+#endif
 import Prelude hiding (init)
 import Quine.Monitor
 
@@ -39,8 +47,11 @@ instance HasMonitorOptions Options where
 -- we need to set up the data directory first
 parseOptions :: IO (Parser Options)
 parseOptions = do
-  -- dd <- getDataDir
+#ifdef RELEASE
+  dd <- getDataDir
+#else
   let dd = "."
+#endif
   return $ Options 
        <$> parseMonitorOptions
        <*> switch (long "full-screen" <> short 'f' <> help "open full-screen on launch")
