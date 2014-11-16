@@ -80,6 +80,7 @@ library
     Quine.Simulation
     Quine.StateVar
     Quine.System
+    Quine.Task
 
   other-modules:
     Paths_quine
