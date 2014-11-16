@@ -31,6 +31,11 @@ class ToNormal t => HasNormal t where
 
 -- * Tangent spaces for a surface
 
+-- |
+--
+-- We'll eventually need actual UV information in order to properly distinguish the tangent and bitangent.
+--
+-- For now they are merely chosen to form a space orthogonal to the surface normal.
 data TangentSpace = TangentSpace
   { _tangentSpaceTangent, _tangentSpaceBitangent, _tangentSpaceNormal :: !(V3 Double)
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
@@ -80,4 +85,3 @@ instance HasTangentSpace TangentSpace where
 instance Field1 TangentSpace TangentSpace (V3 Double) (V3 Double) where _1 = tangent
 instance Field2 TangentSpace TangentSpace (V3 Double) (V3 Double) where _2 = bitangent
 instance Field3 TangentSpace TangentSpace (V3 Double) (V3 Double) where _3 = normal
-
