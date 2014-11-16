@@ -15,16 +15,16 @@
 <a name="line-6"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
 <a name="line-7"></a>
 <a name="line-8"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Lens</span>
-<a name="line-9"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Linear</span>
+<a name="line-9"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
 <a name="line-10"></a>
-<a name="line-11"></a><a name="Position"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Position</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>V3</span> <span class='hs-conid'>Double</span>
+<a name="line-11"></a><a name="Position"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Position</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Vec3</span>
 <a name="line-12"></a>
 <a name="line-13"></a><span class='hs-keyword'>class</span> <span class='hs-conid'>ToPosition</span> <span class='hs-varid'>t</span> <span class='hs-keyword'>where</span>
-<a name="line-14"></a>  <span class='hs-varid'>toPosition</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>V3</span> <span class='hs-conid'>Double</span>
-<a name="line-15"></a>  <span class='hs-keyword'>default</span> <span class='hs-varid'>toPosition</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>HasPosition</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>V3</span> <span class='hs-conid'>Double</span>
+<a name="line-14"></a>  <span class='hs-varid'>toPosition</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Vec3</span>
+<a name="line-15"></a>  <span class='hs-keyword'>default</span> <span class='hs-varid'>toPosition</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>HasPosition</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Vec3</span>
 <a name="line-16"></a>  <span class='hs-varid'>toPosition</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>view</span> <span class='hs-varid'>position</span>
 <a name="line-17"></a>
 <a name="line-18"></a><a name="HasPosition"></a><span class='hs-keyword'>class</span> <span class='hs-conid'>ToPosition</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>HasPosition</span> <span class='hs-varid'>t</span> <span class='hs-keyword'>where</span>
-<a name="line-19"></a>  <span class='hs-varid'>position</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Lens'</span> <span class='hs-varid'>t</span> <span class='hs-layout'>(</span><span class='hs-conid'>V3</span> <span class='hs-conid'>Double</span><span class='hs-layout'>)</span>
+<a name="line-19"></a>  <span class='hs-varid'>position</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Lens'</span> <span class='hs-varid'>t</span> <span class='hs-conid'>Vec3</span>
 </pre></body>
 </html>
