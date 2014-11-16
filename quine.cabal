@@ -46,6 +46,7 @@ library
   hs-source-dirs: src
   include-dirs: includes
   exposed-modules:
+    Quine.Beam
     Quine.Bounding.Box
     Quine.Bounding.Sphere
     Quine.Camera
