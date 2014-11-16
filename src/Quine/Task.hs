@@ -154,7 +154,7 @@ instance MonadTask Task where
 -- @execTask delay idle task@ will run a task on the GPU and should
 -- only be run in the bound thread that is controlling the user interface.
 --
--- When we block waiting on a sync from the GPU, and have no ready workers,
+-- When we block waiting on a sync from the GPU and have no ready fibers then
 -- we'll block for up to @delay@ nanoseconds and if that timeout expires, we'll run @idle@
 execTask :: MonadIO m => Word64 -> IO () -> Task a -> m a
 execTask d w (Task m) = liftIO $ do
