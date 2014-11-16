@@ -1,6 +1,15 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
 module Quine.Bounding.Sphere
   ( Sphere(..)
   , HasSphere(..)

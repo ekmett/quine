@@ -6,12 +6,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
-
--- | simulation is a bit of a shell game, we need two physics states per rendering frame
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- simulation is a bit of a shell game, we need two physics states per rendering frame
 -- but we need two rendering frames for temporal antialiasing, so we'll have up to 4
 -- physics states in flight at any given time.
 --
 -- Here we track the two current states
+--------------------------------------------------------------------
 module Quine.Simulation
   ( Simulation(..)
   , HasSimulation(..)

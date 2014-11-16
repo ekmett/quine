@@ -1,4 +1,13 @@
 {-# OPTIONS -fno-warn-orphans #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
 module Quine.Instances () where
 
 import Numeric.Half

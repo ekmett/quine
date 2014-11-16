@@ -3,10 +3,18 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+--------------------------------------------------------------------
 -- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
 -- These cache the recipriocal direction.
 --
 -- <http://tavianator.com/2011/05/fast-branchless-raybounding-box-intersections/>
+--------------------------------------------------------------------
 module Quine.Ray
   ( Ray(..)
   , _Ray
