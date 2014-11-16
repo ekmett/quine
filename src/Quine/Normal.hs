@@ -1,6 +1,8 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Quine.Normal
   ( Normal
   , ToNormal(..)
@@ -16,6 +18,9 @@ import Data.Functor
 import GHC.Generics
 import Linear
 
+-- * Surface normals
+
+-- | Assumed to be a unit vector
 type Normal = V3 Double
 
 class ToNormal t where
@@ -24,8 +29,10 @@ class ToNormal t where
 class ToNormal t => HasNormal t where
   normal :: Lens' t Normal
 
+-- * Tangent spaces for a surface
+
 data TangentSpace = TangentSpace
-  { _tangentSpaceTangent, _tangentSpaceBinormal, _tangentSpaceNormal :: !(V3 Double)
+  { _tangentSpaceTangent, _tangentSpaceBitangent, _tangentSpaceNormal :: !(V3 Double)
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
 
 instance ToNormal TangentSpace where
@@ -42,29 +49,35 @@ class ToNormal t => ToTangentSpace t where
     t = t' - dot n t' *^ n
     b = signorm (cross t n)
 
-  toBinormal :: t -> V3 Double
-  toBinormal = toBinormal.toTangentSpace
   toTangent  :: t -> V3 Double
   toTangent = toTangent.toTangentSpace
 
+  toBitangent :: t -> V3 Double
+  toBitangent = toBitangent.toTangentSpace
+
 instance ToTangentSpace TangentSpace where
   toTangentSpace = id
-  toBinormal = _tangentSpaceBinormal
   toTangent  = _tangentSpaceTangent
+  toBitangent = _tangentSpaceBitangent
 
 class HasNormal t => HasTangentSpace t where
   tangentSpace :: Lens' t TangentSpace
   
-  binormal :: Lens' t (V3 Double)
-  binormal = tangentSpace.binormal
-
   tangent :: Lens' t (V3 Double)
   tangent = tangentSpace.tangent
+
+  bitangent :: Lens' t (V3 Double)
+  bitangent = tangentSpace.bitangent
 
 instance HasNormal TangentSpace where
   normal f (TangentSpace t b n) = TangentSpace t b <$> f n
 
 instance HasTangentSpace TangentSpace where
   tangentSpace = id
-  binormal f (TangentSpace t b n) = f b <&> \b' -> TangentSpace t b' n
   tangent  f (TangentSpace t b n) = f t <&> \t' -> TangentSpace t' b n
+  bitangent f (TangentSpace t b n) = f b <&> \b' -> TangentSpace t b' n
+
+instance Field1 TangentSpace TangentSpace (V3 Double) (V3 Double) where _1 = tangent
+instance Field2 TangentSpace TangentSpace (V3 Double) (V3 Double) where _2 = bitangent
+instance Field3 TangentSpace TangentSpace (V3 Double) (V3 Double) where _3 = normal
+
