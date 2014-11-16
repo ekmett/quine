@@ -1,11 +1,14 @@
 {-# LANGUAGE DefaultSignatures #-}
 module Quine.Position
-  ( ToPosition(..)
+  ( Position
+  , ToPosition(..)
   , HasPosition(..)
   ) where
 
 import Control.Lens
 import Linear
+
+type Position = V3 Double
 
 class ToPosition t where
   toPosition :: t -> V3 Double
