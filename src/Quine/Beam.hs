@@ -27,6 +27,10 @@ import Quine.GL.Types
 import Quine.Position
 import Quine.Ray
 
+-- | A 'Beam' is a fat 'Ray'. It starts out with a given 'beamWidth' and grows by 'beamWidthDelta'
+-- every unit of time along the ray.
+--
+-- When used to model a focus the negative width is actually a real thing, so these do not stop when they hit width 0, but start to widen out again.
 data Beam = Beam
   { _beamRay        :: !Ray
   , _beamWidth      :: !Float
