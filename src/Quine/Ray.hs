@@ -3,9 +3,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 -- |
--- Rays, these cache the recipriocal direction.
+-- These cache the recipriocal direction.
 --
--- <http://tavianator.com/2011/05/fast-branchless-raybounding-box-intersections/
+-- <http://tavianator.com/2011/05/fast-branchless-raybounding-box-intersections/>
 module Quine.Ray
   ( Ray(..)
   , _Ray
