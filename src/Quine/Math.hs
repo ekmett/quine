@@ -4,6 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiWayIf #-}
 module Quine.Math
   ( 
   -- * Pointwise Manipulation
@@ -16,12 +17,22 @@ module Quine.Math
   , reflect
   , refract
   , faceforward
-  -- * Colorspace Manipulation
-  , srgb
-  , linear
+  -- * Color space and Tone mapping
+  , luminance
+  , exposureAdjustment
+  , standardSRGB
+  , standardLinear
+  , simplifiedSRGB
+  , simplifiedLinear
+  , simplifiedReinhard
+  , fullSimplifiedReinhard
+  , enhancedReinhard
+  , fullEnhancedReinhard
+  , hejlBurgessDawson
   ) where
 
 import Control.Applicative
+import Control.Lens
 import Linear
 
 -- | @clamp x l h@ clamps @x@ to the range @l <= x <= h@
@@ -84,18 +95,84 @@ faceforward n i nref
   | dot nref i < 0 = n
   | otherwise = negate <$> n
 
--- * Color space conversion
+-- * Color space and tone mapping
 
--- | Convert from linear to sRGB
-srgb :: (Floating a, Ord a) => a -> a
-srgb cl
+-- | Manipulate luminance in an RGB value. Note: when changing from Y = 0, we construct a greyscale value as the other axes are lost.
+luminance :: (Fractional a, Epsilon a) => Lens' (V3 a) a
+luminance f (V3 r g b) = f l <&> \n ->
+  if | nearZero l -> V3 n n n
+     | s <- n / l -> V3 (r*s) (g*s) (b*s)
+  where l = (0.2126 * r + 0.7152 * g + 0.0722 * b)
+
+-- | Convert from linear to sRGB per the 'gl_EXT_texture_sRGB_decode' extension
+standardSRGB :: (Floating a, Ord a) => a -> a
+standardSRGB cl
   | cl < 0.0031308 = cl * 12.92
-  | otherwise       = 1.055 * cl**0.41666 - 0.55
+  | otherwise      = 1.055 * cl ** 0.41666 - 0.55
 
--- | Convert from sRGB to linear
-linear :: (Floating a, Ord a) => a -> a
-linear cs
+-- | Convert from linear to sRGB using the simplified gamma curve.
+simplifiedSRGB :: Floating a => a -> a
+simplifiedSRGB cl = cl ** 0.4545454545454545
+
+-- | Convert from sRGB to linear as per the 'gl_EXT_texture_sRGB_decode' extension
+standardLinear :: (Floating a, Ord a) => a -> a
+standardLinear cs
   | cs <= 0       = 0
   | cs <= 0.04045 = cs / 12.92
-  | cs < 1        = ((cs + 0.055)*0.9478672985781991)**2.4
+  | cs < 1        = ((cs + 0.055)*0.9478672985781991) ** 2.4
   | otherwise     = 1
+
+-- | Convert from sRGB to linear using the simplified gamma curve.
+simplifiedLinear :: Floating a => a -> a
+simplifiedLinear cl = cl ** 2.2
+
+exposureAdjustment :: Num a => a
+exposureAdjustment = 16
+
+-- | 
+-- Simplified componentwise Reinhard tonemap operator, result is still in "linear" space but in [0..1]
+--
+-- You should really be applying this to 'luminance', or you'll get particular 'milky' greys.
+--
+-- <http://www.gdcvault.com/play/1012351/Uncharted-2-HDR>
+--
+-- @
+-- color & luminance %~ simplifiedReinhard
+-- @
+--
+-- You should apply an exposure adjustment and need to map it to the monitor by applying (** (1/2.2))
+simplifiedReinhard :: Fractional a => a -> a
+simplifiedReinhard x = x/(1+x)
+
+-- | Reinhard tonemap operator, maps to the monitor working space, no adjustment required.
+--
+-- <http://filmicgames.com/archives/75>
+fullSimplifiedReinhard :: Floating a => a -> a
+fullSimplifiedReinhard x0 = simplifiedReinhard (x0 * exposureAdjustment) ** (1/2.2) where
+
+-- | Reinhard should really be applied to 'luminance' values.
+--
+-- <http://imdoingitwrong.wordpress.com/2010/08/19/why-reinhard-desaturates-my-blacks-3/>
+--
+-- @
+-- color & luminance %~ enhancedReinhard 4
+-- @
+--
+-- @enhancedReinhard l_white l@ takes the least color value that should be mapped to white and a color to map, and maps it.
+--
+-- The result remains in 'linear' space.
+enhancedReinhard :: Fractional a => a -> a -> a
+enhancedReinhard w x = x*(1 + x/(w*w))/(1+x)
+
+-- | Takes a color all the way from linear to monitor working space
+fullEnhancedReinhard :: (Epsilon a, Floating a) => a -> V3 a -> V3 a
+fullEnhancedReinhard white color = color & traverse *~ exposureAdjustment & luminance %~ enhancedReinhard white & traverse **~ 1/2.2
+
+-- | Jim Hejl and Richard Burgess-Dawson's tonemap, maps from linear into monitor space.
+--
+-- <http://filmicgames.com/archives/75>
+--
+-- No adjustment required.
+hejlBurgessDawson :: (Fractional a, Ord a) => a -> a
+hejlBurgessDawson x0 = (x*(6.2*x+0.5))/(x*(6.2*x+1.7)+0.06) where
+  x = max 0 (x0*exposureAdjustment-0.004)
