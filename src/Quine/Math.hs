@@ -9,11 +9,13 @@ module Quine.Math
   -- * Pointwise Manipulation
     smoothstep
   , clamp
+  , saturate
   , mix
   , step
   -- * Vector Manipulation
   , reflect
   , refract
+  , faceforward
   -- * Colorspace Manipulation
   , srgb
   , linear
@@ -25,6 +27,17 @@ import Linear
 -- | @clamp x l h@ clamps @x@ to the range @l <= x <= h@
 clamp :: Ord a => a -> a -> a -> a
 clamp x l h = min (max x l) h
+
+-- | @saturate x@ returns @x@ saturated to the range @[0,1]@
+--
+-- @
+-- saturate x ≡ clamp x 0 1
+-- @
+saturate :: (Num a, Ord a) => a -> a
+saturate x
+  | x <= 0 = 0
+  | x <= 1 = x
+  | otherwise = 1
 
 -- | @smoothstep l h x@ goes from @0@ to @1@ over the interval from @l@ to @h@
 smoothstep :: (Fractional a, Ord a) => a -> a -> a -> a
@@ -42,6 +55,7 @@ step edge x
 
 -- * Vector Operations
 
+
 -- | @reflect i n eta@ calculates the reflection direction for an incident vector @i@ around
 -- a normal @n@. @i@ and @n@ should be normalized.
 reflect :: (Applicative f, Metric f, Num a) => f a -> f a -> f a
@@ -56,6 +70,19 @@ refract i n eta
   where 
     d = dot n i
     k = 1 - eta * eta * (1 - d * d)
+
+-- | @faceforward n i nref@ is used to return a vector pointing in the same direction as another.
+--
+-- It orients a vector to point away from the surface as defined by its normal.
+--
+-- @n@ is the vector to orient (perturbed normal vector)
+-- @i@ is the incidence vector, (e.g. vector from the eye)
+-- @nref@ is the reference vector or geometric normal vector.
+
+faceforward :: (Applicative f, Metric f, Num a, Ord a) => f a -> f a -> f a -> f a
+faceforward n i nref 
+  | dot nref i < 0 = n
+  | otherwise = negate <$> n
 
 -- * Color space conversion
 
