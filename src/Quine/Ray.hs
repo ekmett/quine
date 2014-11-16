@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 -- |
 -- These cache the recipriocal direction.
 --
@@ -12,6 +13,7 @@ module Quine.Ray
   , ToRay(..)
   , HasRay(..)
   , OverlapsRay(..)
+  , evalRay
   ) where
 
 import Control.Applicative
@@ -22,14 +24,15 @@ import Data.Foldable
 import Data.Semigroup
 import GHC.Generics
 import Linear
+import Quine.GL.Types
 import Quine.Instances ()
 import Quine.Position
 import Quine.Bounding.Box
 
 data Ray = Ray
-  { _origin         :: !(V3 Double)
-  , _direction      :: !(V3 Double)
-  , _recipDirection :: (V3 Double) -- cache
+  { _origin         :: !DVec3
+  , _direction      :: !DVec3
+  , _recipDirection :: DVec3 -- cache
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
 
 instance ToPosition Ray where
@@ -38,16 +41,16 @@ instance ToPosition Ray where
 instance HasPosition Ray where
   position f (Ray o d r) = f o <&> \o' -> Ray o' d r
 
-_Ray :: Iso' Ray (V3 Double, V3 Double) 
+_Ray :: Iso' Ray (DVec3, DVec3) 
 _Ray = iso (\(Ray o d _) -> (o, d)) $ \(o, d) -> Ray o d (recip <$> d)
 
 class ToPosition t => ToRay t where
   toRay            :: t -> Ray
 
-  toDirection      :: t -> V3 Double
+  toDirection      :: t -> DVec3
   toDirection = toDirection.toRay
 
-  toRecipDirection :: t -> V3 Double
+  toRecipDirection :: t -> DVec3
   toRecipDirection = toRecipDirection.toRay
 
 instance ToRay Ray where
@@ -58,10 +61,10 @@ instance ToRay Ray where
 class (HasPosition t, ToRay t) => HasRay t where
   ray :: Lens' t Ray
 
-  origin :: Lens' t (V3 Double)
+  origin :: Lens' t DVec3
   origin = ray.origin
 
-  direction :: Lens' t (V3 Double)
+  direction :: Lens' t DVec3
   direction = ray.direction
 
 instance HasRay Ray where
@@ -69,10 +72,10 @@ instance HasRay Ray where
   origin f (Ray o d r) = f o <&> \o' -> Ray o' d r
   direction f (Ray o d r) = f d <&> \d' -> Ray o d' r
 
-instance Field1 Ray Ray (V3 Double) (V3 Double) where
+instance Field1 Ray Ray DVec3 DVec3 where
   _1 = origin
 
-instance Field2 Ray Ray (V3 Double) (V3 Double) where
+instance Field2 Ray Ray DVec3 DVec3 where
   _2 f (Ray o d _) = f d <&> \d' -> Ray o d' (recip <$> d')
 
 class OverlapsRay t where
@@ -92,3 +95,6 @@ instance OverlapsRay Box where
 
 instance OverlapsBox Ray where
   overlapsBox r b = is _Just (overlapsRay b r)
+
+evalRay :: Ray -> Double -> DVec3
+evalRay (Ray o d _) t = o + t*^d

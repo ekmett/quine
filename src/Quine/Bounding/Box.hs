@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 module Quine.Bounding.Box
   ( Box(..)
   , HasBox(..)
@@ -20,9 +21,10 @@ import GHC.Generics
 import Linear
 import Prelude hiding (and)
 import Quine.Bounding.Sphere
+import Quine.GL.Types
 import Quine.Position
 
-data Box = Box { _lo, _hi :: V3 Double }
+data Box = Box { _lo, _hi :: DVec3 }
   deriving (Data, Typeable, Generic)
 
 instance ToSphere Box where
@@ -35,13 +37,13 @@ instance ToPosition Box where
 class (ToPosition t, ToSphere t) => ToBox t where
   toBox :: t -> Box
 
-  toSize :: t -> V3 Double
+  toSize :: t -> DVec3
   toSize = toSize.toBox
 
   validBox :: t -> Bool
   validBox = validBox.toBox
 
-  corners :: t -> [V3 Double]
+  corners :: t -> [DVec3]
   corners = corners.toBox
 
 instance ToBox Box where
@@ -56,13 +58,13 @@ instance ToBox Sphere where
 class (HasPosition t, ToBox t) => HasBox t where
   box :: Lens' t Box
 
-  lo :: Lens' t (V3 Double)
+  lo :: Lens' t DVec3
   lo = box.lo
 
-  hi :: Lens' t (V3 Double)
+  hi :: Lens' t DVec3
   hi = box.hi
 
-  size :: Lens' t (V3 Double)
+  size :: Lens' t DVec3
   size = box.size
 
 instance HasPosition Box where
@@ -76,10 +78,10 @@ instance HasBox Box where
   size f (Box l h) = f (h-l) <&> \ s -> Box (m-s) (m+s)
     where m = l+(h-l)^*0.5
 
-instance Field1 Box Box (V3 Double) (V3 Double) where
+instance Field1 Box Box DVec3 DVec3 where
   _1 = lo
 
-instance Field2 Box Box (V3 Double) (V3 Double) where
+instance Field2 Box Box DVec3 DVec3 where
   _2 = hi
 
 -- | union

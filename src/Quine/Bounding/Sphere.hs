@@ -14,10 +14,11 @@ import Data.Foldable
 import Data.Functor
 import GHC.Generics
 import Linear
+import Quine.GL.Types
 import Quine.Position
 import Prelude hiding (any)
 
-data Sphere = Sphere !(V3 Double) !Double deriving (Eq, Ord, Show, Data, Typeable, Generic)
+data Sphere = Sphere !DVec3 !Double deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 class ToPosition t => ToSphere t where
   toSphere :: t -> Sphere
