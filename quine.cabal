@@ -73,6 +73,7 @@ library
     Quine.Monitor
     Quine.Options
     Quine.Normal
+    Quine.Pointwise
     Quine.Position
     Quine.Ray
     Quine.Ref
