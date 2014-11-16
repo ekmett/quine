@@ -93,7 +93,7 @@ class OverlapsRay t where
 instance OverlapsRay Box where
   overlapsRay (Box l h) (Ray o _ r) = case fold (hit <$> l <*> h <*> o <*> r) of
     (Max t0, Min t1)
-      | t0 <= t1 -> Just (t0, t1)
+      | t0 <= t1, t1 >= 0 -> Just (max 0 t0, t1)
       | otherwise -> Nothing 
     where
       hit la ha oa ra
