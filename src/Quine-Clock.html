@@ -7,26 +7,35 @@
 <link type='text/css' rel='stylesheet' href='hscolour.css' />
 </head>
 <body>
-<pre><a name="line-1"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Clock</span>
-<a name="line-2"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>now</span>
-<a name="line-3"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Time</span>
-<a name="line-4"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>DeltaTime</span>
-<a name="line-5"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-6"></a>
-<a name="line-7"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
-<a name="line-8"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Functor</span>
-<a name="line-9"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>UI</span><span class='hs-varop'>.</span><span class='hs-conid'>SDL</span>
-<a name="line-10"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>System</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Unsafe</span>
-<a name="line-11"></a>
-<a name="line-12"></a><a name="Time"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Time</span>      <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
-<a name="line-13"></a><a name="DeltaTime"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>DeltaTime</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
-<a name="line-14"></a>
-<a name="line-15"></a><a name="granularity"></a><span class='hs-definition'>granularity</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Double</span>
-<a name="line-16"></a><span class='hs-definition'>granularity</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>unsafePerformIO</span> <span class='hs-layout'>(</span><span class='hs-varid'>recip</span> <span class='hs-varop'>.</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>&lt;$&gt;</span> <span class='hs-varid'>getPerformanceFrequency</span><span class='hs-layout'>)</span>
-<a name="line-17"></a><span class='hs-comment'>{-# NOINLINE granularity #-}</span>
-<a name="line-18"></a>
-<a name="line-19"></a><a name="now"></a><span class='hs-comment'>-- | A simple monotonic system clock in seconds with undefined origin</span>
-<a name="line-20"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>Time</span>
-<a name="line-21"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-layout'>(</span><span class='hs-varid'>granularity</span> <span class='hs-varop'>*</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>&lt;$&gt;</span> <span class='hs-varid'>getPerformanceCounter</span>
+<pre><a name="line-1"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-2"></a><span class='hs-comment'>-- |</span>
+<a name="line-3"></a><span class='hs-comment'>-- Copyright :  (c) 2014 Edward Kmett</span>
+<a name="line-4"></a><span class='hs-comment'>-- License   :  BSD2</span>
+<a name="line-5"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
+<a name="line-6"></a><span class='hs-comment'>-- Stability :  experimental</span>
+<a name="line-7"></a><span class='hs-comment'>-- Portability: non-portable</span>
+<a name="line-8"></a><span class='hs-comment'>--</span>
+<a name="line-9"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-10"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>Clock</span>
+<a name="line-11"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>now</span>
+<a name="line-12"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Time</span>
+<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>DeltaTime</span>
+<a name="line-14"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-15"></a>
+<a name="line-16"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
+<a name="line-17"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Functor</span>
+<a name="line-18"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>UI</span><span class='hs-varop'>.</span><span class='hs-conid'>SDL</span>
+<a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>System</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Unsafe</span>
+<a name="line-20"></a>
+<a name="line-21"></a><a name="Time"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Time</span>      <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
+<a name="line-22"></a><a name="DeltaTime"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>DeltaTime</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Double</span>
+<a name="line-23"></a>
+<a name="line-24"></a><a name="granularity"></a><span class='hs-definition'>granularity</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Double</span>
+<a name="line-25"></a><span class='hs-definition'>granularity</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>unsafePerformIO</span> <span class='hs-layout'>(</span><span class='hs-varid'>recip</span> <span class='hs-varop'>.</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>&lt;$&gt;</span> <span class='hs-varid'>getPerformanceFrequency</span><span class='hs-layout'>)</span>
+<a name="line-26"></a><span class='hs-comment'>{-# NOINLINE granularity #-}</span>
+<a name="line-27"></a>
+<a name="line-28"></a><a name="now"></a><span class='hs-comment'>-- | A simple monotonic system clock in seconds with undefined origin</span>
+<a name="line-29"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>Time</span>
+<a name="line-30"></a><span class='hs-definition'>now</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-layout'>(</span><span class='hs-varid'>granularity</span> <span class='hs-varop'>*</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>&lt;$&gt;</span> <span class='hs-varid'>getPerformanceCounter</span>
 </pre></body>
 </html>
