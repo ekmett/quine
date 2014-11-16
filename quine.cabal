@@ -51,6 +51,7 @@ library
     Quine.Bounding.Sphere
     Quine.Camera
     Quine.Clock
+    Quine.Color
     Quine.Debug
     Quine.Display
     Quine.Env
