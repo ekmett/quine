@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeFamilies #-}
 module Quine.Bounding.Sphere
   ( Sphere(..)
   , HasSphere(..)
   , ToSphere(..)
+  , OverlapsSphere(..)
   ) where
 
 import Control.Lens
@@ -47,3 +49,13 @@ instance HasPosition Sphere where
 instance HasSphere Sphere where
   sphere = id
   radius f (Sphere p r) = Sphere p <$> f r
+
+class OverlapsSphere a where
+  overlapsSphere :: a -> Sphere -> Bool
+
+instance OverlapsSphere Sphere where
+  overlapsSphere (Sphere p r) (Sphere p' r') = quadrance (p-p') < r''*r''
+    where r'' = r+r'
+
+instance a ~ Double => OverlapsSphere (V3 a) where
+  overlapsSphere p (Sphere p' r) = quadrance (p-p') < r*r
