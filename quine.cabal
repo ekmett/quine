@@ -51,7 +51,6 @@ library
     Quine.Bounding.Sphere
     Quine.Camera
     Quine.Clock
-    Quine.Color
     Quine.Debug
     Quine.Display
     Quine.Env
@@ -70,11 +69,11 @@ library
     Quine.Image
     Quine.Input
     Quine.Instances
+    Quine.Math
     Quine.Meter
     Quine.Monitor
     Quine.Options
     Quine.Normal
-    Quine.Pointwise
     Quine.Position
     Quine.Ray
     Quine.Ref
