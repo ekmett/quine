@@ -24,7 +24,7 @@ import Quine.Bounding.Sphere
 import Quine.GL.Types
 import Quine.Position
 
-data Box = Box { _lo, _hi :: DVec3 }
+data Box = Box { _lo, _hi :: Vec3 }
   deriving (Data, Typeable, Generic)
 
 instance ToSphere Box where
@@ -37,13 +37,13 @@ instance ToPosition Box where
 class (ToPosition t, ToSphere t) => ToBox t where
   toBox :: t -> Box
 
-  toSize :: t -> DVec3
+  toSize :: t -> Vec3
   toSize = toSize.toBox
 
   validBox :: t -> Bool
   validBox = validBox.toBox
 
-  corners :: t -> [DVec3]
+  corners :: t -> [Vec3]
   corners = corners.toBox
 
 instance ToBox Box where
@@ -58,13 +58,13 @@ instance ToBox Sphere where
 class (HasPosition t, ToBox t) => HasBox t where
   box :: Lens' t Box
 
-  lo :: Lens' t DVec3
+  lo :: Lens' t Vec3
   lo = box.lo
 
-  hi :: Lens' t DVec3
+  hi :: Lens' t Vec3
   hi = box.hi
 
-  size :: Lens' t DVec3
+  size :: Lens' t Vec3
   size = box.size
 
 instance HasPosition Box where
@@ -78,10 +78,10 @@ instance HasBox Box where
   size f (Box l h) = f (h-l) <&> \ s -> Box (m-s) (m+s)
     where m = l+(h-l)^*0.5
 
-instance Field1 Box Box DVec3 DVec3 where
+instance Field1 Box Box Vec3 Vec3 where
   _1 = lo
 
-instance Field2 Box Box DVec3 DVec3 where
+instance Field2 Box Box Vec3 Vec3 where
   _2 = hi
 
 -- | union
@@ -114,6 +114,6 @@ instance OverlapsBox Box where
 instance OverlapsBox Sphere where
   overlapsBox = flip overlapsSphere
 
-instance a ~ Double => OverlapsBox (V3 a) where
+instance a ~ Float => OverlapsBox (V3 a) where
   overlapsBox (V3 a b c) (Box (V3 la lb lc) (V3 ha hb hc)) =
     la <= a && a <= ha && lb <= b && b <= hb && lc <= c && c <= hc

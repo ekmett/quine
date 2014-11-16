@@ -6,14 +6,14 @@ module Quine.Position
   ) where
 
 import Control.Lens
-import Linear
+import Quine.GL.Types
 
-type Position = V3 Double
+type Position = Vec3
 
 class ToPosition t where
-  toPosition :: t -> V3 Double
-  default toPosition :: HasPosition t => t -> V3 Double
+  toPosition :: t -> Vec3
+  default toPosition :: HasPosition t => t -> Vec3
   toPosition = view position
 
 class ToPosition t => HasPosition t where
-  position :: Lens' t (V3 Double)
+  position :: Lens' t Vec3

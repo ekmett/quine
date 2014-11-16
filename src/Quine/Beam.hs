@@ -21,8 +21,8 @@ import Quine.Ray
 
 data Beam = Beam
   { _beamRay        :: !Ray
-  , _beamWidth      :: !Double
-  , _beamWidthDelta :: !Double
+  , _beamWidth      :: !Float
+  , _beamWidthDelta :: !Float
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
 
 instance ToPosition Beam where
@@ -40,10 +40,10 @@ instance HasRay Beam where
 class ToRay t => ToBeam t where
   toBeam :: t -> Beam
 
-  toBeamWidth :: t -> Double
+  toBeamWidth :: t -> Float
   toBeamWidth = toBeamWidth.toBeam
 
-  toBeamWidthDelta :: t -> Double
+  toBeamWidthDelta :: t -> Float
   toBeamWidthDelta = toBeamWidthDelta.toBeam
 
 instance ToBeam Ray where
@@ -57,10 +57,10 @@ instance ToBeam Beam where
 class HasRay t => HasBeam t where
   beam :: Lens' t Beam
 
-  beamWidth :: Lens' t Double
+  beamWidth :: Lens' t Float
   beamWidth = beam.beamWidth
 
-  beamWidthDelta :: Lens' t Double
+  beamWidthDelta :: Lens' t Float
   beamWidthDelta = beam.beamWidthDelta
   
 instance HasBeam Beam where
@@ -74,5 +74,5 @@ buildBeam (toSphere -> Sphere o ow) (toSphere -> Sphere n nw) = Beam (_Ray # (o,
   dw = nw - ow
   rn = recip $ norm d -- use a fast inverse sqrt?
 
-evalBeam :: Beam -> Double -> (DVec3, Double)
+evalBeam :: Beam -> Float -> (Vec3, Float)
 evalBeam (Beam (Ray r d _) w dw) t = (r + t*^d, w + t*dw)

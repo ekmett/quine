@@ -18,12 +18,12 @@ import Quine.GL.Types
 import Quine.Position
 import Prelude hiding (any)
 
-data Sphere = Sphere !DVec3 !Double deriving (Eq, Ord, Show, Data, Typeable, Generic)
+data Sphere = Sphere !Vec3 !Float deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 class ToPosition t => ToSphere t where
   toSphere :: t -> Sphere
 
-  toRadius :: t -> Double
+  toRadius :: t -> Float
   toRadius t = case toSphere t of
     Sphere _ r -> r
 
@@ -41,7 +41,7 @@ instance ToSphere Sphere where
 class (HasPosition t, ToSphere t) => HasSphere t where
   sphere :: Lens' t Sphere
 
-  radius :: Lens' t Double
+  radius :: Lens' t Float
   radius = sphere.radius
 
 instance HasPosition Sphere where
@@ -58,5 +58,5 @@ instance OverlapsSphere Sphere where
   overlapsSphere (Sphere p r) (Sphere p' r') = quadrance (p-p') < r''*r''
     where r'' = r+r'
 
-instance a ~ Double => OverlapsSphere (V3 a) where
+instance a ~ Float => OverlapsSphere (V3 a) where
   overlapsSphere p (Sphere p' r) = quadrance (p-p') < r*r
