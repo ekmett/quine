@@ -82,6 +82,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     | is _Shutdown e -> return ()
     | otherwise -> do
       hPrint stderr e
+      hFlush stderr
       exitFailure
 
   -- set up EKG
