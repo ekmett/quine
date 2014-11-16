@@ -29,6 +29,7 @@ module Quine.Math
   , enhancedReinhard
   , fullEnhancedReinhard
   , hejlBurgessDawson
+  , filmic
   ) where
 
 import Control.Applicative
@@ -176,3 +177,18 @@ fullEnhancedReinhard white color = color & traverse *~ exposureAdjustment & lumi
 hejlBurgessDawson :: (Fractional a, Ord a) => a -> a
 hejlBurgessDawson x0 = (x*(6.2*x+0.5))/(x*(6.2*x+1.7)+0.06) where
   x = max 0 (x0*exposureAdjustment-0.004)
+
+-- | John Hable's filmic curve
+--
+-- <http://filmicgames.com/archives/75>
+filmic :: Floating a => a -> a
+filmic x0 = (uncharted2 (x0 * 2 * exposureAdjustment) * whiteScale) ** (1/2.2) where
+  whiteScale = recip (uncharted2 w)
+  uncharted2 x = ((x*(a*x+c*b)+d*e)/(x*(a*x+b)+d*f))-e/f
+  a = 0.15
+  b = 0.50
+  c = 0.10
+  d = 0.20
+  e = 0.02
+  f = 0.30
+  w = 11.2
