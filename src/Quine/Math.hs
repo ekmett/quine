@@ -12,6 +12,7 @@ module Quine.Math
   , mix
   , step
   -- * Vector Manipulation
+  , reflect
   , refract
   -- * Colorspace Manipulation
   , srgb
@@ -40,6 +41,11 @@ step edge x
   | otherwise = 1
 
 -- * Vector Operations
+
+-- | @reflect i n eta@ calculates the reflection direction for an incident vector @i@ around
+-- a normal @n@. @i@ and @n@ should be normalized.
+reflect :: (Applicative f, Metric f, Num a) => f a -> f a -> f a
+reflect i n = i ^-^ (2 * dot n i) *^ n
 
 -- | @reflect i n eta@ calculates the refraction vector for an incident vector @i@ around
 -- a normal @n@. @i@ and @n@ should be normalized.
