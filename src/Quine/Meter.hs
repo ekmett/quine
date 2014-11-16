@@ -23,7 +23,7 @@ import Quine.Clock
 
 data Ticks
   = NoTicks
-  | Ticks {-# UNPACK #-} !Double {-# UNPACK #-} !Double {-# UNPACK #-} !Int
+  | Ticks {-# UNPACK #-} !Time {-# UNPACK #-} !Time {-# UNPACK #-} !Int
   deriving (Show, Typeable, Data)
 
 instance Monoid Ticks where
@@ -32,7 +32,7 @@ instance Monoid Ticks where
   mappend m NoTicks = m
   mappend (Ticks l _ n) (Ticks _ h n') = Ticks l h (n + n')
 
-newtype Tick = Tick Double deriving (Show, Typeable, Data)
+newtype Tick = Tick Time deriving (Show, Typeable, Data)
 
 instance Measured Ticks Tick where
   measure (Tick d) = Ticks d d 1
@@ -46,12 +46,13 @@ instance Default Meter where
 instance Measured Ticks Meter where
   measure (Meter t) = measure t
 
--- returns the current number of ticks per second
+-- | record a tick at a given time
 tick :: Time -> Meter -> Meter
 tick d (Meter t) = Meter $ dropUntil newEnough (t |> Tick d) where
   newEnough NoTicks       = False
   newEnough (Ticks _ h _) = h >= d - 2
 
+-- | returns the current number of ticks per second over the last couple of seconds.
 fps :: Meter -> Double
 fps (Meter t) = case measure t of
   Ticks l h n | h > l -> (fromIntegral n - 1) / (h - l)
