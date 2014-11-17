@@ -75,6 +75,7 @@ library
     Quine.Options
     Quine.Normal
     Quine.Position
+    Quine.Queue
     Quine.Ray
     Quine.Ref
     Quine.SDL
