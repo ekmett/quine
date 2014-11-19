@@ -74,6 +74,7 @@ library
     Quine.Monitor
     Quine.Options
     Quine.Normal
+    Quine.Plane
     Quine.Position
     Quine.Queue
     Quine.Ray
