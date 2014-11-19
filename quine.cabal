@@ -10,7 +10,7 @@ stability:     experimental
 homepage:      http://github.com/ekmett/quine/
 bug-reports:   http://github.com/ekmett/quine/issues
 copyright:     Copyright (C) 2014 Edward A. Kmett
-build-type:    Simple
+build-type:    Custom
 tested-with:   GHC == 7.8.3
 synopsis:      Quine
 description:   Quine
@@ -108,14 +108,14 @@ library
     half,
     JuicyPixels,
     lens,
-    linear >= 1.14,
+    linear >= 1.15.1,
     monad-control >= 0.3.3,
     mtl,
     optparse-applicative,
     primitive,
     process >= 1.2,
     sdl2 >= 1.3,
-    semigroups,
+    semigroups >= 0.9,
     stm >= 2.4.2,
     text,
     transformers,
@@ -147,3 +147,4 @@ executable quine
       sdl2,
       time,
       transformers
+
