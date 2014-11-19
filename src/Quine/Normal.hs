@@ -11,6 +11,7 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
+-- TODO: Use cotangent and cobitangent instead
 --------------------------------------------------------------------
 module Quine.Normal
   ( Normal
@@ -26,11 +27,12 @@ import Data.Data
 import Data.Functor
 import GHC.Generics
 import Linear
+import Quine.GL.Types
 
 -- * Surface normals
 
 -- | Assumed to be a unit vector
-type Normal = V3 Double
+type Normal = Vec3
 
 class ToNormal t where
   toNormal :: t -> Normal
@@ -46,7 +48,7 @@ class ToNormal t => HasNormal t where
 --
 -- For now they are merely chosen to form a space orthogonal to the surface normal.
 data TangentSpace = TangentSpace
-  { _tangentSpaceTangent, _tangentSpaceBitangent, _tangentSpaceNormal :: !(V3 Double)
+  { _tangentSpaceTangent, _tangentSpaceBitangent, _tangentSpaceNormal :: !Vec3
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
 
 instance ToNormal TangentSpace where
@@ -63,10 +65,10 @@ class ToNormal t => ToTangentSpace t where
     t = t' - dot n t' *^ n
     b = signorm (cross t n)
 
-  toTangent  :: t -> V3 Double
+  toTangent  :: t -> Vec3
   toTangent = toTangent.toTangentSpace
 
-  toBitangent :: t -> V3 Double
+  toBitangent :: t -> Vec3
   toBitangent = toBitangent.toTangentSpace
 
 instance ToTangentSpace TangentSpace where
@@ -77,10 +79,10 @@ instance ToTangentSpace TangentSpace where
 class HasNormal t => HasTangentSpace t where
   tangentSpace :: Lens' t TangentSpace
   
-  tangent :: Lens' t (V3 Double)
+  tangent :: Lens' t Vec3
   tangent = tangentSpace.tangent
 
-  bitangent :: Lens' t (V3 Double)
+  bitangent :: Lens' t Vec3
   bitangent = tangentSpace.bitangent
 
 instance HasNormal TangentSpace where
@@ -91,6 +93,6 @@ instance HasTangentSpace TangentSpace where
   tangent  f (TangentSpace t b n) = f t <&> \t' -> TangentSpace t' b n
   bitangent f (TangentSpace t b n) = f b <&> \b' -> TangentSpace t b' n
 
-instance Field1 TangentSpace TangentSpace (V3 Double) (V3 Double) where _1 = tangent
-instance Field2 TangentSpace TangentSpace (V3 Double) (V3 Double) where _2 = bitangent
-instance Field3 TangentSpace TangentSpace (V3 Double) (V3 Double) where _3 = normal
+instance Field1 TangentSpace TangentSpace Vec3 Vec3 where _1 = tangent
+instance Field2 TangentSpace TangentSpace Vec3 Vec3 where _2 = bitangent
+instance Field3 TangentSpace TangentSpace Vec3 Vec3 where _3 = normal
