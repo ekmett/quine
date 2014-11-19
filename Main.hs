@@ -159,7 +159,7 @@ core = do
   screenShader <- compile GL_VERTEX_SHADER   "shaders/screen.vert"
   geomShader   <- compile GL_GEOMETRY_SHADER "shaders/simple.geom"
   sceneShader  <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
-  scn <- link [screenShader,sceneShader]
+  scn <- link [screenShader,geomShader,sceneShader]
   emptyVAO <- gen
   iResolution   <- uniformLocation scn "iResolution"
   iGlobalTime   <- uniformLocation scn "iGlobalTime"
