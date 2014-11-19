@@ -28,15 +28,21 @@ import Quine.StateVar
 -- * Camera
 
 data Camera = Camera
-  { _fov, _yaw, _pitch :: Float -- in radians
-  , _cameraPos :: Vec3
-  , _cameraVel :: Vec3
+  { _fovy
+  , _yaw
+  , _pitch     :: !Float -- in radians
+  , _cameraPos :: !Vec3
+  , _cameraVel :: !Vec3
+  , _nearZ     :: !Float
+  , _farZ      :: !Float
   }
 
 makeClassy ''Camera
 
 instance Default Camera where
-  def = Camera (pi/2) 0 0 0 0
+  def = Camera (3*pi/8) 0 0 0 0 0.1 2000
+    -- fixed vertical fov = 67.5 degrees, matches old quake horizontal fov of 90.
+    -- view distance from 4 inches to 2km
 
 updateCamera :: (MonadState s m, HasCamera s, HasInput s, MonadIO m) => m ()
 updateCamera = do
