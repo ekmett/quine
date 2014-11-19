@@ -61,7 +61,7 @@ parseOptions = do
        <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 800)
        <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 600)
        <*> strOption (long "data" <> short 'd' <> help "location of the data directory" <> metavar "DIR" <> action "directory" <> value dd)
-       <*> strOption (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> action "file" <> value "examples/chains.frag")
+       <*> strOption (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> action "file" <> value "shaders/generators.frag")
        <*> switch (long "debug" <> help "turn on synchronous opengl debugging if available")
 
 instance Default Options where

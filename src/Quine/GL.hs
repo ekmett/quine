@@ -35,6 +35,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Internal as Strict
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
+import Data.Foldable (for_)
 import Data.Data
 import Prelude hiding (concat)
 import Quine.GL.Shader
@@ -66,9 +67,9 @@ _ProgramException = exception
 compile :: MonadIO m => ShaderType -> FilePath -> m Shader
 compile st fp = do
   source <- liftIO $ readFile fp
-  s      <- createShader st
+  s <- createShader st
   shaderSource s $= UTF8.fromString source
-  compileShaderInclude s ["/includes"]
+  compileShaderInclude s ["/shaders"]
   compiled <- compileStatus s
   unless compiled $ do
     e <- shaderInfoLog s
@@ -77,11 +78,10 @@ compile st fp = do
   return s
   
 -- | Link a program and vertex shader to build a program
-link :: MonadIO m => Shader -> Shader -> m Program
-link vs fs = liftIO $ do
+link :: MonadIO m => [Shader] -> m Program
+link ss = liftIO $ do
   p <- gen
-  attachShader p vs
-  attachShader p fs
+  for_ ss $ attachShader p
   linkProgram p
   linked <- linkStatus p
   unless linked $ do
