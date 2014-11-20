@@ -150,3 +150,16 @@ executable quine
       time,
       transformers
 
+test-suite gltest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: GLTests.hs
+  ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs: tests
+
+  build-depends:
+    base,
+    quine,
+    containers,
+    GLFW-b,
+    hspec

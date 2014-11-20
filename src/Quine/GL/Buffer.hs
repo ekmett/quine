@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -19,20 +20,20 @@
 module Quine.GL.Buffer
   ( Buffer(..), boundBufferAt,
   -- * Buffer Data
-    BufferData(..), bufferData
+    BufferData(..), bufferData, bufferDataBindless
   -- * Buffer Targets
   , pattern ArrayBuffer
-  , pattern AtomicCounterBuffer
-  , pattern CopyReadBuffer
-  , pattern CopyWriteBuffer
-  , pattern DispatchIndirectBuffer
+  -- , pattern AtomicCounterBuffer
+  -- , pattern CopyReadBuffer
+  -- , pattern CopyWriteBuffer
+  -- , pattern DispatchIndirectBuffer
   , pattern DrawIndirectBuffer
   , pattern ElementArrayBuffer
   , pattern PixelPackBuffer
   , pattern PixelUnpackBuffer
-  , pattern QueryBuffer
-  , pattern ShaderStorageBuffer
-  , pattern TextureBuffer
+  -- , pattern QueryBuffer
+  -- , pattern ShaderStorageBuffer
+  -- , pattern TextureBuffer
   , pattern TransformFeedbackBuffer
   , pattern UniformBuffer
   -- * Buffer Usage
@@ -49,6 +50,7 @@ module Quine.GL.Buffer
 
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Exception
 import Data.Coerce
 import Data.Data
 import Data.Default
@@ -60,7 +62,9 @@ import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
-import Graphics.GL.Core45
+-- import Graphics.GL.Core45 -- direct state access
+import Graphics.GL.Core41
+import Graphics.GL.Ext.ARB.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
 import Quine.GL.Object
@@ -71,7 +75,10 @@ import Quine.GL.Object
 -- the MD (Multiple Data) in SIMD (Single Instruction, Multiple Data)
 newtype Buffer a = Buffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 newtype BufferTarget = BufferTarget (GLenum, GLenum) deriving (Typeable,Data,Generic)
-newtype BufferUsage = BufferUsage GLenum deriving (Typeable,Data,Generic)
+newtype BufferUsage = BufferUsage GLenum deriving (Eq,Num,Typeable,Data,Generic)
+
+data BufferException = BufferException String deriving (Show,Typeable)
+instance Exception BufferException
 
 instance Object (Buffer a) where
   object = coerce
@@ -119,9 +126,12 @@ boundBufferAt (BufferTarget (target, binding)) = StateVar g s where
   s = glBindBuffer target . coerce
 
 
--- | bindless uploading data to the argumented buffer
-bufferData :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
-bufferData (Buffer i) = StateVar g s where
+-- | bindless uploading data to the argumented buffer (since OpenGL 4.5)
+bufferDataBindless :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
+bufferDataBindless (Buffer i)
+  | gl_ARB_direct_state_access = StateVar g s
+  | otherwise = throw $ BufferException "gl_ARB_direct_state_access unsported" where
+
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
       alloca $ \rawPtr -> do
@@ -135,18 +145,32 @@ bufferData (Buffer i) = StateVar g s where
   s (u,v) = withRawData v $ \size ptr -> glNamedBufferData i (fromIntegral size) ptr (coerce u)
 
 
+bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
+bufferData (BufferTarget (t, _)) = StateVar g s where
+  g = alloca $ \sizePtr ->
+      alloca $ \usagePtr -> do
+      alloca $ \rawPtr -> do
+          glGetBufferParameteriv t GL_BUFFER_SIZE sizePtr
+          glGetBufferParameteriv t GL_BUFFER_USAGE usagePtr
+          glGetBufferPointerv t GL_BUFFER_MAP_POINTER rawPtr
+          usage <- peek usagePtr
+          size  <- peek sizePtr
+          raw   <- peek rawPtr
+          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) raw
+  s (u,v) = withRawData v $ \size ptr -> glBufferData t (fromIntegral size) ptr (coerce u)
+
 -- * Buffer Types
 
 -- | Vertex attributes
 pattern ArrayBuffer = BufferTarget (GL_ARRAY_BUFFER, GL_ARRAY_BUFFER_BINDING)
 -- | Atomic counter storage
-pattern AtomicCounterBuffer = BufferTarget (GL_ATOMIC_COUNTER_BUFFER, GL_ATOMIC_COUNTER_BUFFER_BINDING)
+-- pattern AtomicCounterBuffer = BufferTarget (GL_ATOMIC_COUNTER_BUFFER, GL_ATOMIC_COUNTER_BUFFER_BINDING)
 -- | Buffer copy source
-pattern CopyReadBuffer = BufferTarget (GL_COPY_READ_BUFFER, GL_COPY_READ_BUFFER_BINDING)
+-- pattern CopyReadBuffer = BufferTarget (GL_COPY_READ_BUFFER, GL_COPY_READ_BUFFER_BINDING)
 -- | Buffer copy destination
-pattern CopyWriteBuffer = BufferTarget (GL_COPY_WRITE_BUFFER, GL_COPY_WRITE_BUFFER_BINDING)
+-- pattern CopyWriteBuffer = BufferTarget (GL_COPY_WRITE_BUFFER, GL_COPY_WRITE_BUFFER_BINDING)
 -- | Indirect compute dispatch commands
-pattern DispatchIndirectBuffer = BufferTarget (GL_DISPATCH_INDIRECT_BUFFER, GL_DISPATCH_INDIRECT_BUFFER_BINDING)
+-- pattern DispatchIndirectBuffer = BufferTarget (GL_DISPATCH_INDIRECT_BUFFER, GL_DISPATCH_INDIRECT_BUFFER_BINDING)
 -- | Indirect command arguments
 pattern DrawIndirectBuffer = BufferTarget (GL_DRAW_INDIRECT_BUFFER, GL_DRAW_INDIRECT_BUFFER_BINDING)
 -- | Vertex array indices
@@ -156,11 +180,11 @@ pattern PixelPackBuffer = BufferTarget (GL_PIXEL_PACK_BUFFER, GL_PIXEL_PACK_BUFF
 -- | Texture data source
 pattern PixelUnpackBuffer = BufferTarget (GL_PIXEL_UNPACK_BUFFER, GL_PIXEL_UNPACK_BUFFER_BINDING)
 -- | Query result buffer
-pattern QueryBuffer = BufferTarget (GL_QUERY_BUFFER, GL_QUERY_BUFFER_BINDING)
+-- pattern QueryBuffer = BufferTarget (GL_QUERY_BUFFER, GL_QUERY_BUFFER_BINDING)
 -- | Read-write storage for shaders
-pattern ShaderStorageBuffer = BufferTarget (GL_SHADER_STORAGE_BUFFER, GL_SHADER_STORAGE_BUFFER_BINDING)
+-- pattern ShaderStorageBuffer = BufferTarget (GL_SHADER_STORAGE_BUFFER, GL_SHADER_STORAGE_BUFFER_BINDING)
 -- | Texture data buffer
-pattern TextureBuffer = BufferTarget (GL_TEXTURE_BUFFER, GL_TEXTURE_BUFFER_BINDING)
+-- pattern TextureBuffer = BufferTarget (GL_TEXTURE_BUFFER, GL_TEXTURE_BUFFER_BINDING)
 -- | Transform feedback buffer
 pattern TransformFeedbackBuffer = BufferTarget (GL_TRANSFORM_FEEDBACK_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER_BINDING)
 -- | Uniform block storage
