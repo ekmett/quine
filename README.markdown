@@ -7,9 +7,24 @@ I reserve the right to get bored and go do something else that actually makes mo
 
 A couple of shader toys:
 
+```
+$ quine -F shaders/generators.frag
+```
+
 ![screenshot of generators](https://raw.githubusercontent.com/wiki/ekmett/quine/generators.png)
+
+```
+$ quine -F shaders/dodecahedron.frag
+```
+
 ![screenshot of a dodecahedron](https://raw.githubusercontent.com/wiki/ekmett/quine/dodecahedron.png)
+
+```
+$ quine -F shaders/chains.frag
+```
+
 ![screenshot of chains](https://raw.githubusercontent.com/wiki/ekmett/quine/chains.png)
+
 
 Now I need to make things fast.
 
@@ -54,7 +69,7 @@ By default `ekg` will start on port 5616, and you can connect to monitor the ren
 
 You can run `quine -M` to also have the browser pop open to the page on startup. (On a mac)
 
-Opening the `quine.frame` chart will give you a handy FPS meter.
+Opening the `quine.frame` chart will give you a handy FPS meter (which is now also in the title for the window).
 
 
 Contact Information
