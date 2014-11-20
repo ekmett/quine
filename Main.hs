@@ -155,9 +155,9 @@ translate v = eye4 & translation .~ v
 
 core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
-  view optionsDataDir >>= \dd -> buildNamedStrings $(embedDir "shaders") (dd </> "shaders") ("/"</>)
-  screenShader <- compile GL_VERTEX_SHADER   "shaders/screen.vert"
-  geomShader   <- compile GL_GEOMETRY_SHADER "shaders/simple.geom"
+  liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
+  screenShader <- compile GL_VERTEX_SHADER   "screen.vert"
+  geomShader   <- compile GL_GEOMETRY_SHADER "simple.geom"
   sceneShader  <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link [screenShader,geomShader,sceneShader]
   emptyVAO <- gen

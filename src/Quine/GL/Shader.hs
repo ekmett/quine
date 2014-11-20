@@ -156,15 +156,23 @@ shaderInfoLog s = do
         return $ l-1
 
 -- | 
+--
+-- Using statically embedded strings in the executable:
+-- 
 -- @
--- buildNamedStrings $(embedDir "foo") "foo" ('/':)
+-- buildNamedStrings $(embedDir "foo") ('/':)
+-- @
+--
+-- Dynamically embedding all files in a given directory into the named string set
+--
+-- @
+-- getDir "foo" >>= \ ss -> buildNamedStrings ss ('/':)
 -- @
 --
 -- Falls back to doing nothing if 'gl_ARB_shading_langauge_include' isn't available.
-buildNamedStrings :: MonadIO m => [(FilePath, Strict.ByteString)] -> FilePath -> (FilePath -> String) -> m ()
-buildNamedStrings fallback fp tweak = liftIO $ when gl_ARB_shading_language_include $ do
-  includes <- getDir fp 
-  forM_ (if null includes then fallback else includes) $ \(fp',body) -> do
+buildNamedStrings :: MonadIO m => [(FilePath, Strict.ByteString)] -> (FilePath -> String) -> m ()
+buildNamedStrings includes tweak = liftIO $ when gl_ARB_shading_language_include $ do
+  forM_ includes $ \(fp',body) -> do
     withCStringLen (tweak fp') $ \ (name, namelen) ->
       Strict.unsafeUseAsCString body $ \string -> do
         glNamedStringARB GL_SHADER_INCLUDE_ARB (fromIntegral namelen) name (fromIntegral $ Strict.length body) string
