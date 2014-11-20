@@ -134,6 +134,9 @@ bufferData (Buffer i) = StateVar g s where
           (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) raw
   s (u,v) = withRawData v $ \size ptr -> glNamedBufferData i (fromIntegral size) ptr (coerce u)
 
+
+-- * Buffer Types
+
 -- | Vertex attributes
 pattern ArrayBuffer = BufferTarget (GL_ARRAY_BUFFER, GL_ARRAY_BUFFER_BINDING)
 -- | Atomic counter storage
@@ -164,9 +167,11 @@ pattern TransformFeedbackBuffer = BufferTarget (GL_TRANSFORM_FEEDBACK_BUFFER, GL
 pattern UniformBuffer = BufferTarget (GL_UNIFORM_BUFFER, GL_UNIFORM_BUFFER_BINDING)
 
 
+-- * Usage Types
+
 -- | Draw: The data store contents are modified by the application, and used as the source for GL drawing and image specification commands.
--- | Read: The data store contents are modified by reading data from the GL, and used to return that data when queried by the application.
--- | Copy: The data store contents are modified by reading data from the GL, and used as the source for GL drawing and image specification commands.
+-- Read: The data store contents are modified by reading data from the GL, and used to return that data when queried by the application.
+-- Copy: The data store contents are modified by reading data from the GL, and used as the source for GL drawing and image specification commands.
 
 -- | The data store contents will be modified once and used at most a few times.
 pattern StreamDraw = GL_STREAM_DRAW
