@@ -165,35 +165,43 @@
 <a name="line-156"></a>        <span class='hs-varid'>return</span> <span class='hs-varop'>$</span> <span class='hs-varid'>l</span><span class='hs-comment'>-</span><span class='hs-num'>1</span>
 <a name="line-157"></a>
 <a name="line-158"></a><a name="buildNamedStrings"></a><span class='hs-comment'>-- | </span>
-<a name="line-159"></a><span class='hs-comment'>-- @</span>
-<a name="line-160"></a><span class='hs-comment'>-- buildNamedStrings $(embedDir "foo") "foo" ('/':)</span>
-<a name="line-161"></a><span class='hs-comment'>-- @</span>
-<a name="line-162"></a><span class='hs-comment'>--</span>
-<a name="line-163"></a><span class='hs-comment'>-- Falls back to doing nothing if 'gl_ARB_shading_langauge_include' isn't available.</span>
-<a name="line-164"></a><span class='hs-definition'>buildNamedStrings</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-keyglyph'>[</span><span class='hs-layout'>(</span><span class='hs-conid'>FilePath</span><span class='hs-layout'>,</span> <span class='hs-conid'>Strict</span><span class='hs-varop'>.</span><span class='hs-conid'>ByteString</span><span class='hs-layout'>)</span><span class='hs-keyglyph'>]</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>FilePath</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-layout'>(</span><span class='hs-conid'>FilePath</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>String</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
-<a name="line-165"></a><span class='hs-definition'>buildNamedStrings</span> <span class='hs-varid'>fallback</span> <span class='hs-varid'>fp</span> <span class='hs-varid'>tweak</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>when</span> <span class='hs-varid'>gl_ARB_shading_language_include</span> <span class='hs-varop'>$</span> <span class='hs-keyword'>do</span>
-<a name="line-166"></a>  <span class='hs-varid'>includes</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>getDir</span> <span class='hs-varid'>fp</span> 
-<a name="line-167"></a>  <span class='hs-varid'>forM_</span> <span class='hs-layout'>(</span><span class='hs-keyword'>if</span> <span class='hs-varid'>null</span> <span class='hs-varid'>includes</span> <span class='hs-keyword'>then</span> <span class='hs-varid'>fallback</span> <span class='hs-keyword'>else</span> <span class='hs-varid'>includes</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-layout'>(</span><span class='hs-varid'>fp'</span><span class='hs-layout'>,</span><span class='hs-varid'>body</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>do</span>
-<a name="line-168"></a>    <span class='hs-varid'>withCStringLen</span> <span class='hs-layout'>(</span><span class='hs-varid'>tweak</span> <span class='hs-varid'>fp'</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span> <span class='hs-layout'>(</span><span class='hs-varid'>name</span><span class='hs-layout'>,</span> <span class='hs-varid'>namelen</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span>
-<a name="line-169"></a>      <span class='hs-conid'>Strict</span><span class='hs-varop'>.</span><span class='hs-varid'>unsafeUseAsCString</span> <span class='hs-varid'>body</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>string</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>do</span>
-<a name="line-170"></a>        <span class='hs-varid'>glNamedStringARB</span> <span class='hs-conid'>GL_SHADER_INCLUDE_ARB</span> <span class='hs-layout'>(</span><span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>namelen</span><span class='hs-layout'>)</span> <span class='hs-varid'>name</span> <span class='hs-layout'>(</span><span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>$</span> <span class='hs-conid'>Strict</span><span class='hs-varop'>.</span><span class='hs-varid'>length</span> <span class='hs-varid'>body</span><span class='hs-layout'>)</span> <span class='hs-varid'>string</span>
-<a name="line-171"></a>
-<a name="line-172"></a><a name="compileShaderInclude"></a><span class='hs-comment'>-- | Compile a shader with @#include@ support (if available).</span>
-<a name="line-173"></a><span class='hs-comment'>--</span>
-<a name="line-174"></a><span class='hs-comment'>-- Remember to use</span>
-<a name="line-175"></a><span class='hs-comment'>--</span>
-<a name="line-176"></a><span class='hs-comment'>-- @</span>
-<a name="line-177"></a><span class='hs-comment'>-- #extension GL_ARB_shading_language_include : &lt;behavior&gt;</span>
-<a name="line-178"></a><span class='hs-comment'>-- @</span>
-<a name="line-179"></a><span class='hs-comment'>--</span>
-<a name="line-180"></a><span class='hs-comment'>-- as appropriate within your shader.</span>
+<a name="line-159"></a><span class='hs-comment'>--</span>
+<a name="line-160"></a><span class='hs-comment'>-- Using statically embedded strings in the executable:</span>
+<a name="line-161"></a><span class='hs-comment'>-- </span>
+<a name="line-162"></a><span class='hs-comment'>-- @</span>
+<a name="line-163"></a><span class='hs-comment'>-- buildNamedStrings $(embedDir "foo") ('/':)</span>
+<a name="line-164"></a><span class='hs-comment'>-- @</span>
+<a name="line-165"></a><span class='hs-comment'>--</span>
+<a name="line-166"></a><span class='hs-comment'>-- Dynamically embedding all files in a given directory into the named string set</span>
+<a name="line-167"></a><span class='hs-comment'>--</span>
+<a name="line-168"></a><span class='hs-comment'>-- @</span>
+<a name="line-169"></a><span class='hs-comment'>-- getDir "foo" &gt;&gt;= \ ss -&gt; buildNamedStrings ss ('/':)</span>
+<a name="line-170"></a><span class='hs-comment'>-- @</span>
+<a name="line-171"></a><span class='hs-comment'>--</span>
+<a name="line-172"></a><span class='hs-comment'>-- Falls back to doing nothing if 'gl_ARB_shading_langauge_include' isn't available.</span>
+<a name="line-173"></a><span class='hs-definition'>buildNamedStrings</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-keyglyph'>[</span><span class='hs-layout'>(</span><span class='hs-conid'>FilePath</span><span class='hs-layout'>,</span> <span class='hs-conid'>Strict</span><span class='hs-varop'>.</span><span class='hs-conid'>ByteString</span><span class='hs-layout'>)</span><span class='hs-keyglyph'>]</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-layout'>(</span><span class='hs-conid'>FilePath</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>String</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
+<a name="line-174"></a><span class='hs-definition'>buildNamedStrings</span> <span class='hs-varid'>includes</span> <span class='hs-varid'>tweak</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>when</span> <span class='hs-varid'>gl_ARB_shading_language_include</span> <span class='hs-varop'>$</span> <span class='hs-keyword'>do</span>
+<a name="line-175"></a>  <span class='hs-varid'>forM_</span> <span class='hs-varid'>includes</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-layout'>(</span><span class='hs-varid'>fp'</span><span class='hs-layout'>,</span><span class='hs-varid'>body</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>do</span>
+<a name="line-176"></a>    <span class='hs-varid'>withCStringLen</span> <span class='hs-layout'>(</span><span class='hs-varid'>tweak</span> <span class='hs-varid'>fp'</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span> <span class='hs-layout'>(</span><span class='hs-varid'>name</span><span class='hs-layout'>,</span> <span class='hs-varid'>namelen</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span>
+<a name="line-177"></a>      <span class='hs-conid'>Strict</span><span class='hs-varop'>.</span><span class='hs-varid'>unsafeUseAsCString</span> <span class='hs-varid'>body</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>string</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>do</span>
+<a name="line-178"></a>        <span class='hs-varid'>glNamedStringARB</span> <span class='hs-conid'>GL_SHADER_INCLUDE_ARB</span> <span class='hs-layout'>(</span><span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>namelen</span><span class='hs-layout'>)</span> <span class='hs-varid'>name</span> <span class='hs-layout'>(</span><span class='hs-varid'>fromIntegral</span> <span class='hs-varop'>$</span> <span class='hs-conid'>Strict</span><span class='hs-varop'>.</span><span class='hs-varid'>length</span> <span class='hs-varid'>body</span><span class='hs-layout'>)</span> <span class='hs-varid'>string</span>
+<a name="line-179"></a>
+<a name="line-180"></a><a name="compileShaderInclude"></a><span class='hs-comment'>-- | Compile a shader with @#include@ support (if available).</span>
 <a name="line-181"></a><span class='hs-comment'>--</span>
-<a name="line-182"></a><span class='hs-comment'>-- Falls back to 'compileShader' if 'gl_ARB_shading_language_include' isn't available.</span>
-<a name="line-183"></a><span class='hs-definition'>compileShaderInclude</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Shader</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>FilePath</span><span class='hs-keyglyph'>]</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
-<a name="line-184"></a><span class='hs-definition'>compileShaderInclude</span> <span class='hs-layout'>(</span><span class='hs-conid'>Shader</span> <span class='hs-varid'>s</span><span class='hs-layout'>)</span> <span class='hs-varid'>path</span>
-<a name="line-185"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>gl_ARB_shading_language_include</span> <span class='hs-keyglyph'>=</span> 
-<a name="line-186"></a>    <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>withCStrings</span> <span class='hs-varid'>path</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>n</span> <span class='hs-varid'>cpcs</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>glCompileShaderIncludeARB</span> <span class='hs-varid'>s</span> <span class='hs-layout'>(</span><span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>n</span><span class='hs-layout'>)</span> <span class='hs-varid'>cpcs</span> <span class='hs-varid'>nullPtr</span>
-<a name="line-187"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>otherwise</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>glCompileShader</span> <span class='hs-varid'>s</span>
-<a name="line-188"></a>
+<a name="line-182"></a><span class='hs-comment'>-- Remember to use</span>
+<a name="line-183"></a><span class='hs-comment'>--</span>
+<a name="line-184"></a><span class='hs-comment'>-- @</span>
+<a name="line-185"></a><span class='hs-comment'>-- #extension GL_ARB_shading_language_include : &lt;behavior&gt;</span>
+<a name="line-186"></a><span class='hs-comment'>-- @</span>
+<a name="line-187"></a><span class='hs-comment'>--</span>
+<a name="line-188"></a><span class='hs-comment'>-- as appropriate within your shader.</span>
+<a name="line-189"></a><span class='hs-comment'>--</span>
+<a name="line-190"></a><span class='hs-comment'>-- Falls back to 'compileShader' if 'gl_ARB_shading_language_include' isn't available.</span>
+<a name="line-191"></a><span class='hs-definition'>compileShaderInclude</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Shader</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>FilePath</span><span class='hs-keyglyph'>]</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-conid'>()</span>
+<a name="line-192"></a><span class='hs-definition'>compileShaderInclude</span> <span class='hs-layout'>(</span><span class='hs-conid'>Shader</span> <span class='hs-varid'>s</span><span class='hs-layout'>)</span> <span class='hs-varid'>path</span>
+<a name="line-193"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>gl_ARB_shading_language_include</span> <span class='hs-keyglyph'>=</span> 
+<a name="line-194"></a>    <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span> <span class='hs-varid'>withCStrings</span> <span class='hs-varid'>path</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>n</span> <span class='hs-varid'>cpcs</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>glCompileShaderIncludeARB</span> <span class='hs-varid'>s</span> <span class='hs-layout'>(</span><span class='hs-varid'>fromIntegral</span> <span class='hs-varid'>n</span><span class='hs-layout'>)</span> <span class='hs-varid'>cpcs</span> <span class='hs-varid'>nullPtr</span>
+<a name="line-195"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-varid'>otherwise</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>glCompileShader</span> <span class='hs-varid'>s</span>
+<a name="line-196"></a>
 </pre></body>
 </html>
