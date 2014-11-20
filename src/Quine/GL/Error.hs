@@ -35,7 +35,7 @@ import Graphics.GL.Ext.ARB.Imaging
 import Graphics.GL.Types
 
 -- | Used to represent the result of 'glGetError'
-newtype Error = Error GLenum deriving (Typeable, Data, Generic)
+newtype Error = Error GLenum deriving (Eq, Typeable, Data, Generic)
 
 -- | No error has been recorded. 
 pattern NoError = Error GL_NO_ERROR

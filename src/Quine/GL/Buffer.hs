@@ -18,9 +18,11 @@
 -- https://www.opengl.org/discussion_boards/showthread.php/170388-Bindless-Stuff
 --------------------------------------------------------------------
 module Quine.GL.Buffer
-  ( Buffer(..), boundBufferAt,
+  ( Buffer(..), boundBufferAt
   -- * Buffer Data
-    BufferData(..), bufferData, bufferDataBindless
+  , BufferData(..), bufferData
+  -- , directStateSupported -- ^ crashes
+  , bufferDataDirect
   -- * Buffer Targets
   , pattern ArrayBuffer
   -- , pattern AtomicCounterBuffer
@@ -43,6 +45,8 @@ module Quine.GL.Buffer
   , pattern StaticDraw
   , pattern StaticRead
   , pattern StaticCopy
+
+  , BufferUsage
   , pattern DynamicDraw
   , pattern DynamicRead
   , pattern DynamicCopy
@@ -63,8 +67,9 @@ import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
 -- import Graphics.GL.Core45 -- direct state access
+-- import Graphics.GL.Ext.ARB.DirectStateAccess -- currently not supported by inv
 import Graphics.GL.Core41
-import Graphics.GL.Ext.ARB.DirectStateAccess
+import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
 import Quine.GL.Object
@@ -75,7 +80,7 @@ import Quine.GL.Object
 -- the MD (Multiple Data) in SIMD (Single Instruction, Multiple Data)
 newtype Buffer a = Buffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 newtype BufferTarget = BufferTarget (GLenum, GLenum) deriving (Typeable,Data,Generic)
-newtype BufferUsage = BufferUsage GLenum deriving (Eq,Num,Typeable,Data,Generic)
+newtype BufferUsage = BufferUsage GLenum deriving (Eq,Num,Show,Typeable,Data,Generic)
 
 data BufferException = BufferException String deriving (Show,Typeable)
 instance Exception BufferException
@@ -114,7 +119,7 @@ instance Storable a => BufferData (V.Vector a) where
 
 instance Storable a => BufferData [a] where
     withRawData v m = withArrayLen v $ \n -> m (n * sizeOf (undefined::a)) . castPtr
-    fromRawData = undefined
+    fromRawData bytes = peekArray (bytes `div` sizeOf (undefined::a)) . castPtr
 
 -- * Buffer Access
 
@@ -127,37 +132,41 @@ boundBufferAt (BufferTarget (target, binding)) = StateVar g s where
 
 
 -- | bindless uploading data to the argumented buffer (since OpenGL 4.5)
-bufferDataBindless :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
-bufferDataBindless (Buffer i)
-  | gl_ARB_direct_state_access = StateVar g s
-  | otherwise = throw $ BufferException "gl_ARB_direct_state_access unsported" where
+bufferDataDirect :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
+bufferDataDirect (Buffer i)
+  | directStateSupported = StateVar g s
+  | otherwise = throw $ BufferException "gl_EXT_direct_state_access unsported" where
 
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
-      alloca $ \rawPtr -> do
-          glGetNamedBufferParameteriv i GL_BUFFER_SIZE sizePtr
-          glGetNamedBufferParameteriv i GL_BUFFER_USAGE usagePtr
-          glGetNamedBufferPointerv i GL_BUFFER_MAP_POINTER rawPtr
-          usage <- peek usagePtr
-          size  <- peek sizePtr
-          raw   <- peek rawPtr
-          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) raw
-  s (u,v) = withRawData v $ \size ptr -> glNamedBufferData i (fromIntegral size) ptr (coerce u)
+        glGetNamedBufferParameterivEXT i GL_BUFFER_SIZE sizePtr
+        glGetNamedBufferParameterivEXT i GL_BUFFER_USAGE usagePtr
+        usage <- peek usagePtr
+        size  <- peek sizePtr
+        allocaBytes (fromIntegral size) $ \rawPtr -> do
+          glGetNamedBufferSubDataEXT i 0 (fromIntegral size) (castPtr rawPtr)
+          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
+  s (u,v) = withRawData v $ \size ptr -> glNamedBufferDataEXT i (fromIntegral size) ptr (coerce u)
 
 
 bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
 bufferData (BufferTarget (t, _)) = StateVar g s where
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
-      alloca $ \rawPtr -> do
-          glGetBufferParameteriv t GL_BUFFER_SIZE sizePtr
-          glGetBufferParameteriv t GL_BUFFER_USAGE usagePtr
-          glGetBufferPointerv t GL_BUFFER_MAP_POINTER rawPtr
-          usage <- peek usagePtr
-          size  <- peek sizePtr
-          raw   <- peek rawPtr
-          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) raw
+        glGetBufferParameteriv t GL_BUFFER_SIZE sizePtr
+        glGetBufferParameteriv t GL_BUFFER_USAGE usagePtr
+        usage <- peek usagePtr
+        size  <- peek sizePtr
+        allocaBytes (fromIntegral size) $ \rawPtr -> do
+          glGetBufferSubData t 0 (fromIntegral size) (castPtr rawPtr)
+          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
   s (u,v) = withRawData v $ \size ptr -> glBufferData t (fromIntegral size) ptr (coerce u)
+
+--{--
+directStateSupported :: Bool
+directStateSupported = gl_EXT_direct_state_access -- || gl_ARB_direct_state_access
+{-# NOINLINE directStateSupported #-}
+--}
 
 -- * Buffer Types
 

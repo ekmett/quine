@@ -156,10 +156,12 @@ test-suite gltest
   main-is: GLTests.hs
   ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
   hs-source-dirs: tests
-
   build-depends:
-    base,
-    quine,
-    containers,
     GLFW-b,
-    hspec
+    base,
+    containers,
+    data-default,
+    gl,
+    hspec,
+    quine,
+    vector

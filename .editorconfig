@@ -1,6 +1,6 @@
 root = true
 
-[**.hs]
+[**.hs,*.cabal]
 indent_style = space
 end_of_line = lf
 indent_size = 2
