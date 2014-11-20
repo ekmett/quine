@@ -37,7 +37,6 @@ import qualified Data.ByteString.Unsafe as Strict
 import qualified Data.ByteString.Internal as Strict
 import qualified Data.ByteString.Lazy as Lazy
 import Data.Data
-import Data.FileEmbed
 import Foreign.C.String
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc

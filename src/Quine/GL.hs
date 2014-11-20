@@ -42,7 +42,6 @@ import Quine.GL.Shader
 import Quine.GL.Object
 import Quine.GL.Program
 import Quine.StateVar
-import System.FilePath
 
 -- * Shaders and Programs
 
@@ -67,7 +66,7 @@ _ProgramException = exception
 -- | Compile a shader with @#include@ support if it is available.
 compile :: MonadIO m => ShaderType -> FilePath -> m Shader
 compile st fp = do
-  source <- liftIO $ readFile ("shaders" </> fp)
+  source <- liftIO $ readFile fp
   s <- createShader st
   shaderSource s $= UTF8.fromString source
   compileShaderInclude s ["/shaders"]
