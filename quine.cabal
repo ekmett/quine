@@ -57,6 +57,7 @@ library
     Quine.Env
     Quine.Exception
     Quine.GL
+    Quine.GL.Buffer
     Quine.GL.Error
     Quine.GL.Object
     Quine.GL.Pixel
