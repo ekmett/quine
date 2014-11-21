@@ -23,7 +23,7 @@ Plane plane(vec3 n, float d) {
 }
 
 // construct a plane from a normal and a point
-Plane plane(vec3 n, vec p) {
+Plane plane(vec3 n, vec3 p) {
   return plane(n,dot(n,p));
 }
 

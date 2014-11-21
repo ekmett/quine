@@ -3,8 +3,8 @@
 
 #include "frustum.h"
 
-struct camera {
-  frustum frustum;
+struct Camera {
+  Frustum Frustum;
   mat4 projection, inverseProjection, modelView, inverseModelView;
 };
 
