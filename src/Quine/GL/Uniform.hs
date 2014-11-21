@@ -20,18 +20,23 @@ module Quine.GL.Uniform
   , uniformLocation
   , uniformMat4s
   , uniformMat4
+  -- * Program Uniforms
+  -- $programUniform
+  , ProgramUniform(..)
   -- * Uniform Types
   , UniformType
   , showUniformType
   , uniformTypeName
   ) where
 
+import Control.Applicative
 import Control.Monad.IO.Class
+import Data.Coerce
 import Data.Distributive
 import Data.Foldable
-import Data.Functor
 import Data.Version
 import Foreign.C.String
+import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
@@ -41,8 +46,11 @@ import Linear
 import Quine.GL.Program
 import Quine.GL.Types
 import Quine.GL.Version
+import Quine.StateVar
 
+--------------------------------------------------------------------------------
 -- * Uniform Locations
+--------------------------------------------------------------------------------
 
 type UniformLocation = GLint
 
@@ -68,6 +76,45 @@ uniformMat4s = uniformMatrices glUniformMatrix4fv glUniformMatrix4fv
 
 uniformMat4 :: MonadIO m  => UniformLocation -> Mat4 -> m ()
 uniformMat4 l = uniformMat4s l . Id
+
+--------------------------------------------------------------------------------
+-- * Program Uniforms
+--------------------------------------------------------------------------------
+
+-- $programUniform
+--
+-- Requires 'gl_ARB_separate_shader_objects' or OpenGL 4.1+
+--
+-- The benefit of this API is that it doesn't tie to the current bound program.
+-- and so we have fewer state changes, and nicely these can make a full
+-- 'StateVar'.
+
+class ProgramUniform a where
+  programUniform :: Program -> UniformLocation -> StateVar a
+
+instance ProgramUniform Float where
+  programUniform p l = StateVar g s where
+    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+    s = glProgramUniform1f (coerce p) (coerce l) 
+
+instance ProgramUniform (V2 Float) where
+  programUniform p l = StateVar g s where
+    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+    s (V2 a b) = glProgramUniform2f (coerce p) (coerce l) a b
+
+instance ProgramUniform (V3 Float) where
+  programUniform p l = StateVar g s where
+    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+    s (V3 a b c) = glProgramUniform3f (coerce p) (coerce l) a b c
+
+instance ProgramUniform (V4 Float) where
+  programUniform p l = StateVar g s where
+    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+    s (V4 a b c d) = glProgramUniform4f (coerce p) (coerce l) a b c d
+
+--------------------------------------------------------------------------------
+-- * Uniform Type
+--------------------------------------------------------------------------------
 
 type UniformType = GLenum
 
