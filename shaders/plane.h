@@ -19,18 +19,18 @@ float distance(Plane p, vec3 q) { return dot(p.data, vec4(q,1.0)); }
 //
 // intersection occurs if this range contains zero.
 vec2 distance(Plane a, Box b) {
-  bvec3 m = lessThan(normal(a),vec3(0.));
+  bvec3 m = greaterThan(normal(a),vec3(0.));
   return vec2(distance(a,mix(b.hi,b.lo,m)), distance(a,mix(b.lo,b.hi,m)));
 }
 
 // returns least signed distance of intersection for an axis aligned bounding box to the plane
 float minDistance(Plane a, Box b) {
-  return distance(a,mix(b.hi,b.lo,lessThan(normal(a),vec3(0.))));
+  return distance(a,mix(b.lo,b.hi,lessThan(normal(a),vec3(0.))));
 }
 
 // returns greatest signed distance of intersection for an axis aligned bounding box to the plane
 float maxDistance(Plane a, Box b) {
-  return distance(a,mix(b.lo,b.hi,lessThan(normal(a),vec3(0.))));
+  return distance(a,mix(b.lo,b.hi,greaterThan(normal(a),vec3(0.))));
 }
 
 // returns the range of signed distances for a bounding sphere to the plane
