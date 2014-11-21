@@ -8,9 +8,7 @@ data Frustum = Frustum
 
 -- | @buildFrustum origin direction nearZ farZ fovy aspectRatio@
 buildFrustum :: Vec3 -> Vec3 -> Vec3 -> Float -> Float -> Float -> Float -> Frustum
-buildFrustum origin dir up near far fovy aspect =
-    Frustum undefined undefined undefined undefined undefined undefined $
-
+buildFrustum origin dir up near far fovy aspect = undefined
   where
     t = tan (fovy*0.5)
     nc = origin + near*^dir
@@ -19,7 +17,6 @@ buildFrustum origin dir up near far fovy aspect =
     fh = t * far
     nw = nh * aspect
     fw = fh * aspect
-
 
 planes :: Frustum -> [Plane]
 planes (Frustum a b c d e f _ _ _ _ _ _ _ _) = [a,b,c,d,e,f]
