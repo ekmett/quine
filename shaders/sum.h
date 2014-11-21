@@ -1,8 +1,6 @@
 #ifndef INCLUDED_SUM_H
 #define INCLUDED_SUM_H
 
-// L1 norm
-
 float sum(float a) { return a; }
 float sum(vec2 a) { return a.x + a.y; }
 float sum(vec3 a) { return a.x + a.y + a.z; }
