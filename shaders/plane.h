@@ -3,6 +3,7 @@
 
 #include "box.h"
 #include "sphere.h"
+#include "projective.h"
 
 struct Plane {
   vec4 data;
@@ -13,7 +14,7 @@ vec3 normal(Plane a) {
 }
 
 // compute a signed distance to the plane
-float distance(Plane p, vec3 q) { return dot(p.data, vec4(q,1.0)); }
+float distance(Plane p, vec3 q) { return dot(p.data, point(q)); }
 
 // returns the range of signed distances for an axis aligned bounding box to the plane
 //
