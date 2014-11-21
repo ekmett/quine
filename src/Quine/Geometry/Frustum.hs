@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Quine.Frustum
+module Quine.Geometry.Frustum
   ( Frustum(..)
   , HasFrustum(..)
   , OverlapsFrustum(..)
@@ -17,10 +17,10 @@ import Data.Word
 import GHC.Generics
 import Linear hiding (frustum)
 import Prelude hiding (any, all)
-import Quine.Bounding.Box
-import Quine.Bounding.Sphere
+import Quine.Geometry.Box
+import Quine.Geometry.Plane
+import Quine.Geometry.Sphere
 import Quine.GL.Types
-import Quine.Plane
 
 data Frustum = Frustum { _frustumPlanes :: Vector Plane, _frustumPoints :: Vector Vec3 }
   deriving (Show,Eq,Ord,Generic,Typeable,Data)

@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Quine.Position
+module Quine.Geometry.Position
   ( Position
   , ToPosition(..)
   , HasPosition(..)

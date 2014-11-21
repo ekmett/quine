@@ -13,7 +13,7 @@
 --
 -- TODO: Use cotangent and cobitangent instead
 --------------------------------------------------------------------
-module Quine.Normal
+module Quine.Geometry.Normal
   ( Normal
   , ToNormal(..)
   , HasNormal(..)

@@ -15,7 +15,7 @@
 --
 -- <http://tavianator.com/2011/05/fast-branchless-raybounding-box-intersections/>
 --------------------------------------------------------------------
-module Quine.Ray
+module Quine.Geometry.Ray
   ( Ray(..)
   , _Ray
   , ToRay(..)
@@ -32,10 +32,10 @@ import Data.Foldable
 import Data.Semigroup
 import GHC.Generics
 import Linear
+import Quine.Geometry.Box
+import Quine.Geometry.Position
 import Quine.GL.Types
 import Quine.Instances ()
-import Quine.Position
-import Quine.Bounding.Box
 
 data Ray = Ray
   { _origin         :: !Vec3

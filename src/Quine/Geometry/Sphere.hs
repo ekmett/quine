@@ -10,7 +10,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Quine.Bounding.Sphere
+module Quine.Geometry.Sphere
   ( Sphere(..)
   , HasSphere(..)
   , ToSphere(..)
@@ -23,8 +23,8 @@ import Data.Foldable
 import Data.Functor
 import GHC.Generics
 import Linear
+import Quine.Geometry.Position
 import Quine.GL.Types
-import Quine.Position
 import Prelude hiding (any)
 
 data Sphere = Sphere !Vec3 !Float deriving (Eq, Ord, Show, Data, Typeable, Generic)

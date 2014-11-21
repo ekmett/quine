@@ -13,7 +13,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Quine.Bounding.Box
+module Quine.Geometry.Box
   ( Box(..)
   , HasBox(..)
   , ToBox(..)
@@ -29,9 +29,9 @@ import Data.Semigroup
 import GHC.Generics
 import Linear
 import Prelude hiding (and)
-import Quine.Bounding.Sphere
+import Quine.Geometry.Position
+import Quine.Geometry.Sphere
 import Quine.GL.Types
-import Quine.Position
 
 data Box = Box { _lo, _hi :: Vec3 }
   deriving (Data, Typeable, Generic)

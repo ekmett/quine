@@ -10,7 +10,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Quine.Beam
+module Quine.Geometry.Beam
   ( Beam(..)
   , ToBeam(..)
   , HasBeam(..)
@@ -22,10 +22,10 @@ import Control.Lens
 import Data.Data
 import GHC.Generics
 import Linear
-import Quine.Bounding.Sphere
+import Quine.Geometry.Position
+import Quine.Geometry.Ray
+import Quine.Geometry.Sphere
 import Quine.GL.Types
-import Quine.Position
-import Quine.Ray
 
 -- | A 'Beam' is a fat 'Ray'. It starts out with a given 'beamWidth' and grows by 'beamWidthDelta'
 -- every unit of time along the ray.

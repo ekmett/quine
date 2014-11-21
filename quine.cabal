@@ -51,16 +51,20 @@ library
   hs-source-dirs: src
   include-dirs: shaders
   exposed-modules:
-    Quine.Beam
-    Quine.Bounding.Box
-    Quine.Bounding.Sphere
     Quine.Camera
     Quine.Clock
     Quine.Debug
     Quine.Display
     Quine.Env
     Quine.Exception
-    Quine.Frustum
+    Quine.Geometry.Beam
+    Quine.Geometry.Box
+    Quine.Geometry.Frustum
+    Quine.Geometry.Normal
+    Quine.Geometry.Plane
+    Quine.Geometry.Position
+    Quine.Geometry.Ray
+    Quine.Geometry.Sphere
     Quine.GL
     Quine.GL.Buffer
     Quine.GL.Error
@@ -80,11 +84,7 @@ library
     Quine.Meter
     Quine.Monitor
     Quine.Options
-    Quine.Normal
-    Quine.Plane
-    Quine.Position
     Quine.Queue
-    Quine.Ray
     Quine.Ref
     Quine.SDL
     Quine.Simulation

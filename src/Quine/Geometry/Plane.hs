@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 -- | Assumes normals are actually unit vectors
-module Quine.Plane
+module Quine.Geometry.Plane
   ( Plane(..)
   , ToPlane(..)
   , HasPlane(..)
@@ -16,10 +16,10 @@ import Control.Lens
 import Data.Data
 import GHC.Generics
 import Linear
-import Quine.Normal
 import Quine.GL.Types
-import Quine.Bounding.Box
-import Quine.Bounding.Sphere
+import Quine.Geometry.Box
+import Quine.Geometry.Normal
+import Quine.Geometry.Sphere
 
 data Plane = Plane { _planeNormal :: !Vec3, _planeDistance :: !Float } deriving (Show,Ord,Eq,Typeable,Data,Generic)
 
