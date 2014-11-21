@@ -38,6 +38,7 @@ before_install:
     fi
 
   # install SDL 2.0.3
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
   - wget http://libsdl.org/release/SDL2-2.0.3.tar.gz -O - | tar xz
   - cd SDL2-2.0.3 && ./configure && make -j && sudo make install && cd ..
 
