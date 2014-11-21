@@ -21,11 +21,11 @@ import Graphics.GL.Types
 import Graphics.GL.Internal.Shared
 
 
-gl45Test =
+gl41Test =
   [ WindowHint'Visible False
   , WindowHint'ClientAPI ClientAPI'OpenGL
   , WindowHint'ContextVersionMajor 4
-  , WindowHint'ContextVersionMinor 4 
+  , WindowHint'ContextVersionMinor 1
   -- ^ 4.1 max on os x, 4.4 on windows with nvidia 344.75
   , WindowHint'OpenGLForwardCompat  True
   , WindowHint'OpenGLProfile OpenGLProfile'Core
@@ -47,7 +47,7 @@ withGLContext settings action = do
    (\win -> destroyWindow win >> terminate)
    (const action)
 
-main = hspec $ around_ (withGLContext gl45Test) $ do
+main = withGLContext gl41Test (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ around_ (withGLContext gl41Test) $ do
   -- * Buffer generation
   describe "Buffer generation" $ do
     it "at least some buffers generatable" $ do
@@ -90,14 +90,8 @@ main = hspec $ around_ (withGLContext gl45Test) $ do
         bufferData ArrayBuffer $= (StaticDraw, [1, 2, 3, 5] :: [Int])
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
 
-      it "should fail to upload directly something to the 0-default buffer" $ do
-        bufferDataDirect def $= (StaticDraw, [1, 2, 3, 5] :: [Int])
-        errors >>= (`shouldSatisfy` (==[InvalidOperation]))
-
-    context "direct upload data to buffer" $ do
-      -- when gl_EXT_direct_state_access $ ...
-        -- ^ crashes 
-      when True $ it "is possible to direct upload" $ do
+    when dsa $ context "direct upload data to buffer" $ do
+      it "is possible to direct upload" $ do
         vao <- gen :: IO VertexArray
         buff <- gen :: IO (Buffer [Int])
 
@@ -110,6 +104,10 @@ main = hspec $ around_ (withGLContext gl45Test) $ do
         -- works even without bound buffer
         bufferDataDirect buff $= (StaticDraw, [1, 2, 3, 5] :: [Int])
         errors >>= (`shouldSatisfy` null)
+
+      it "should fail to upload directly something to the 0-default buffer" $ do
+        bufferDataDirect def $= (StaticDraw, [1, 2, 3, 5] :: [Int])
+        errors >>= (`shouldSatisfy` (==[InvalidOperation]))
 
   describe "Buffer download" $ do
     context "indirect buffer download data from buffer" $ do
@@ -136,7 +134,7 @@ main = hspec $ around_ (withGLContext gl45Test) $ do
         (get $ bufferData ArrayBuffer) `shouldReturn` (StaticDraw, vec)
         errors >>= (`shouldSatisfy` null)    
 
-    context "direct buffer download data from buffer" $ do
+    when dsa $ context "direct buffer download data from buffer" $ do
       
       it "is possible to retrieve the same list data from a buffer" $ do
         let xs = [1, 2, 3, 5] :: [Int]
