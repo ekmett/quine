@@ -6,47 +6,53 @@
 {-# LANGUAGE TupleSections #-}
 --------------------------------------------------------------------
 -- |
--- Copyright :  (c) 2014 Jan-Philip Loos
+-- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
 -- License   :  BSD2
--- Maintainer:  Jan-Philip Loos <jloos@maxdaten.io>
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
 -- Stability :  experimental
 -- Portability: non-portable
 --
--- OpenGL Doc: https://www.opengl.org/sdk/docs/man/html/glBindBuffer.xhtml
+-- OpenGL Doc: <https://www.opengl.org/sdk/docs/man/html/glBindBuffer.xhtml>
 --
 -- Also usable for bindless rendering:
--- https://www.opengl.org/discussion_boards/showthread.php/170388-Bindless-Stuff
+-- <https://www.opengl.org/discussion_boards/showthread.php/170388-Bindless-Stuff>
 --------------------------------------------------------------------
 module Quine.GL.Buffer
-  ( Buffer(..), boundBufferAt
+  ( Buffer(..)
+  , boundBufferAt
   -- * Buffer Data
-  , BufferData(..), bufferData
-  -- , directStateSupported -- ^ crashes
+  , BufferData(..)
+  , bufferData
   , bufferDataDirect
   -- * Buffer Targets
   , pattern ArrayBuffer
-  -- , pattern AtomicCounterBuffer
-  -- , pattern CopyReadBuffer
-  -- , pattern CopyWriteBuffer
-  -- , pattern DispatchIndirectBuffer
   , pattern DrawIndirectBuffer
   , pattern ElementArrayBuffer
   , pattern PixelPackBuffer
   , pattern PixelUnpackBuffer
+  , pattern TransformFeedbackBuffer
+  , pattern UniformBuffer
+  -- , pattern AtomicCounterBuffer
+  -- , pattern CopyReadBuffer
+  -- , pattern CopyWriteBuffer
+  -- , pattern DispatchIndirectBuffer
   -- , pattern QueryBuffer
   -- , pattern ShaderStorageBuffer
   -- , pattern TextureBuffer
-  , pattern TransformFeedbackBuffer
-  , pattern UniformBuffer
+
   -- * Buffer Usage
+  , BufferUsage
+  -- * Usage Types
+  -- $usage
+  -- $stream
   , pattern StreamDraw
   , pattern StreamRead
   , pattern StreamCopy
+  -- $static
   , pattern StaticDraw
   , pattern StaticRead
   , pattern StaticCopy
-
-  , BufferUsage
+  -- $dynamic
   , pattern DynamicDraw
   , pattern DynamicRead
   , pattern DynamicCopy
@@ -66,20 +72,20 @@ import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
--- import Graphics.GL.Core45 -- direct state access
--- import Graphics.GL.Ext.ARB.DirectStateAccess -- currently not supported by inv
 import Graphics.GL.Core41
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
 import Quine.GL.Object
 
--- | A @'Buffer' is the generic OpenGL storage object for multiple possible kind of data
+-- | A 'Buffer' is the generic OpenGL storage object for multiple possible kind of data
 --
 -- For ArrayBuffer it storages vertex attributes like position, normal or color an provides
 -- the MD (Multiple Data) in SIMD (Single Instruction, Multiple Data)
 newtype Buffer a = Buffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
-newtype BufferTarget = BufferTarget (GLenum, GLenum) deriving (Typeable,Data,Generic)
+
+data BufferTarget = BufferTarget GLenum GLenum deriving (Typeable,Data,Generic)
+
 newtype BufferUsage = BufferUsage GLenum deriving (Eq,Num,Show,Typeable,Data,Generic)
 
 data BufferException = BufferException String deriving (Show,Typeable)
@@ -103,19 +109,17 @@ instance Default (Buffer a) where
 
 -- * Buffer Data
 
--- | i bet there is already a package with
+-- | I bet there is already a package with
 class BufferData a where
     -- | perfom a monadic action with the pointer to the raw content and the size of it in bytes
     withRawData :: a -> (Int -> Ptr () -> IO ()) -> IO ()
     fromRawData :: Int -> Ptr () -> IO a
-
 
 instance Storable a => BufferData (V.Vector a) where
     withRawData v m = V.unsafeWith v $ m (sizeOf (undefined::a) * V.length v) . castPtr
     fromRawData bytes ptr = do
       fp <- newForeignPtr_ $ castPtr ptr
       return $ V.unsafeFromForeignPtr fp 0 (bytes `div` sizeOf (undefined::a))
-
 
 instance Storable a => BufferData [a] where
     withRawData v m = withArrayLen v $ \n -> m (n * sizeOf (undefined::a)) . castPtr
@@ -124,19 +128,17 @@ instance Storable a => BufferData [a] where
 -- * Buffer Access
 
 boundBufferAt :: BufferTarget -> StateVar (Buffer a)
-boundBufferAt (BufferTarget (target, binding)) = StateVar g s where
+boundBufferAt (BufferTarget target binding) = StateVar g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
     return $ Buffer (fromIntegral i)
   s = glBindBuffer target . coerce
 
-
 -- | bindless uploading data to the argumented buffer (since OpenGL 4.5)
 bufferDataDirect :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
 bufferDataDirect (Buffer i)
-  | directStateSupported = StateVar g s
-  | otherwise = throw $ BufferException "gl_EXT_direct_state_access unsported" where
-
+  | gl_EXT_direct_state_access = StateVar g s
+  | otherwise = throw $ BufferException "gl_EXT_direct_state_access unsupported" where
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
         glGetNamedBufferParameterivEXT i GL_BUFFER_SIZE sizePtr
@@ -150,7 +152,7 @@ bufferDataDirect (Buffer i)
 
 
 bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
-bufferData (BufferTarget (t, _)) = StateVar g s where
+bufferData (BufferTarget t _) = StateVar g s where
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
         glGetBufferParameteriv t GL_BUFFER_SIZE sizePtr
@@ -162,59 +164,62 @@ bufferData (BufferTarget (t, _)) = StateVar g s where
           (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
   s (u,v) = withRawData v $ \size ptr -> glBufferData t (fromIntegral size) ptr (coerce u)
 
---{--
-directStateSupported :: Bool
-directStateSupported = gl_EXT_direct_state_access -- || gl_ARB_direct_state_access
-{-# NOINLINE directStateSupported #-}
---}
-
 -- * Buffer Types
 
 -- | Vertex attributes
-pattern ArrayBuffer = BufferTarget (GL_ARRAY_BUFFER, GL_ARRAY_BUFFER_BINDING)
--- | Atomic counter storage
--- pattern AtomicCounterBuffer = BufferTarget (GL_ATOMIC_COUNTER_BUFFER, GL_ATOMIC_COUNTER_BUFFER_BINDING)
--- | Buffer copy source
--- pattern CopyReadBuffer = BufferTarget (GL_COPY_READ_BUFFER, GL_COPY_READ_BUFFER_BINDING)
--- | Buffer copy destination
--- pattern CopyWriteBuffer = BufferTarget (GL_COPY_WRITE_BUFFER, GL_COPY_WRITE_BUFFER_BINDING)
--- | Indirect compute dispatch commands
--- pattern DispatchIndirectBuffer = BufferTarget (GL_DISPATCH_INDIRECT_BUFFER, GL_DISPATCH_INDIRECT_BUFFER_BINDING)
+pattern ArrayBuffer = BufferTarget GL_ARRAY_BUFFER GL_ARRAY_BUFFER_BINDING
 -- | Indirect command arguments
-pattern DrawIndirectBuffer = BufferTarget (GL_DRAW_INDIRECT_BUFFER, GL_DRAW_INDIRECT_BUFFER_BINDING)
+pattern DrawIndirectBuffer = BufferTarget GL_DRAW_INDIRECT_BUFFER GL_DRAW_INDIRECT_BUFFER_BINDING
 -- | Vertex array indices
-pattern ElementArrayBuffer = BufferTarget (GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER_BINDING)
+pattern ElementArrayBuffer = BufferTarget GL_ELEMENT_ARRAY_BUFFER GL_ELEMENT_ARRAY_BUFFER_BINDING
 -- | Pixel read target
-pattern PixelPackBuffer = BufferTarget (GL_PIXEL_PACK_BUFFER, GL_PIXEL_PACK_BUFFER_BINDING)
+pattern PixelPackBuffer = BufferTarget GL_PIXEL_PACK_BUFFER GL_PIXEL_PACK_BUFFER_BINDING
 -- | Texture data source
-pattern PixelUnpackBuffer = BufferTarget (GL_PIXEL_UNPACK_BUFFER, GL_PIXEL_UNPACK_BUFFER_BINDING)
--- | Query result buffer
--- pattern QueryBuffer = BufferTarget (GL_QUERY_BUFFER, GL_QUERY_BUFFER_BINDING)
--- | Read-write storage for shaders
--- pattern ShaderStorageBuffer = BufferTarget (GL_SHADER_STORAGE_BUFFER, GL_SHADER_STORAGE_BUFFER_BINDING)
--- | Texture data buffer
--- pattern TextureBuffer = BufferTarget (GL_TEXTURE_BUFFER, GL_TEXTURE_BUFFER_BINDING)
+pattern PixelUnpackBuffer = BufferTarget GL_PIXEL_UNPACK_BUFFER GL_PIXEL_UNPACK_BUFFER_BINDING
 -- | Transform feedback buffer
-pattern TransformFeedbackBuffer = BufferTarget (GL_TRANSFORM_FEEDBACK_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER_BINDING)
+pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_TRANSFORM_FEEDBACK_BUFFER_BINDING
 -- | Uniform block storage
-pattern UniformBuffer = BufferTarget (GL_UNIFORM_BUFFER, GL_UNIFORM_BUFFER_BINDING)
+pattern UniformBuffer = BufferTarget GL_UNIFORM_BUFFER GL_UNIFORM_BUFFER_BINDING
 
+-- | Atomic counter storage
+-- pattern AtomicCounterBuffer = BufferTarget GL_ATOMIC_COUNTER_BUFFER GL_ATOMIC_COUNTER_BUFFER_BINDING
+-- | Buffer copy source
+-- pattern CopyReadBuffer = BufferTarget GL_COPY_READ_BUFFER GL_COPY_READ_BUFFER_BINDING
+-- | Buffer copy destination
+-- pattern CopyWriteBuffer = BufferTarget GL_COPY_WRITE_BUFFER GL_COPY_WRITE_BUFFER_BINDING
+-- | Indirect compute dispatch commands
+-- pattern DispatchIndirectBuffer = BufferTarget GL_DISPATCH_INDIRECT_BUFFER GL_DISPATCH_INDIRECT_BUFFER_BINDING
+-- | Query result buffer
+-- pattern QueryBuffer = BufferTarget GL_QUERY_BUFFER GL_QUERY_BUFFER_BINDING
+-- | Read-write storage for shaders
+-- pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
+-- | Texture data buffer
+-- pattern TextureBuffer = BufferTarget GL_TEXTURE_BUFFER GL_TEXTURE_BUFFER_BINDING
 
--- * Usage Types
+-- * Usage
 
--- | Draw: The data store contents are modified by the application, and used as the source for GL drawing and image specification commands.
--- Read: The data store contents are modified by reading data from the GL, and used to return that data when queried by the application.
--- Copy: The data store contents are modified by reading data from the GL, and used as the source for GL drawing and image specification commands.
+-- $usage
+--
+-- Terminology:
+--
+-- [Stream] The data store contents will be modified once and used at most a few times.
+--
+-- [Static] The data store contents will be modified once and used many times.
+--
+-- [Dynamic] The data store contents will be modified repeatedly and used many times.
+--
+-- [Draw] The data store contents are modified by the application, and used as the source for GL drawing and image specification commands.
+--
+-- [Read] The data store contents are modified by reading data from the GL, and used to return that data when queried by the application.
+--
+-- [Copy] The data store contents are modified by reading data from the GL, and used as the source for GL drawing and image specification commands.
 
--- | The data store contents will be modified once and used at most a few times.
-pattern StreamDraw = GL_STREAM_DRAW
-pattern StreamRead = GL_STREAM_READ
-pattern StreamCopy = GL_STREAM_COPY
--- | The data store contents will be modified once and used many times.
-pattern StaticDraw = GL_STATIC_DRAW
-pattern StaticRead = GL_STATIC_READ
-pattern StaticCopy = GL_STATIC_COPY
--- | The data store contents will be modified repeatedly and used many times.
-pattern DynamicDraw = GL_DYNAMIC_DRAW
-pattern DynamicRead = GL_DYNAMIC_READ
-pattern DynamicCopy = GL_DYNAMIC_COPY
+pattern StreamDraw = BufferUsage GL_STREAM_DRAW
+pattern StreamRead = BufferUsage GL_STREAM_READ
+pattern StreamCopy = BufferUsage GL_STREAM_COPY
+pattern StaticDraw = BufferUsage GL_STATIC_DRAW
+pattern StaticRead = BufferUsage GL_STATIC_READ
+pattern StaticCopy = BufferUsage GL_STATIC_COPY
+pattern DynamicDraw = BufferUsage GL_DYNAMIC_DRAW
+pattern DynamicRead = BufferUsage GL_DYNAMIC_READ
+pattern DynamicCopy = BufferUsage GL_DYNAMIC_COPY
