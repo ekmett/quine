@@ -1,6 +1,7 @@
 #version 410 core
 
 #extension GL_ARB_shading_language_include : require
+
 #include "camera.h"
 #include "box.h"
 
