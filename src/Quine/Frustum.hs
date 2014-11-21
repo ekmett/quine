@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Quine.Frustum
   ( Frustum(..)
+  , HasFrustum(..)
   , OverlapsFrustum(..)
  -- , buildFrustum
   ) where
@@ -13,15 +15,17 @@ import Data.Data
 import Data.Vector -- .Storable
 import Data.Word
 import GHC.Generics
-import Linear
+import Linear hiding (frustum)
 import Prelude hiding (any, all)
 import Quine.Bounding.Box
 import Quine.Bounding.Sphere
 import Quine.GL.Types
 import Quine.Plane
 
-data Frustum = Frustum { frustumPlanes :: Vector Plane, frustumPoints :: Vector Vec3 }
+data Frustum = Frustum { _frustumPlanes :: Vector Plane, _frustumPoints :: Vector Vec3 }
   deriving (Show,Eq,Ord,Generic,Typeable,Data)
+
+makeClassy ''Frustum
 
 {-
 -- | @buildFrustum origin direction nearZ farZ fovy aspectRatio@
@@ -48,7 +52,6 @@ class OverlapsFrustum a where
 instance OverlapsFrustum Box where
   overlapsFrustum = flip overlapsBox
 
--- | In theory a sphere _could_ be large enough to pull the same stunt as a box 
 instance OverlapsSphere Frustum where
   overlapsSphere (Frustum ps _) (Sphere c r)
     = all (\p -> signedDistance p c + r >= 0) ps
