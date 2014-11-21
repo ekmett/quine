@@ -9,6 +9,7 @@ matrix:
     - env: GHCVER=head
 
 before_install:
+  - travis_retry sudo apt-get install sdllib sdllib-dev
   # If $GHCVER is the one travis has, don't bother reinstalling it.
   # We can also have faster builds by installing some libraries with
   # `apt`. If it isn't, install the GHC we want from hvr's PPA along
