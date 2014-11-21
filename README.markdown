@@ -8,19 +8,19 @@ I reserve the right to get bored and go do something else that actually makes mo
 A couple of shader toys:
 
 ```
-$ quine -F shaders/generators.frag
+$ quine -F shaders/examples/generators.frag
 ```
 
 ![screenshot of generators](https://raw.githubusercontent.com/wiki/ekmett/quine/generators.png)
 
 ```
-$ quine -F shaders/dodecahedron.frag
+$ quine -F shaders/examples/dodecahedron.frag
 ```
 
 ![screenshot of a dodecahedron](https://raw.githubusercontent.com/wiki/ekmett/quine/dodecahedron.png)
 
 ```
-$ quine -F shaders/chains.frag
+$ quine -F shaders/examples/chains.frag
 ```
 
 ![screenshot of chains](https://raw.githubusercontent.com/wiki/ekmett/quine/chains.png)
