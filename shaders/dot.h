@@ -1,6 +1,8 @@
 #ifndef INCLUDED_DOT_H
 #define INCLUDED_DOT_H
 
+#include "sum.h"
+
 // For some reason the standard dot only works on genType and genDType,
 // it should really also support genIType.
 

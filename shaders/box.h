@@ -3,29 +3,34 @@
 
 #include "sphere.h"
 
-struct box {
+struct Box {
   vec3 lo, hi;
 };
 
-bool overlaps(box a, box b) {
+bool overlaps(Box a, Box b) {
   return all(lessThanEqual(a.lo,b.hi))
       && all(lessThanEqual(b.lo,b.hi));
 }
 
-box bound(box a, box b) {
-  return box(min(a.lo,b.lo),max(a.hi,b.hi));
+Box bound(Box a, Box b) {
+  return Box(min(a.lo,b.lo),max(a.hi,b.hi));
 }
 
-box bound(box a, vec3 b) {
-  return box(min(a.lo,b),max(a.hi,b));
+Box bound(Box a, vec3 b) {
+  return Box(min(a.lo,b),max(a.hi,b));
 }
 
-vec3 position(box a) {
+vec3 position(Box a) {
   return (a.lo+a.hi)/2;
 }
 
-sphere tosphere(box a) {
-  return tosphere(0.5*(a.lo+a.hi),0.5*length(a.hi-a.lo));
+Sphere sphere(Box a) {
+  return sphere(0.5*(a.lo+a.hi),0.5*length(a.hi-a.lo));
+}
+
+Box box(Sphere a) {
+  vec3 d = vec3(a.s.w);
+  return Box(a.s.xyz-d,a.s.xyz+d);
 }
 
 #endif
