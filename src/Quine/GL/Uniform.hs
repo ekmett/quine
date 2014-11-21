@@ -14,7 +14,7 @@
 --
 --------------------------------------------------------------------
 module Quine.GL.Uniform
-  ( 
+  (
   -- * Uniform Locations
     UniformLocation
   , uniformLocation
@@ -22,7 +22,14 @@ module Quine.GL.Uniform
   , uniformMat4
   -- * Program Uniforms
   -- $programUniform
-  , ProgramUniform(..)
+  , programUniform1f
+  , programUniform2f
+  , programUniform3f
+  , programUniform4f
+  , programUniform1d
+  , programUniform2d
+  , programUniform3d
+  , programUniform4d
   -- * Uniform Types
   , UniformType
   , showUniformType
@@ -65,7 +72,7 @@ uniformMatrices
   => (GLint -> GLsizei -> GLboolean -> Ptr x -> IO ())
   -> (GLint -> GLsizei -> GLboolean -> Ptr y -> IO ())
   -> UniformLocation -> f (g (h a)) -> m ()
-uniformMatrices rowMajor columnMajor loc xs 
+uniformMatrices rowMajor columnMajor loc xs
   | canTranspose = liftIO $ withArrayLen (              toList xs) $ \n p -> rowMajor    loc (fromIntegral n) GL_TRUE  (castPtr p)
   | otherwise    = liftIO $ withArrayLen (transpose <$> toList xs) $ \n p -> columnMajor loc (fromIntegral n) GL_FALSE (castPtr p)
 
@@ -89,28 +96,45 @@ uniformMat4 l = uniformMat4s l . Id
 -- and so we have fewer state changes, and nicely these can make a full
 -- 'StateVar'.
 
-class ProgramUniform a where
-  programUniform :: Program -> UniformLocation -> StateVar a
+programUniform1f :: Program -> UniformLocation -> StateVar Float
+programUniform1f p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+  s = glProgramUniform1f (coerce p) (coerce l)
 
-instance ProgramUniform Float where
-  programUniform p l = StateVar g s where
-    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
-    s = glProgramUniform1f (coerce p) (coerce l) 
+programUniform2f :: Program -> UniformLocation -> StateVar (V2 Float)
+programUniform2f p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+  s (V2 a b) = glProgramUniform2f (coerce p) (coerce l) a b
 
-instance ProgramUniform (V2 Float) where
-  programUniform p l = StateVar g s where
-    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
-    s (V2 a b) = glProgramUniform2f (coerce p) (coerce l) a b
+programUniform3f :: Program -> UniformLocation -> StateVar (V3 Float)
+programUniform3f p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+  s (V3 a b c) = glProgramUniform3f (coerce p) (coerce l) a b c
 
-instance ProgramUniform (V3 Float) where
-  programUniform p l = StateVar g s where
-    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
-    s (V3 a b c) = glProgramUniform3f (coerce p) (coerce l) a b c
+programUniform4f :: Program -> UniformLocation -> StateVar (V4 Float)
+programUniform4f p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
+  s (V4 a b c d) = glProgramUniform4f (coerce p) (coerce l) a b c d
 
-instance ProgramUniform (V4 Float) where
-  programUniform p l = StateVar g s where
-    g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
-    s (V4 a b c d) = glProgramUniform4f (coerce p) (coerce l) a b c d
+programUniform1d :: Program -> UniformLocation -> StateVar Double
+programUniform1d p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformdv (coerce p) (coerce l) . castPtr <*> peek
+  s = glProgramUniform1d (coerce p) (coerce l)
+
+programUniform2d :: Program -> UniformLocation -> StateVar (V2 Double)
+programUniform2d p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformdv (coerce p) (coerce l) . castPtr <*> peek
+  s (V2 a b) = glProgramUniform2d (coerce p) (coerce l) a b
+
+programUniform3d :: Program -> UniformLocation -> StateVar (V3 Double)
+programUniform3d p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformdv (coerce p) (coerce l) . castPtr <*> peek
+  s (V3 a b c) = glProgramUniform3d (coerce p) (coerce l) a b c
+
+programUniform4d :: Program -> UniformLocation -> StateVar (V4 Double)
+programUniform4d p l = StateVar g s where
+  g = alloca $ (>>) <$> glGetUniformdv (coerce p) (coerce l) . castPtr <*> peek
+  s (V4 a b c d) = glProgramUniform4d (coerce p) (coerce l) a b c d
 
 --------------------------------------------------------------------------------
 -- * Uniform Type

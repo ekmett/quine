@@ -160,19 +160,19 @@ core = do
   sceneShader  <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link [screenShader,geomShader,sceneShader]
   emptyVAO <- gen
-  iResolution   <- uniformLocation scn "iResolution"
-  iGlobalTime   <- uniformLocation scn "iGlobalTime"
-  iPerspective  <- uniformLocation scn "iPerspective"
-  iPhysicsAlpha <- uniformLocation scn "iPhysicsAlpha"
-  iView         <- uniformLocation scn "iView"
-  iInverseView  <- uniformLocation scn "iInverseView"
-  iCamera       <- programUniform scn `liftM` uniformLocation scn "iCamera" -- yaw, pitch, fovy
+  iResolution        <- programUniform2f scn `liftM` uniformLocation scn "iResolution"
+  iGlobalTime        <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iGlobalTime"
+  iPhysicsAlpha      <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iPhysicsAlpha"
+  iCamera            <- programUniform3f scn `liftM` uniformLocation scn "iCamera" -- yaw, pitch, fovy
+  iProjection        <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iInverseProjection <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iView              <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iView"
+  iInverseView       <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iInverseView"
   throwErrors
   currentProgram   $= scn
   boundVertexArray $= emptyVAO
   forever $ do 
-    (alpha,t) <- simulate $ do
-      poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+    (alpha,t) <- simulate $ poll $ \e -> handleDisplayEvent e >> handleInputEvent e
     displayMeter %= tick t
     
     displayFPS <- uses displayMeter fps 
@@ -189,17 +189,17 @@ core = do
       (w,h) <- use displayWindowSize
       let wf = fromIntegral w
           hf = fromIntegral h
-      glUniform2f iResolution wf hf
-
       c <- use camera
-      uniformMat4 iPerspective $ perspective (c^.fovy) (wf/hf) (c^.nearZ) (c^.farZ)
       let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
-      uniformMat4 iView $ m33_to_m44 $ fromQuaternion cameraQuat
       let inverseCameraQuat = axisAngle (V3 0 1 0) (-c^.yaw) * axisAngle (V3 1 0 0) (-c^.pitch)
-      uniformMat4 iInverseView $ m33_to_m44 $ fromQuaternion inverseCameraQuat
-      iCamera $= V3 (c^.yaw) (c^.pitch) (c^.fovy)
-      glUniform1f iGlobalTime (realToFrac t)
-      glUniform1f iPhysicsAlpha (realToFrac alpha)
+      iResolution        $= V2 wf hf
+      iProjection        $= perspective (c^.fovy) (wf/hf) (c^.nearZ) (c^.farZ)
+      iInverseProjection $= inversePerspective (c^.fovy) (wf/hf) (c^.nearZ) (c^.farZ)
+      iView              $= m33_to_m44 (fromQuaternion cameraQuat)
+      iInverseView       $= m33_to_m44 (fromQuaternion inverseCameraQuat)
+      iCamera            $= V3 (c^.yaw) (c^.pitch) (c^.fovy)
+      iGlobalTime        $= t
+      iPhysicsAlpha      $= alpha
       glDrawArrays GL_TRIANGLES 0 3
 
 render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
