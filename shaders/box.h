@@ -33,4 +33,17 @@ Box box(Sphere a) {
   return Box(a.data.xyz-d,a.data.xyz+d);
 }
 
+vec3[8] vertices(Box a) {
+  return vec3[8](
+     vec3(a.lo.x,a.lo.y,a.lo.z),
+     vec3(a.lo.x,a.lo.y,a.hi.z),
+     vec3(a.lo.x,a.hi.y,a.lo.z),
+     vec3(a.lo.x,a.hi.y,a.hi.z),
+     vec3(a.hi.x,a.lo.y,a.lo.z),
+     vec3(a.hi.x,a.lo.y,a.hi.z),
+     vec3(a.hi.x,a.hi.y,a.lo.z),
+     vec3(a.hi.x,a.hi.y,a.hi.z)
+  );
+}
+
 #endif
