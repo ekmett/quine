@@ -19,7 +19,7 @@ bool overlaps(Frustum a, Box b) {
 
   // check frustum outside/inside box
   ivec3 c = ivec3(0), d = ivec3(0), e = ivec3(8);
-  for( int i=0; i<8; ++i ) {
+  for (int i=0;i<8;++i) {
     vec3 p = a.point[i];
     c += ivec3(greaterThan(p,b.hi));
     d += ivec3(lessThan(p,b.lo));
