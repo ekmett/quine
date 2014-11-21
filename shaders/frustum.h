@@ -22,7 +22,7 @@ bool overlaps(Frustum a, Box b) {
   for( int i=0; i<8; ++i ) {
     vec3 p = a.point[i];
     c += ivec3(greaterThan(p,b.hi));
-    d += ivec3(lessThan(p,b.lo));   
+    d += ivec3(lessThan(p,b.lo));
   }
   return all(notEqual(c,e)) && all(notEqual(d,e));
 }
