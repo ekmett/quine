@@ -29,8 +29,8 @@ Sphere sphere(Box a) {
 }
 
 Box box(Sphere a) {
-  vec3 d = vec3(a.s.w);
-  return Box(a.s.xyz-d,a.s.xyz+d);
+  vec3 d = vec3(a.data.w);
+  return Box(a.data.xyz-d,a.data.xyz+d);
 }
 
 #endif
