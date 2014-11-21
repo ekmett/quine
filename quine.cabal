@@ -60,6 +60,7 @@ library
     Quine.Display
     Quine.Env
     Quine.Exception
+    Quine.Frustum
     Quine.GL
     Quine.GL.Buffer
     Quine.GL.Error
