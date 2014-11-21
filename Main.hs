@@ -166,7 +166,7 @@ core = do
   iPhysicsAlpha <- uniformLocation scn "iPhysicsAlpha"
   iView         <- uniformLocation scn "iView"
   iInverseView  <- uniformLocation scn "iInverseView"
-  iCamera       <- uniformLocation scn "iCamera" -- yaw, pitch, fovy
+  iCamera       <- programUniform scn `liftM` uniformLocation scn "iCamera" -- yaw, pitch, fovy
   throwErrors
   currentProgram   $= scn
   boundVertexArray $= emptyVAO
@@ -197,7 +197,7 @@ core = do
       uniformMat4 iView $ m33_to_m44 $ fromQuaternion cameraQuat
       let inverseCameraQuat = axisAngle (V3 0 1 0) (-c^.yaw) * axisAngle (V3 1 0 0) (-c^.pitch)
       uniformMat4 iInverseView $ m33_to_m44 $ fromQuaternion inverseCameraQuat
-      glUniform3f iCamera (c^.yaw) (c^.pitch) (c^.fovy)
+      iCamera $= V3 (c^.yaw) (c^.pitch) (c^.fovy)
       glUniform1f iGlobalTime (realToFrac t)
       glUniform1f iPhysicsAlpha (realToFrac alpha)
       glDrawArrays GL_TRIANGLES 0 3
