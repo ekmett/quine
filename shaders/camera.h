@@ -5,8 +5,7 @@
 
 struct camera {
   frustum frustum;
-  mat44 projection, inverseProjection;
-  mat44 modelView, inverseModelView;
+  mat4 projection, inverseProjection, modelView, inverseModelView;
 };
 
 #endif
