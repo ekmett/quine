@@ -1,5 +1,8 @@
 #version 410 core
 
+#extension GL_ARB_shading_language_include : require
+#include "box.h"
+
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 uniform vec4 iMouse = vec4(0.);
