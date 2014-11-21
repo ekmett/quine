@@ -20,11 +20,17 @@ float sum(vec4 a) {
 
 int sum(ivec2 a) { return a.x + a.y; }
 int sum(ivec3 a) { return a.x + a.y + a.z; }
-int sum(ivec4 a) { return a.x + a.y + a.z + a.w; }
+int sum(ivec4 a) {
+  ivec2 b = a.xy + a.zw;
+  return b.x + b.y;
+}
 
 uint sum(uvec2 a) { return a.x + a.y; }
 uint sum(uvec3 a) { return a.x + a.y + a.z; }
-uint sum(uvec4 a) { return a.x + a.y + a.z + a.w; }
+uint sum(uvec4 a) {
+  uvec2 b = a.xy + a.zw;
+  return b.x + b.y;
+}
 
 #ifdef GL_ARB_gpu_shader_fp64
 double sum(dvec2 a) {
@@ -38,7 +44,7 @@ double sum(dvec3 a) {
 }
 
 double sum(dvec4 a) {
-  const dvec4 ones = dvec4(1.0);
+  dvec4 ones = dvec4(1.0);
   return dot(a,ones);
 }
 #endif
