@@ -79,4 +79,6 @@ Contributions and bug reports are welcome!
 
 Please feel free to contact me through github or on the #haskell and #haskell-game IRC channels on irc.freenode.net.
 
+Build bot spam from this project goes to #haskell-lens.
+
 -Edward Kmett
