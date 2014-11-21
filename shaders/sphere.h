@@ -12,8 +12,8 @@ bool overlaps(Sphere a, Sphere b) {
   return quadrance(a.data.xyz-b.data.xyz) < square(a.data.w+b.data.w);
 }
 
-vec4 position(Sphere a) {
-  return vec4(a.data.xyz,1.0);
+vec3 position(Sphere a) {
+  return a.data.xyz;
 }
 
 float radius(Sphere a) {
