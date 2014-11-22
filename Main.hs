@@ -156,9 +156,8 @@ core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, H
 core = do
   liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
   screenShader <- compile GL_VERTEX_SHADER   "shaders/screen.vert"
-  geomShader   <- compile GL_GEOMETRY_SHADER "shaders/simple.geom"
   sceneShader  <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
-  scn <- link [screenShader,geomShader,sceneShader]
+  scn <- link [screenShader,sceneShader]
   emptyVAO <- gen
   iResolution        <- programUniform2f scn `liftM` uniformLocation scn "iResolution"
   iGlobalTime        <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iGlobalTime"
