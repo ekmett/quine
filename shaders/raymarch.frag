@@ -51,9 +51,12 @@ void main() {
   float z = -t * dot(eyeDirection.xyz, fwd);
 
   // convert to normalized device coordinates
-  float ndcDepth = ((cam.far+cam.near) + (2.0*cam.far*cam.near)/z)/(cam.far-cam.near);
+  float ndcz = ((cam.far + cam.near) + (2.0*cam.far*cam.near)/z)
+             /  (cam.far - cam.near);
 
   // scribble something into the color buffer
-  fragColor = vec4(eyeDeviceCoord.xy,z,1.0);
-  gl_FragDepth =((gl_DepthRange.diff * ndcDepth) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
+  fragColor = vec4(eyeDeviceCoord.xy,0.5*(ndcz+1.0),1.0);
+
+  // map onto gl_DepthRange
+  gl_FragDepth = 0.5 * (gl_DepthRange.diff * ndcz + gl_DepthRange.near + gl_DepthRange.far);
 }
