@@ -1,6 +1,7 @@
 #ifndef INCLUDED_GEOMETRY_BEAM_H
 #define INCLUDED_GEOMETRY_BEAM_H
 
+#include "math/projective.h"
 #include "geometry/sphere.h"
 #include "geometry/ray.h"
 
@@ -12,6 +13,11 @@ struct Beam {
 
 Beam beam(vec4 origin, vec4 dir) {
   return Beam(origin, dir, vec3(1.0)/dir.xyz);
+}
+
+Beam beam(vec3 origin, vec4 dir) {
+  // not a vector, but 0 radius at origin
+  return Beam(vector(origin), dir, vec3(1.0)/dir.xyz);
 }
 
 // Build a beam that starts at 'a' and goes to be growing/shrinking linearly to match 'b' whenever it gets
