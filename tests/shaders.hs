@@ -1,4 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- This attempts to compile all of the shaders in the shaders/
+-- directory as a basic sanity check.
+--------------------------------------------------------------------
 module Main where
 
 import Control.Exception
