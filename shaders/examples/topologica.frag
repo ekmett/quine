@@ -49,7 +49,7 @@ float noise2dT(vec2 uv)
     vec2 smoothed = fr*fr*(3.0-2.0*fr);
     vec2 fl = floor(uv);
     uv = smoothed + fl;
-    return texture(iChannel0, (uv + 0.5)/iChannelResolution[0].xy).y;	// use constant here instead?
+    return texture(iChannel0, (uv + 0.5)/iChannelResolution[0].xy).y;    // use constant here instead?
 }
 float noise(vec3 uv)
 {
@@ -73,15 +73,15 @@ float PI=3.14159265;
 
 vec3 saturate(vec3 a)
 {
-	return clamp(a, 0.0, 1.0);
+    return clamp(a, 0.0, 1.0);
 }
 vec2 saturate(vec2 a)
 {
-	return clamp(a, 0.0, 1.0);
+    return clamp(a, 0.0, 1.0);
 }
 float saturate(float a)
 {
-	return clamp(a, 0.0, 1.0);
+    return clamp(a, 0.0, 1.0);
 }
 
 float Density(vec3 p)
@@ -99,51 +99,51 @@ float Density(vec3 p)
 
 void main(void)
 {
-	// ---------------- First, set up the camera rays for ray marching ----------------
-	vec2 uv = gl_FragCoord.xy/iResolution.xy * 2.0 - 1.0;// - 0.5;
+    // ---------------- First, set up the camera rays for ray marching ----------------
+    vec2 uv = gl_FragCoord.xy/iResolution.xy * 2.0 - 1.0;// - 0.5;
 
-	// Camera up vector.
-	vec3 camUp=vec3(0,1,0); // vuv
+    // Camera up vector.
+    vec3 camUp=vec3(0,1,0); // vuv
 
-	// Camera lookat.
-	vec3 camLookat=vec3(0,0.0,0);	// vrp
+    // Camera lookat.
+    vec3 camLookat=vec3(0,0.0,0);    // vrp
 
-	float mx=iMouse.x/iResolution.x*PI*2.0 + iGlobalTime * 0.01;
-	float my=-iMouse.y/iResolution.y*10.0 + sin(iGlobalTime * 0.03)*0.2+0.2;//*PI/2.01;
-	vec3 camPos=vec3(cos(my)*cos(mx),sin(my),cos(my)*sin(mx))*(200.2); 	// prp
+    float mx=iMouse.x/iResolution.x*PI*2.0 + iGlobalTime * 0.01;
+    float my=-iMouse.y/iResolution.y*10.0 + sin(iGlobalTime * 0.03)*0.2+0.2;//*PI/2.01;
+    vec3 camPos=vec3(cos(my)*cos(mx),sin(my),cos(my)*sin(mx))*(200.2);     // prp
 
-	// Camera setup.
-	vec3 camVec=normalize(camLookat - camPos);//vpn
-	vec3 sideNorm=normalize(cross(camUp, camVec));	// u
-	vec3 upNorm=cross(camVec, sideNorm);//v
-	vec3 worldFacing=(camPos + camVec);//vcv
-	vec3 worldPix = worldFacing + uv.x * sideNorm * (iResolution.x/iResolution.y) + uv.y * upNorm;//scrCoord
-	vec3 relVec = normalize(worldPix - camPos);//scp
+    // Camera setup.
+    vec3 camVec=normalize(camLookat - camPos);//vpn
+    vec3 sideNorm=normalize(cross(camUp, camVec));    // u
+    vec3 upNorm=cross(camVec, sideNorm);//v
+    vec3 worldFacing=(camPos + camVec);//vcv
+    vec3 worldPix = worldFacing + uv.x * sideNorm * (iResolution.x/iResolution.y) + uv.y * upNorm;//scrCoord
+    vec3 relVec = normalize(worldPix - camPos);//scp
 
-	// --------------------------------------------------------------------------------
-	float t = 0.0;
-	float inc = 0.02;
-	float maxDepth = 70.0;
-	vec3 pos = vec3(0,0,0);
+    // --------------------------------------------------------------------------------
+    float t = 0.0;
+    float inc = 0.02;
+    float maxDepth = 70.0;
+    vec3 pos = vec3(0,0,0);
     float density = 0.0;
-	// ray marching time
-    for (int i = 0; i < 37; i++)	// This is the count of how many times the ray actually marches.
+    // ray marching time
+    for (int i = 0; i < 37; i++)    // This is the count of how many times the ray actually marches.
     {
         if ((t > maxDepth)) break;
         pos = camPos + relVec * t;
         float temp = Density(pos);
         //temp *= saturate(t-1.0);
 
-        inc = 1.9 + temp*0.05;	// add temp because this makes it look extra crazy!
+        inc = 1.9 + temp*0.05;    // add temp because this makes it look extra crazy!
         density += temp * inc;
         t += inc;
     }
 
-	// --------------------------------------------------------------------------------
-	// Now that we have done our ray marching, let's put some color on this.
-	vec3 finalColor = vec3(0.01,0.1,1.0)* density*0.2;
+    // --------------------------------------------------------------------------------
+    // Now that we have done our ray marching, let's put some color on this.
+    vec3 finalColor = vec3(0.01,0.1,1.0)* density*0.2;
 
-	// output the final color with sqrt for "gamma correction"
-	color = vec4(sqrt(clamp(finalColor, 0.0, 1.0)),1.0);
+    // output the final color with sqrt for "gamma correction"
+    color = vec4(sqrt(clamp(finalColor, 0.0, 1.0)),1.0);
 }
 
