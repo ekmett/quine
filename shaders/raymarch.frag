@@ -35,8 +35,7 @@ float march(Beam r, float t_min, float t_max) {
 }
 
 void main() {
-  // beam for this pixel, TODO: dFdX for SoC?
-  Beam b = beam(ray(eyePosition.xyz, eyeDirection.xyz));
+  Beam b = beam(eyePosition.xyz, vec4(eyeDirection.xyz, fwidth(eyeDirection.xy)));
 
   // camera 
   Camera cam = viewportCamera[viewportIndex];
@@ -55,7 +54,7 @@ void main() {
              /  (cam.far - cam.near);
 
   // scribble something into the color buffer
-  fragColor = vec4(eyeDeviceCoord.xy,0.5*(ndcz+1.0),1.0);
+  fragColor = vec4(eyeDeviceCoord.xy,0.5*ndcz+0.5,1.0);
 
   // map onto gl_DepthRange
   gl_FragDepth = 0.5 * (gl_DepthRange.diff * ndcz + gl_DepthRange.near + gl_DepthRange.far);
