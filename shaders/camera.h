@@ -6,6 +6,7 @@
 struct Camera {
   Frustum Frustum;
   mat4 projection, inverseProjection, modelView, inverseModelView;
+  float fovy, aspectRatio, near, far;
 };
 
 #endif

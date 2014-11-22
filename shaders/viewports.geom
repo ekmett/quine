@@ -18,12 +18,19 @@ layout (triangle_strip, max_vertices = 3) out;
 void main() {
   if (gl_InvocationID <= viewportCount) {
     for (int i=0;i<3;++i) {
-      // Rendering worlds with two^H^H^Hone triangle
+      // Rendering worlds with two^H^H^Hone triangle (ok, one per viewport)
       float x = float((i & 1) << 2) - 1.0;
       float y = float((i & 2) << 1) - 1.0;
-      gl_Position = vec4(x,y,0.0,1.0);
-      gl_ViewportIndex = gl_InvocationID;
-      viewportIndex    = gl_InvocationID; // TODO: gl_ViewportIndex is available in the fragment shader in GL 4.3+
+      gl_Position = eyeDeviceCoord = vec4(x,y,0.0,1.0);
+
+      Camera cam = viewportCamera[gl_InvocationID];
+      float h = tan(cam.fovy/2);
+      mat3 v3 = mat3(cam.modelView);
+      eyePosition  = -(cam.modelView[3].xyz)*v3;
+      eyeDirection = vec3(x*h*cam.aspectRatio,y*h,-1.0)*v3;
+
+      // gl_ViewportIndex is only available in the fragment shader as of GL 4.3+
+      gl_ViewportIndex = viewportIndex = gl_InvocationID;
       EmitVertex();
     }
     EndPrimitive();
