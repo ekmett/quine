@@ -6,7 +6,7 @@
 #include "camera.h"
 
 // the maximum number of viewports we'll use
-const int MAX_VIEWPORTS = 16;
+#define MAX_VIEWPORTS 16
 
 //----------------------------------------------------------------------------
 // Uniforms

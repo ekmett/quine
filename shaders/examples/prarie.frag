@@ -3,7 +3,7 @@
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
 
-layout(location = FRAGMENT_COLOR) out vec4 color;
+out vec4 color;
 
 // Prairie by eiffie
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.

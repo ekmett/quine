@@ -1,8 +1,12 @@
 language: haskell
 
 env:
-  - GHCVER=7.8.3
-  - GHCVER=head
+  - > 
+    GHCVER=7.8.3
+    MODE="-f-test-shaders -f-test-buffers"
+  - >
+    GHCVER=head
+    MODE="-f-test-shaders -f-test-buffers"
 
 matrix:
   allow_failures:
@@ -46,8 +50,8 @@ before_install:
   # - sudo apt-get install libxxf86vm-dev
 
 install:
-  - $CABAL install --dependencies-only --enable-tests -f-test-gl
-  - $CABAL configure --enable-tests $MODE -f-test-gl
+  - $CABAL install --dependencies-only --enable-tests $MODE
+  - $CABAL configure --enable-tests $MODE
 
 script:
   - $CABAL build

@@ -41,7 +41,11 @@ flag embed
   default: False
   manual: True
 
-flag test-gl
+flag test-buffers
+  default: True
+  manual: True
+
+flag test-shaders
   default: True
   manual: True
 
@@ -155,12 +159,12 @@ executable quine
       time,
       transformers
 
-test-suite gltest
-  main-is: GLTests.hs
+test-suite test-buffers
+  main-is: buffers.hs
   default-language: Haskell2010
   type: exitcode-stdio-1.0
   hs-source-dirs: tests
-  if !flag(test-gl)
+  if !flag(test-buffers)
     buildable: False
   else
     ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
@@ -173,3 +177,21 @@ test-suite gltest
       hspec,
       quine,
       vector
+
+test-suite test-shaders
+  main-is: shaders.hs
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  if !flag(test-shaders)
+    buildable: False
+  else
+    ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+    build-depends:
+      base,
+      bytestring,
+      file-embed,
+      filepath,
+      gl,
+      sdl2,
+      quine
