@@ -6,9 +6,9 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
+-- Tests for `Quine.GL.Buffer`
 --------------------------------------------------------------------
 module Main where
-
 
 import Prelude hiding (sequence)
 import Test.Hspec
@@ -30,7 +30,6 @@ import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Graphics.GL.Internal.Shared
 
-
 gl41Test =
   [ WindowHint'Visible False
   , WindowHint'ClientAPI ClientAPI'OpenGL
@@ -41,7 +40,6 @@ gl41Test =
   , WindowHint'OpenGLProfile OpenGLProfile'Core
   , WindowHint'OpenGLDebugContext False
   ]
-
 
 withGLContext :: [WindowHint] -> IO a -> IO a
 withGLContext settings action = do
@@ -64,7 +62,6 @@ main = withGLContext gl41Test (evaluate gl_EXT_direct_state_access) >>= \dsa -> 
       buffs <- gens 1024
       length (buffs :: [Buffer ()]) `shouldBe` 1024
       throwErrors
-
 
     context "A name returned by glGenBuffers, but not yet associated with a buffer object by calling glBindBuffer, is not the name of a buffer object." $ do
       it "is generated but unbound" $ do
