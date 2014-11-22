@@ -12,10 +12,7 @@
 #include "viewports.h"
 
 // TODO: invocations lock us to GL 4.0, have vertex shader send us up to MAX_VIEWPORTS points instead?
-#if MAX_VIEWPORTS != 16
-#error viewport count must match invocations
-#endif
-layout (points, invocations = 16) in; 
+layout (points, invocations = MAX_VIEWPORTS) in; 
 layout (triangle_strip, max_vertices = 3) out;
 
 void main() {
