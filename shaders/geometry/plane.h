@@ -19,19 +19,26 @@ float distance(Plane p, vec3 q) { return dot(p.data, point(q)); }
 // returns the range of signed distances for an axis aligned bounding box to the plane
 //
 // intersection occurs if this range contains zero.
+//
+// Uses an idea from <http://rauwendaal.net/2012/06/15/glsl-sign-function/> to abuse `step`
+// as a "binary" `sign`, but vectorizes it and switches it to (0,1) from (-1,1), letting us
+// use it to `mix`
 vec2 distance(Plane a, Box b) {
-  bvec3 m = greaterThan(normal(a),vec3(0.));
-  return vec2(distance(a,mix(b.hi,b.lo,m)), distance(a,mix(b.lo,b.hi,m)));
+  vec3 m = step(0,normal(a)); // elementwise 0 of x < 0, 1 if x >= 0
+  return vec2(
+    distance(a,mix(b.hi,b.lo,m)),
+    distance(a,mix(b.lo,b.hi,m))
+  );
 }
 
 // returns least signed distance of intersection for an axis aligned bounding box to the plane
 float minDistance(Plane a, Box b) {
-  return distance(a,mix(b.lo,b.hi,lessThan(normal(a),vec3(0.))));
+  return distance(a,mix(b.lo,b.hi,step(0,normal(a))));
 }
 
 // returns greatest signed distance of intersection for an axis aligned bounding box to the plane
 float maxDistance(Plane a, Box b) {
-  return distance(a,mix(b.lo,b.hi,greaterThan(normal(a),vec3(0.))));
+  return distance(a,mix(b.lo,b.hi,step(0,normal(a))));
 }
 
 // returns the range of signed distances for a bounding sphere to the plane
