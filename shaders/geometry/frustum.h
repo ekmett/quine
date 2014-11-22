@@ -1,8 +1,8 @@
-#ifndef INCLUDED_FRUSTUM_H
-#define INCLUDED_FRUSTUM_H
+#ifndef INCLUDED_GEOMETRY_FRUSTUM_H
+#define INCLUDED_GEOMETRY_FRUSTUM_H
 
-#include "box.h"
-#include "plane.h"
+#include "geometry/box.h"
+#include "geometry/plane.h"
 
 struct Frustum {
   Plane plane[6];
@@ -51,4 +51,4 @@ vec3[8] frustum(vec3 o, vec3 d, vec3 u, float n, float f, float fovy, float aspe
 }
 */
 
-#endif
+#endif // INCLUDED_GEOMETRY_FRUSTUM_H

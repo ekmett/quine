@@ -1,7 +1,7 @@
-#ifndef INCLUDED_DOT_H
-#define INCLUDED_DOT_H
+#ifndef INCLUDED_MATH_DOT_H
+#define INCLUDED_MATH_DOT_H
 
-#include "sum.h"
+#include "math/sum.h"
 
 // For some reason the standard dot only works on genType and genDType,
 // it should really also support genIType.
@@ -14,4 +14,4 @@ uint dot(uvec4 a, uvec4 b) { return sum(a*b); }
 uint dot(uvec3 a, uvec3 b) { return sum(a*b); }
 uint dot(uvec2 a, uvec2 b) { return sum(a*b); }
 
-#endif
+#endif // INCLUDED_MATH_DOT_H

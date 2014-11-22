@@ -1,8 +1,8 @@
-#ifndef INCLUDED_BEAM_H
-#define INCLUDED_BEAM_H
+#ifndef INCLUDED_GEOMETRY_BEAM_H
+#define INCLUDED_GEOMETRY_BEAM_H
 
-#include "sphere.h"
-#include "ray.h"
+#include "geometry/sphere.h"
+#include "geometry/ray.h"
 
 struct Beam {
   vec4 origin;   // xyz: origin,   w: radius
@@ -36,4 +36,4 @@ Beam beam(Ray a) {
   return Beam(a.origin.xyzz * v, a.dir.xyzz * v, a.recipDir);
 }
 
-#endif
+#endif // INCLUDED_GEOMETRY_BEAM_H

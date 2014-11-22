@@ -1,7 +1,7 @@
-#ifndef INCLUDED_BOX_H
-#define INCLUDED_BOX_H
+#ifndef INCLUDED_GEOMETRY_BOX_H
+#define INCLUDED_GEOMETRY_BOX_H
 
-#include "sphere.h"
+#include "geometry/sphere.h"
 
 struct Box {
   vec3 lo, hi;
@@ -46,4 +46,4 @@ vec3[8] vertices(Box a) {
   );
 }
 
-#endif
+#endif // INCLUDED_GEOMETRY_BOX_H

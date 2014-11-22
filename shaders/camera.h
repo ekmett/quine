@@ -1,7 +1,7 @@
 #ifndef INCLUDED_CAMERA_H
 #define INCLUDED_CAMERA_H 1
 
-#include "frustum.h"
+#include "geometry/frustum.h"
 
 struct Camera {
   Frustum Frustum;

@@ -1,7 +1,7 @@
-#ifndef INCLUDED_RAY_H
-#define INCLUDED_RAY_H
+#ifndef INCLUDED_GEOMETRY_RAY_H
+#define INCLUDED_GEOMETRY_RAY_H
 
-#include "box.h"
+#include "geometry/box.h"
 
 struct Ray {
   vec3 origin, dir, recipDir;
@@ -55,4 +55,4 @@ bool overlaps(Ray a, Box b) {
   return i.x <= i.y;
 }
 
-#endif
+#endif // INCLUDED_GEOMETRY_RAY_H

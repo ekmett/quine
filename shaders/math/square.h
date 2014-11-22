@@ -1,5 +1,5 @@
-#ifndef INCLUDED_SQUARE_H
-#define INCLUDED_SQUARE_H
+#ifndef INCLUDED_MATH_SQUARE_H
+#define INCLUDED_MATH_SQUARE_H
 
 vec4 square(vec4 x) { return x*x; }
 vec3 square(vec3 x) { return x*x; }
@@ -21,6 +21,6 @@ dvec4 square(dvec4 x) { return x*x; }
 dvec3 square(dvec3 x) { return x*x; }
 dvec2 square(dvec2 x) { return x*x; }
 double square(double x) { return x*x; }
-#endif
+#endif // GL_ARB_gpu_shader_fp64
 
-#endif
+#endif // INCLUDED_MATH_SQUARE_H

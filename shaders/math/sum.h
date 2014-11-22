@@ -1,5 +1,5 @@
-#ifndef INCLUDED_SUM_H
-#define INCLUDED_SUM_H
+#ifndef INCLUDED_MATH_SUM_H
+#define INCLUDED_MATH_SUM_H
 
 // <https://www.opengl.org/wiki/GLSL_Optimizations#Dot_products>
 
@@ -47,7 +47,6 @@ double sum(dvec4 a) {
   dvec4 ones = dvec4(1.0);
   return dot(a,ones);
 }
-#endif
+#endif // GL_ARB_gpu_shader_fp64
 
-#endif
-
+#endif // INCLUDED_MATH_SUM_H

@@ -1,9 +1,9 @@
-#ifndef INCLUDED_PLANE_H
-#define INCLUDED_PLANE_H 1
+#ifndef INCLUDED_GEOMETRY_PLANE_H
+#define INCLUDED_GEOMETRY_PLANE_H 1
 
-#include "box.h"
-#include "sphere.h"
-#include "projective.h"
+#include "geometry/box.h"
+#include "geometry/sphere.h"
+#include "math/projective.h"
 
 struct Plane {
   vec4 data;
@@ -73,4 +73,4 @@ Plane plane(vec3 a, vec3 b, vec3 c) {
   return plane(cross(b-a,c-a),a);
 }
 
-#endif
+#endif // INCLUDED_GEOMETRY_PLANE_H

@@ -1,5 +1,5 @@
-#ifndef INCLUDE_PROJECTIVE_H
-#define INCLUDE_PROJECTIVE_H
+#ifndef INCLUDE_MATH_PROJECTIVE_H
+#define INCLUDE_MATH_PROJECTIVE_H
 
 // convert affine point to projective point (w/ fused multiply-add)
 //
@@ -23,4 +23,4 @@ vec4 vector(vec3 v) {
   return v.xyzz * zo.yyyx + zo.xxxx;
 }
 
-#endif
+#endif // INCLUDED_MATH_PROJECTIVE_H

@@ -1,7 +1,10 @@
-#ifndef INCLUDED_QUADRANCE_H
-#define INCLUDED_QUADRANCE_H
+#ifndef INCLUDED_MATH_QUADRANCE_H
+#define INCLUDED_MATH_QUADRANCE_H
 
-#include "dot.h"
+#include "math/dot.h"
+
+// "quadrance" arises in <http://en.wikipedia.org/wiki/Rational_trigonometry>
+// and is useful for avoiding needless square roots.
 
 float quadrance(vec4 a) { return dot(a,a); }
 float quadrance(vec3 a) { return dot(a,a); }
@@ -19,6 +22,6 @@ uint quadrance(uvec2 a) { return dot(a,a); }
 double quadrance(dvec4 a) { return dot(a,a); }
 double quadrance(dvec3 a) { return dot(a,a); }
 double quadrance(dvec2 a) { return dot(a,a); }
-#endif
+#endif // GL_ARB_gpu_shader_fp64
 
-#endif
+#endif // INCLUDED_MATH_QUADRANCE_H
