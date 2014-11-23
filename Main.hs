@@ -138,6 +138,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 
   -- start OpenGL
   cxt <- glCreateContext window
+  glSetSwapInterval 0
   makeCurrent window cxt
 
   when (opts^.optionsDebug) installDebugHook
