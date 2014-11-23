@@ -138,8 +138,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 
   -- start OpenGL
   cxt <- glCreateContext window
-  glSetSwapInterval 0
   makeCurrent window cxt
+  _ <- glSetSwapInterval 0    -- turn of sync
 
   when (opts^.optionsDebug) installDebugHook
 
@@ -197,16 +197,16 @@ core = do
   throwErrors
   liftIO $ putStrLn "retrieving camera"
   uc <- programUniformCamera scene "viewportCamera[0]"
-  --uniformTime         <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
-  --uniformPhysicsAlpha <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
+  uniformTime         <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
+  uniformPhysicsAlpha <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
   throwErrors
   boundVertexArray $= emptyVAO
   liftIO $ putStrLn "setting up program"
   forever $ do 
     
-    (_alpha,t) <- simulate $ poll $ \e -> handleDisplayEvent e >> handleInputEvent e
-    --uniformTime         $= t
-    --uniformPhysicsAlpha $= alpha
+    (alpha,t) <- simulate $ poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+    uniformTime         $= t
+    uniformPhysicsAlpha $= alpha
     displayFPS <- uses displayMeter fps 
     physicsFPS <- uses simulationMeter fps
     displayMeter        %= tick t
@@ -222,7 +222,7 @@ core = do
       aspectRatio <- uses displayWindowSize $ \ (w,h) -> fromIntegral w / fromIntegral h
       c <- use camera
       uc^.uniformProjection  $= perspective (c^.fovy) aspectRatio (c^.nearZ) (c^.farZ)
-      uc^.uniformModelView   $= lookAt (V3 10 0 0) (V3 0 0 0) (V3 0 1 0)
+      uc^.uniformModelView   $= lookAt (V3 1 0 0) (V3 0 0 0) (V3 0 1 0)
       uc^.uniformFovy        $= c^.fovy
       uc^.uniformAspectRatio $= aspectRatio
       uc^.uniformNear        $= c^.nearZ
@@ -232,8 +232,9 @@ core = do
 render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do
   inc =<< view (env.frameCounter)
-  glClearColor 0 0 0 1
+  glClearColor 1 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_STENCIL_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
   kernel
+  glFlush
   w <- use displayWindow
   liftIO $ glSwapWindow w
