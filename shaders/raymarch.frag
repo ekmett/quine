@@ -47,9 +47,6 @@ float march(Beam r, float t_min, float t_max, out vec4 color) {
 void main() {
   Beam b = beam(eyePosition.xyz, eyeDirection);
 
-  // camera 
-  Camera cam = viewportCamera[viewportIndex];
-
   // march the beam through the scene
   float t = march(b, cam.near, cam.far, fragColor); 
 

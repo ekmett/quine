@@ -76,14 +76,14 @@ data UniformCamera = UniformCamera
 
 makeClassy ''UniformCamera
 
-programUniformCamera :: MonadIO m => Program -> String -> m UniformCamera
+programUniformCamera :: MonadIO m => Program -> Int -> m UniformCamera
 programUniformCamera p s = liftIO $ do
-  pro <- uniformLocation p $ s ++ ".projection"
-  mv  <- uniformLocation p $ s ++ ".modelView"
-  fov <- uniformLocation p $ s ++ ".fovy"
-  a   <- uniformLocation p $ s ++ ".aspectRatio"
-  n   <- uniformLocation p $ s ++ ".near"
-  f   <- uniformLocation p $ s ++ ".far"
+  pro <- uniformLocation p $ "viewportCameraProjection[" ++ show s ++ "]"
+  mv  <- uniformLocation p $ "viewportCameraModelView[" ++ show s ++ "]"
+  fov <- uniformLocation p $ "viewportCameraFovy[" ++ show s ++ "]"
+  a   <- uniformLocation p $ "viewportCameraAspectRatio[" ++ show s ++ "]"
+  n   <- uniformLocation p $ "viewportCameraNear[" ++ show s ++ "]"
+  f   <- uniformLocation p $ "viewportCameraFar[" ++ show s ++ "]"
   liftIO $ print pro
   return $ UniformCamera 
       (SettableStateVar (uniformMat4 pro)) -- TODO programUniformMat4
@@ -197,7 +197,7 @@ core = do
   viewportCount $= 1
   throwErrors
   liftIO $ putStrLn "retrieving camera"
-  uc <- programUniformCamera scene "viewportCamera[0]"
+  uc <- programUniformCamera scene 0
   uniformTime         <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
   uniformPhysicsAlpha <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
   throwErrors

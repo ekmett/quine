@@ -22,15 +22,19 @@ void main() {
       float x = float((i & 1) << 2) - 1.0;
       float y = float((i & 2) << 1) - 1.0;
       gl_Position = eyeDeviceCoord = vec4(x,y,0.0,1.0);
-
-      Camera cam = viewportCamera[gl_InvocationID];
+      cam = Camera(
+         viewportCameraProjection[gl_InvocationID],
+         viewportCameraModelView[gl_InvocationID],
+         viewportCameraFovy[gl_InvocationID],
+         viewportCameraAspectRatio[gl_InvocationID],
+         viewportCameraNear[gl_InvocationID],
+         viewportCameraFar[gl_InvocationID]
+      );
       float h = tan(cam.fovy/2);
       mat3 v3 = mat3(cam.modelView);
       eyePosition  = -(cam.modelView[3].xyz)*v3;
       eyeDirection = vec3(x*h*cam.aspectRatio,y*h,-1.0)*v3;
       eyeForward = vec3(0.0,0.0,-1.0) * v3;
-
-      // gl_ViewportIndex is only available in the fragment shader as of GL 4.3+
       gl_ViewportIndex = viewportIndex = gl_InvocationID;
       EmitVertex();
     }
