@@ -28,6 +28,7 @@ void main() {
       mat3 v3 = mat3(cam.modelView);
       eyePosition  = -(cam.modelView[3].xyz)*v3;
       eyeDirection = vec3(x*h*cam.aspectRatio,y*h,-1.0)*v3;
+      eyeForward = vec3(0.0,0.0,-1.0) * v3;
 
       // gl_ViewportIndex is only available in the fragment shader as of GL 4.3+
       gl_ViewportIndex = viewportIndex = gl_InvocationID;
