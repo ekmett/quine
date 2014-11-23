@@ -50,9 +50,9 @@ instance Measured Ticks Meter where
 tick :: Time -> Meter -> Meter
 tick d (Meter t) = Meter $ dropUntil newEnough (t |> Tick d) where
   newEnough NoTicks       = False
-  newEnough (Ticks _ h _) = h >= d - 2
+  newEnough (Ticks _ h _) = h >= d - 5
 
--- | returns the current number of ticks per second over the last couple of seconds.
+-- | returns the current number of ticks per second over the last few seconds.
 fps :: Meter -> Double
 fps (Meter t) = case measure t of
   Ticks l h n | h > l -> (fromIntegral n - 1) / (h - l)
