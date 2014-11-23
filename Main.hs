@@ -203,6 +203,7 @@ core = do
   boundVertexArray $= emptyVAO
   liftIO $ putStrLn "setting up program"
   forever $ do 
+    
     (_alpha,t) <- simulate $ poll $ \e -> handleDisplayEvent e >> handleInputEvent e
     --uniformTime         $= t
     --uniformPhysicsAlpha $= alpha

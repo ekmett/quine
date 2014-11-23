@@ -62,6 +62,27 @@ you can play with the ratio with `-s`.
 $ quine -r -s 2.0
 ```
 
+Mac "Deferred Updates"
+----------------------
+
+On a Mac the compositior carefully helpfully batches up all the frame updates. This rather sharply caps the frame rate.
+
+You can disable this with
+
+```
+$sudo defaults write /Library/Preferences/com.apple.windowserver Compositor -dict deferredUpdates 0
+```
+
+but you'll probably need to restart.
+
+To re-enable it:
+
+```
+sudo defaults write /Library/Preferences/com.apple.windowserver Compositor -dict deferredUpdates 1
+```
+
+Not being a Mac developer, I don't know how to do this in a less invasive manner. Suggestions are welcome.
+
 Profiling
 ---------
 
