@@ -39,9 +39,9 @@ data Camera = Camera
 makeClassy ''Camera
 
 instance Default Camera where
-  def = Camera (3*pi/8) 0 0 0 0.1 2000
+  def = Camera (3*pi/8) 0 0 0 0.1 1000
     -- fixed vertical fov = 67.5 degrees, matches old quake horizontal fov of 90.
-    -- view distance from 4 inches to 2km
+    -- view distance from 4 inches to 1km
 
 updateCamera :: (MonadState s m, HasCamera s, HasInput s, MonadIO m) => m ()
 updateCamera = do
