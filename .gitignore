@@ -10,6 +10,7 @@ wip
 .*.swo
 *.o
 *.hi
+*.trace
 *~
 *#
 .cabal-sandbox/
