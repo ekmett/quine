@@ -10,13 +10,13 @@ float quadrance(vec4 a) { return dot(a,a); }
 float quadrance(vec3 a) { return dot(a,a); }
 float quadrance(vec2 a) { return dot(a,a); }
 
-int quadrance(ivec4 a) { return dot(a,a); }
-int quadrance(ivec3 a) { return dot(a,a); }
-int quadrance(ivec2 a) { return dot(a,a); }
+int quadrance(ivec4 a) { return idot(a,a); }
+int quadrance(ivec3 a) { return idot(a,a); }
+int quadrance(ivec2 a) { return idot(a,a); }
 
-uint quadrance(uvec4 a) { return dot(a,a); }
-uint quadrance(uvec3 a) { return dot(a,a); }
-uint quadrance(uvec2 a) { return dot(a,a); }
+uint quadrance(uvec4 a) { return udot(a,a); }
+uint quadrance(uvec3 a) { return udot(a,a); }
+uint quadrance(uvec2 a) { return udot(a,a); }
 
 #ifdef GL_ARB_gpu_shader_fp64
 double quadrance(dvec4 a) { return dot(a,a); }
