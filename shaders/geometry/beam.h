@@ -20,6 +20,10 @@ Beam beam(vec3 origin, vec4 dir) {
   return Beam(vector(origin), dir, vec3(1.0)/dir.xyz);
 }
 
+Beam beam(vec3 origin, vec3 dir) {
+  return beam(vector(origin), vector(dir));
+}
+
 // Build a beam that starts at 'a' and goes to be growing/shrinking linearly to match 'b' whenever it gets
 // there at unit speed.
 Beam beam(Sphere a, Sphere b) {
