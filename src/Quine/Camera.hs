@@ -32,7 +32,6 @@ data Camera = Camera
   , _yaw
   , _pitch     :: !Float -- in radians
   , _cameraPos :: !Vec3
-  , _cameraVel :: !Vec3
   , _nearZ     :: !Float
   , _farZ      :: !Float
   }
@@ -40,7 +39,7 @@ data Camera = Camera
 makeClassy ''Camera
 
 instance Default Camera where
-  def = Camera (3*pi/8) 0 0 0 0 0.1 2000
+  def = Camera (3*pi/8) 0 0 0 0.1 2000
     -- fixed vertical fov = 67.5 degrees, matches old quake horizontal fov of 90.
     -- view distance from 4 inches to 2km
 

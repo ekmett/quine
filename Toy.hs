@@ -64,33 +64,7 @@ import Quine.Simulation
 import Quine.StateVar
 import Quine.System
 
--- | I need to switch to UBOs!
-data UniformCamera = UniformCamera
-  { _uniformProjection
-  , _uniformModelView :: SettableStateVar Mat4
-  , _uniformFovy
-  , _uniformAspectRatio
-  , _uniformNear
-  , _uniformFar :: StateVar Float
-  }
-
-makeClassy ''UniformCamera
-
-programUniformCamera :: MonadIO m => Program -> String -> m UniformCamera
-programUniformCamera p s = liftIO $ do
-  pro <- uniformLocation p $ s ++ ".projection"
-  mv  <- uniformLocation p $ s ++ ".modelView"
-  fov <- uniformLocation p $ s ++ ".fovy"
-  a   <- uniformLocation p $ s ++ ".aspectRatio"
-  n   <- uniformLocation p $ s ++ ".near"
-  f   <- uniformLocation p $ s ++ ".far"
-  return $ UniformCamera 
-      (SettableStateVar (uniformMat4 pro)) -- TODO programUniformMat4
-      (SettableStateVar (uniformMat4 mv))
-      (programUniform1f p fov)
-      (programUniform1f p a)
-      (programUniform1f p n)
-      (programUniform1f p f)
+#include "locations.h"
 
 -- * State
 
@@ -181,51 +155,51 @@ translate v = eye4 & translation .~ v
 core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
   liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
-  throwErrors
-  liftIO $ putStrLn "compiling"
-  viewportsView <- compile GL_VERTEX_SHADER   "shaders/viewports.vert"
-  viewportsGeom <- compile GL_GEOMETRY_SHADER "shaders/viewports.geom"
-  raymarchFrag  <- compile GL_FRAGMENT_SHADER "shaders/raymarch.frag"
-  scene <- link [viewportsView,viewportsGeom,raymarchFrag]
-  currentProgram $= scene
+  screenShader <- compile GL_VERTEX_SHADER   "shaders/screen.vert"
+  sceneShader  <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
+  scn <- link [screenShader,sceneShader]
   emptyVAO <- gen
+  iResolution        <- programUniform2f scn `liftM` uniformLocation scn "iResolution"
+  iGlobalTime        <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iGlobalTime"
+  iPhysicsAlpha      <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iPhysicsAlpha"
+  iCamera            <- programUniform3f scn `liftM` uniformLocation scn "iCamera" -- yaw, pitch, fovy
+  iProjection        <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iInverseProjection <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iView              <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iView"
+  iInverseView       <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iInverseView"
   throwErrors
-  liftIO $ putStrLn "setting viewportCount"
-  viewportCount <- programUniform1i scene `liftM` uniformLocation scene "viewportCount"
-  viewportCount $= 1
-  throwErrors
-  liftIO $ putStrLn "retrieving camera"
-  uc <- programUniformCamera scene "viewportCamera[0]"
-  --uniformTime         <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
-  --uniformPhysicsAlpha <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
-  throwErrors
+  currentProgram   $= scn
   boundVertexArray $= emptyVAO
-  liftIO $ putStrLn "setting up program"
   forever $ do 
-    (_alpha,t) <- simulate $ poll $ \e -> handleDisplayEvent e >> handleInputEvent e
-    --uniformTime         $= t
-    --uniformPhysicsAlpha $= alpha
+    (alpha,t) <- simulate $ poll $ \e -> handleDisplayEvent e >> handleInputEvent e
+    displayMeter %= tick t
+    
     displayFPS <- uses displayMeter fps 
     physicsFPS <- uses simulationMeter fps
-    displayMeter        %= tick t
     let title = showString "quine (display " 
-              $ showFFloat (Just 1) displayFPS
-              $ showString " fps, physics "
-              $ showFFloat (Just 1) physicsFPS ")"
+            $ showFFloat (Just 1) displayFPS
+            $ showString " fps, physics "
+            $ showFFloat (Just 1) physicsFPS ")"
     use displayWindow >>= liftIO . withCString title . setWindowTitle
 
     updateCamera
     resizeDisplay 
     render $ do
-      aspectRatio <- uses displayWindowSize $ \ (w,h) -> fromIntegral w / fromIntegral h
+      (w,h) <- use displayWindowSize
+      let wf = fromIntegral w
+          hf = fromIntegral h
       c <- use camera
-      uc^.uniformProjection  $= perspective (c^.fovy) aspectRatio (c^.nearZ) (c^.farZ)
-      uc^.uniformModelView   $= lookAt (V3 10 0 0) (V3 0 0 0) (V3 0 1 0)
-      uc^.uniformFovy        $= c^.fovy
-      uc^.uniformAspectRatio $= aspectRatio
-      uc^.uniformNear        $= c^.nearZ
-      uc^.uniformFar         $= c^.farZ
-      glDrawArrays GL_POINTS 0 1
+      let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
+      let inverseCameraQuat = axisAngle (V3 0 1 0) (-c^.yaw) * axisAngle (V3 1 0 0) (-c^.pitch)
+      iResolution        $= V2 wf hf
+      iProjection        $= perspective (c^.fovy) (wf/hf) (c^.nearZ) (c^.farZ)
+      iInverseProjection $= inversePerspective (c^.fovy) (wf/hf) (c^.nearZ) (c^.farZ)
+      iView              $= m33_to_m44 (fromQuaternion cameraQuat)
+      iInverseView       $= m33_to_m44 (fromQuaternion inverseCameraQuat)
+      iCamera            $= V3 (c^.yaw) (c^.pitch) (c^.fovy)
+      iGlobalTime        $= t
+      iPhysicsAlpha      $= alpha
+      glDrawArrays GL_TRIANGLES 0 3
 
 render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do

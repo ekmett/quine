@@ -1,11 +1,8 @@
 #ifndef INCLUDED_CAMERA_H
 #define INCLUDED_CAMERA_H 1
 
-#include "geometry/frustum.h"
-
 struct Camera {
-  Frustum Frustum;
-  mat4 projection, inverseProjection, modelView, inverseModelView;
+  mat4 projection, modelView;
   float fovy, aspectRatio, near, far;
 };
 

@@ -19,7 +19,7 @@ module Quine.Display
   ) where
 
 import Control.Exception
-import Control.Monad (liftM)
+import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
 import Control.Monad.State.Class hiding (get)

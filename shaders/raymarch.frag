@@ -11,7 +11,7 @@
 
 out vec4 fragColor;
 
-const int max_iterations = 100;
+const int max_iterations = 1;
 const float absolute = 0.005; // 5mm absolute accuracy
 const float relative = 0.5;   // half-pixel relative accuracy
 
