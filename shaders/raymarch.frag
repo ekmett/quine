@@ -21,7 +21,7 @@ const float relative = 0.5;   // half-pixel relative accuracy
 //
 // Use the radius like an fwidth to filter noise.
 float de(Sphere s) {
-  return length(position(s) + vec3(sin(time),cos(time),0.))-0.2; // for now, just put a 0.1m sphere at the origin
+  return length(position(s))-0.4; // for now, just put a 0.1m sphere at the origin
 }
 
 // beam trace

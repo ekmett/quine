@@ -216,14 +216,16 @@ core = do
               $ showString " fps, physics "
               $ showFFloat (Just 1) physicsFPS ")"
     use displayWindow >>= liftIO . withCString title . setWindowTitle
-
-    updateCamera
     resizeDisplay 
+    updateCamera
     render $ do
       aspectRatio <- uses displayWindowSize $ \ (w,h) -> fromIntegral w / fromIntegral h
       c <- use camera
       uc^.uniformProjection  $= perspective (c^.fovy) aspectRatio (c^.nearZ) (c^.farZ)
-      uc^.uniformModelView   $= lookAt (V3 2 0.01 0.01) (V3 0 0 0) (V3 0 1 0)
+      let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
+      let mv = set translation (V3 1 0 0) eye4 !*! m33_to_m44 (fromQuaternion cameraQuat)
+      liftIO $ print mv
+      uc^.uniformModelView   $= mv
       uc^.uniformFovy        $= c^.fovy
       uc^.uniformAspectRatio $= aspectRatio
       uc^.uniformNear        $= c^.nearZ
