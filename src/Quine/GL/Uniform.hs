@@ -75,7 +75,7 @@ uniformLocation :: MonadIO m => Program -> String -> m UniformLocation
 uniformLocation (Program p) s = liftIO $ withCString s (glGetUniformLocation p . castPtr)
 
 canTranspose :: Bool
-canTranspose = not (gles && version < Version [3,1] []) -- older opengl es doesn't support transpose in glUniformMatrix
+canTranspose = False -- not (gles && version < Version [3,1] []) -- older opengl es doesn't support transpose in glUniformMatrix
 
 uniformMatrices
   :: (MonadIO m, Foldable f, Storable (g (h a)), Storable (h (g a)), Distributive h, Functor g)
