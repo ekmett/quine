@@ -84,6 +84,7 @@ programUniformCamera p s = liftIO $ do
   a   <- uniformLocation p $ s ++ ".aspectRatio"
   n   <- uniformLocation p $ s ++ ".near"
   f   <- uniformLocation p $ s ++ ".far"
+  liftIO $ print pro
   return $ UniformCamera 
       (SettableStateVar (uniformMat4 pro)) -- TODO programUniformMat4
       (SettableStateVar (uniformMat4 mv))
@@ -222,7 +223,7 @@ core = do
       aspectRatio <- uses displayWindowSize $ \ (w,h) -> fromIntegral w / fromIntegral h
       c <- use camera
       uc^.uniformProjection  $= perspective (c^.fovy) aspectRatio (c^.nearZ) (c^.farZ)
-      uc^.uniformModelView   $= lookAt (V3 1 0 0) (V3 0 0 0) (V3 0 1 0)
+      uc^.uniformModelView   $= lookAt (V3 2 0.01 0.01) (V3 0 0 0) (V3 0 1 0)
       uc^.uniformFovy        $= c^.fovy
       uc^.uniformAspectRatio $= aspectRatio
       uc^.uniformNear        $= c^.nearZ
