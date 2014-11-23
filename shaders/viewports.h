@@ -24,9 +24,9 @@ uniform Camera viewportCamera[MAX_VIEWPORTS]; // the set of cameras
 #ifdef GEOMETRY
 flat GEOMETRY int viewportIndex; // the viewport index we're using now
 flat GEOMETRY vec3 eyePosition;  // world-space eye position for this camera
+flat GEOMETRY vec3 eyeForward;   // world-space ray direction going forward for the camera
 GEOMETRY vec4 eyeDeviceCoord;    // gl_Position for the fragment shader in NDC
 GEOMETRY vec3 eyeDirection;      // world-space ray direction for the current pixel
-GEOMETRY vec3 eyeForward;        // world-space ray direction going forward for the camera
 #endif // GEOMETRY
 
 #endif // INCLUDED_VIEWPORTS_H
