@@ -16,12 +16,28 @@ import Control.Lens
 import Data.Data
 import GHC.Generics
 import Linear
+import Quine.GL.Block
 import Quine.GL.Types
 import Quine.Geometry.Box
 import Quine.Geometry.Normal
 import Quine.Geometry.Sphere
 
 data Plane = Plane { _planeNormal :: !Vec3, _planeDistance :: !Float } deriving (Show,Ord,Eq,Typeable,Data,Generic)
+
+-- | encoded to match shaders/geometry/plane.h
+instance Block Plane where
+  sizeOf140 _ = 16
+  sizeOf430 _ = 16
+  alignment140 _ = 16
+  alignment430 _ = 16
+  isStruct _ = True
+  read140 p (Offset o) = do
+    V4 a b c d <- read140 p $ Offset o
+    return $ Plane (V3 a b c) d
+  write140 p (Offset o) (Plane (V3 a b c) d) = do
+    write140 p (Offset o) (V4 a b c d)
+  read430 = read140
+  write430 = write140
 
 instance ToNormal Plane where
   toNormal (Plane n _) = n
