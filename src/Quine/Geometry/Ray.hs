@@ -34,6 +34,7 @@ import GHC.Generics
 import Linear
 import Quine.Geometry.Box
 import Quine.Geometry.Position
+import Quine.GL.Block
 import Quine.GL.Types
 import Quine.Instances ()
 
@@ -42,6 +43,9 @@ data Ray = Ray
   , _direction      :: !Vec3
   , _recipDirection :: Vec3 -- cache
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
+
+-- | encoded to match shaders/geometry/ray.h
+instance Block Ray
 
 instance ToPosition Ray where
   toPosition = _origin
