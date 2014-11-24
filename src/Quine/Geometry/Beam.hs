@@ -25,6 +25,7 @@ import Linear
 import Quine.Geometry.Position
 import Quine.Geometry.Ray
 import Quine.Geometry.Sphere
+import Quine.GL.Block
 import Quine.GL.Types
 
 -- | A 'Beam' is a fat 'Ray'. It starts out with a given 'beamWidth' and grows by 'beamWidthDelta'
@@ -48,6 +49,25 @@ instance HasPosition Beam where
 
 instance HasRay Beam where
   ray f (Beam r w d) = f r <&> \r' -> Beam r' w d
+
+-- | encoded to match shaders/geometry/beam.h
+instance Block Beam where
+  sizeOf140 _ = 44
+  sizeOf430 _ = 44
+  alignment140 _ = 16
+  alignment430 _ = 16
+  isStruct _ = True
+  read140 p (Offset o) = do
+    V4 a b c d <- read140 p $ Offset o
+    V4 e f g h <- read140 p $ Offset (o + 16)
+    i          <- read140 p $ Offset (o + 32)
+    return $ Beam (Ray (V3 a b c) (V3 e f g) i) d h
+  write140 p (Offset o) (Beam (Ray (V3 a b c) (V3 e f g) i) d h) = do
+    write140 p (Offset o       ) (V4 a b c d)
+    write140 p (Offset $ o + 16) (V4 e f g h)
+    write140 p (Offset $ o + 32) i
+  read430 = read140
+  write430 = write140
 
 class ToRay t => ToBeam t where
   toBeam :: t -> Beam
