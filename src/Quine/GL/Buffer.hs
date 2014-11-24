@@ -30,10 +30,8 @@ module Quine.GL.Buffer
   , pattern ElementArrayBuffer
   , pattern PixelPackBuffer
   , pattern PixelUnpackBuffer
-  , pattern ShaderStorageBuffer
   , pattern TransformFeedbackBuffer
   , pattern UniformBuffer
-  -- , pattern AtomicCounterBuffer
   -- , pattern CopyReadBuffer
   -- , pattern CopyWriteBuffer
   -- , pattern DispatchIndirectBuffer
@@ -72,7 +70,7 @@ import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
-import Graphics.GL.Core43
+import Graphics.GL.Core41
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
@@ -181,13 +179,6 @@ pattern PixelPackBuffer = BufferTarget GL_PIXEL_PACK_BUFFER GL_PIXEL_PACK_BUFFER
 -- | Texture data source
 pattern PixelUnpackBuffer = BufferTarget GL_PIXEL_UNPACK_BUFFER GL_PIXEL_UNPACK_BUFFER_BINDING
 
--- | Read-write storage for shaders
---
--- You can use the 'Quine.GL.Block.STD140' and 'Quine.GL.Block.STD430' newtype wrappers around the contents.
---
--- Requires OpenGL 4.3+
-pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
-
 -- | Transform feedback buffer
 pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_TRANSFORM_FEEDBACK_BUFFER_BINDING
 
@@ -195,24 +186,6 @@ pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_T
 --
 -- You should probably use the 'Quine.GL.Block.STD140' newtype wrapper around the contents.
 pattern UniformBuffer = BufferTarget GL_UNIFORM_BUFFER GL_UNIFORM_BUFFER_BINDING
-
--- | Atomic counter storage
--- pattern AtomicCounterBuffer = BufferTarget GL_ATOMIC_COUNTER_BUFFER GL_ATOMIC_COUNTER_BUFFER_BINDING
-
--- | Buffer copy source
--- pattern CopyReadBuffer = BufferTarget GL_COPY_READ_BUFFER GL_COPY_READ_BUFFER_BINDING
-
--- | Buffer copy destination
--- pattern CopyWriteBuffer = BufferTarget GL_COPY_WRITE_BUFFER GL_COPY_WRITE_BUFFER_BINDING
-
--- | Indirect compute dispatch commands
--- pattern DispatchIndirectBuffer = BufferTarget GL_DISPATCH_INDIRECT_BUFFER GL_DISPATCH_INDIRECT_BUFFER_BINDING
-
--- | Query result buffer
--- pattern QueryBuffer = BufferTarget GL_QUERY_BUFFER GL_QUERY_BUFFER_BINDING
-
--- | Texture data buffer
--- pattern TextureBuffer = BufferTarget GL_TEXTURE_BUFFER GL_TEXTURE_BUFFER_BINDING
 
 -- * Usage
 
