@@ -4,6 +4,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveGeneric #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -21,15 +26,18 @@ module Quine.GL.Block
   ( Offset(..)
   , Block(..)
   , GBlock(..)
+  , STD140(..)
+  , STD430(..)
   ) where
 
 import Control.Applicative
 import Control.Category
 import Control.Lens hiding (to, from)
 import Control.Monad.IO.Class
+import Data.Data
+import Data.Foldable
 import Data.Functor.Rep hiding (Rep)
 import Data.Int
-import Data.Proxy
 import Data.Traversable
 import Data.Word
 import Foreign.Storable
@@ -41,11 +49,29 @@ import Prelude hiding (id,(.),sequence)
 import Quine.GL.Types
 
 newtype Offset a b = Offset Int
-  deriving (Eq,Ord,Show,Read)
+  deriving (Data,Typeable,Generic,Eq,Ord,Show,Read)
 
 instance Category Offset where
   id = Offset 0
   Offset a . Offset b = Offset (a + b)
+
+newtype STD140 a = STD140 { getSTD140 :: a }
+  deriving (Data,Typeable,Generic,Functor,Foldable,Traversable,Eq,Ord,Show,Read)
+
+instance Block a => Storable (STD140 a) where
+  alignment _ = alignment140 (Proxy :: Proxy a)
+  sizeOf _ = sizeOf140 (Proxy :: Proxy a)
+  peekByteOff p o = STD140 <$> read140 p (Offset o)
+  pokeByteOff p o = write140 p (Offset o) . getSTD140
+
+newtype STD430 a = STD430 { getSTD430 :: a }
+  deriving (Data,Typeable,Generic,Functor,Foldable,Traversable,Eq,Ord,Show,Read)
+
+instance Block a => Storable (STD430 a) where
+  alignment _ = alignment430 (Proxy :: Proxy a)
+  sizeOf _ = sizeOf430 (Proxy :: Proxy a)
+  peekByteOff p o = STD430 <$> read430 p (Offset o)
+  pokeByteOff p o = write430 p (Offset o) . getSTD430
 
 -- | This describes how to load and store primitives
 -- through a uniform/shader storage blocks according to
