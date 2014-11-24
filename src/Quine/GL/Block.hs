@@ -167,10 +167,10 @@ instance GBlock f => GBlock (M1 S c f) where
   gwrite430 p o (M1 a) = gwrite430 p o a
 
 instance GBlock f => GBlock (M1 C c f) where
-  galignment140 _ = lcm 16 $ galignment140 (Proxy :: Proxy f)
-  galignment430 _ = galignment430 (Proxy :: Proxy f)
-  gsizeOf140    _ = gsizeOf140 (Proxy :: Proxy f)
-  gsizeOf430    _ = gsizeOf430 (Proxy :: Proxy f)
+  galignment140 _ = lcm 16 $ galignment140 (Proxy :: Proxy f) -- std140 rule 9
+  galignment430 _ = galignment430 (Proxy :: Proxy f) -- std140 rule 9, relaxed by std430
+  gsizeOf140    _ = roundUp (gsizeOf140 (Proxy :: Proxy f)) (galignment140 (Proxy :: Proxy f)) -- std140 rule 9
+  gsizeOf430    _ = roundUp (gsizeOf430 (Proxy :: Proxy f)) (galignment430 (Proxy :: Proxy f)) -- std140 rule 9, relaxed by std430
   gread140 p o = M1 <$> gread140 p o
   gread430 p o = M1 <$> gread430 p o
   gwrite140 p o (M1 a) = gwrite140 p o a
@@ -272,9 +272,9 @@ instance Block BVec2 where
 
 instance Block BVec3 where
   alignment140 _ = 16
-  sizeOf140 _    = 12
+  sizeOf140 _    = 16
   alignment430 _ = 16
-  sizeOf430 _    = 12
+  sizeOf430 _    = 16
   isStruct _ = False
   read140  p (Offset o)   = liftIO $ fmap toBool <$> peekByteOff p o
   write140 p (Offset o) b = liftIO $ pokeByteOff p o (fmap fromBool b)
@@ -305,9 +305,9 @@ instance Block Vec2 where
 
 instance Block Vec3 where
   alignment140 _ = 16
-  sizeOf140 _    = 12
+  sizeOf140 _    = 16
   alignment430 _ = 16
-  sizeOf430 _    = 12
+  sizeOf430 _    = 16
   isStruct _ = False
   read140 p (Offset o) = liftIO $ peekByteOff p o
   write140 p (Offset o) b = liftIO $ pokeByteOff p o b
@@ -371,9 +371,9 @@ instance Block IVec2 where
 
 instance Block IVec3 where
   alignment140 _ = 16
-  sizeOf140 _    = 12
+  sizeOf140 _    = 16
   alignment430 _ = 16
-  sizeOf430 _    = 12
+  sizeOf430 _    = 16
   isStruct _ = False
   read140 p (Offset o) = liftIO $ peekByteOff p o
   write140 p (Offset o) b = liftIO $ pokeByteOff p o b
@@ -404,9 +404,9 @@ instance Block UVec2 where
 
 instance Block UVec3 where
   alignment140 _ = 16
-  sizeOf140 _    = 12
+  sizeOf140 _    = 16
   alignment430 _ = 16
-  sizeOf430 _    = 12
+  sizeOf430 _    = 16
   isStruct _ = False
   read140 p (Offset o) = liftIO $ peekByteOff p o
   write140 p (Offset o) b = liftIO $ pokeByteOff p o b
@@ -858,7 +858,7 @@ instance Block DMat4 where
 instance (Dim n, Block a) => Block (V n a) where
   isStruct _ = isStruct (Proxy :: Proxy a)
   alignment140 _
-    | isStruct (Proxy :: Proxy a) = lcm 16 n
+    | isStruct (Proxy :: Proxy a) = lcm 16 n -- std140 rule 9
     | otherwise = n
     where n = alignment140 (Proxy :: Proxy a)
   alignment430 _ = alignment430 (Proxy :: Proxy a)
