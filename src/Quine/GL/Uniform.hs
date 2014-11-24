@@ -50,7 +50,7 @@ import Data.Coerce
 import Data.Distributive
 import Data.Foldable
 import Data.Int
-import Data.Version
+--import Data.Version
 import Data.Word
 import Foreign.C.String
 import Foreign.Marshal.Alloc
@@ -62,7 +62,7 @@ import Graphics.GL.Types
 import Linear
 import Quine.GL.Program
 import Quine.GL.Types
-import Quine.GL.Version
+--import Quine.GL.Version
 import Quine.StateVar
 
 --------------------------------------------------------------------------------
