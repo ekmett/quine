@@ -125,7 +125,7 @@ library
     half,
     JuicyPixels,
     lens,
-    linear >= 1.15.3,
+    linear >= 1.15.4,
     monad-control >= 0.3.3,
     mtl,
     optparse-applicative,
