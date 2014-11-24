@@ -134,7 +134,7 @@ boundBufferAt (BufferTarget target binding) = StateVar g s where
     return $ Buffer (fromIntegral i)
   s = glBindBuffer target . coerce
 
--- | bindless uploading data to the argumented buffer (since OpenGL 4.5)
+-- | bindless uploading data to the argumented buffer (since OpenGL 4.4+ or with gl_EXT_direct_state_access)
 bufferDataDirect :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
 bufferDataDirect (Buffer i)
   | gl_EXT_direct_state_access = StateVar g s
@@ -150,7 +150,7 @@ bufferDataDirect (Buffer i)
           (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
   s (u,v) = withRawData v $ \size ptr -> glNamedBufferDataEXT i (fromIntegral size) ptr (coerce u)
 
-
+-- | uploading data to the currently at 'BufferTarget' bound buffer
 bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
 bufferData (BufferTarget t _) = StateVar g s where
   g = alloca $ \sizePtr ->
