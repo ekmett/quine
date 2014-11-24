@@ -24,10 +24,27 @@ import Data.Functor
 import GHC.Generics
 import Linear
 import Quine.Geometry.Position
+import Quine.GL.Block
 import Quine.GL.Types
 import Prelude hiding (any)
 
 data Sphere = Sphere !Vec3 !Float deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+-- | encoded to match shaders/geometry/sphere.h
+instance Block Sphere where
+  sizeOf140 _ = 16
+  sizeOf430 _ = 16
+  alignment140 _ = 16
+  alignment430 _ = 16
+  isStruct _ = True
+  read140 p (Offset o) = do
+    V4 a b c d <- read140 p $ Offset o
+    return $ Sphere (V3 a b c) d
+  write140 p (Offset o) (Sphere (V3 a b c) d) = do
+    write140 p (Offset o) (V4 a b c d)
+  read430 = read140
+  write430 = write140
+
 
 class ToPosition t => ToSphere t where
   toSphere :: t -> Sphere
