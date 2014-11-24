@@ -74,13 +74,13 @@ library
     Quine.Geometry.Ray
     Quine.Geometry.Sphere
     Quine.GL
+    Quine.GL.Block
     Quine.GL.Buffer
     Quine.GL.Error
     Quine.GL.Object
     Quine.GL.Pixel
     Quine.GL.Program
     Quine.GL.Shader
-    Quine.GL.STD140
     Quine.GL.Texture
     Quine.GL.Types
     Quine.GL.Uniform
