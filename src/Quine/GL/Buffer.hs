@@ -30,6 +30,7 @@ module Quine.GL.Buffer
   , pattern ElementArrayBuffer
   , pattern PixelPackBuffer
   , pattern PixelUnpackBuffer
+  , pattern ShaderStorageBuffer
   , pattern TransformFeedbackBuffer
   , pattern UniformBuffer
   -- , pattern AtomicCounterBuffer
@@ -37,7 +38,6 @@ module Quine.GL.Buffer
   -- , pattern CopyWriteBuffer
   -- , pattern DispatchIndirectBuffer
   -- , pattern QueryBuffer
-  -- , pattern ShaderStorageBuffer
   -- , pattern TextureBuffer
 
   -- * Buffer Usage
@@ -72,7 +72,7 @@ import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
-import Graphics.GL.Core41
+import Graphics.GL.Core43
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
@@ -111,19 +111,19 @@ instance Default (Buffer a) where
 
 -- | I bet there is already a package with
 class BufferData a where
-    -- | perfom a monadic action with the pointer to the raw content and the size of it in bytes
-    withRawData :: a -> (Int -> Ptr () -> IO ()) -> IO ()
-    fromRawData :: Int -> Ptr () -> IO a
+  -- | perfom a monadic action with the pointer to the raw content and the size of it in bytes
+  withRawData :: a -> (Int -> Ptr () -> IO ()) -> IO ()
+  fromRawData :: Int -> Ptr () -> IO a
 
 instance Storable a => BufferData (V.Vector a) where
-    withRawData v m = V.unsafeWith v $ m (sizeOf (undefined::a) * V.length v) . castPtr
-    fromRawData bytes ptr = do
-      fp <- newForeignPtr_ $ castPtr ptr
-      return $ V.unsafeFromForeignPtr fp 0 (bytes `div` sizeOf (undefined::a))
+  withRawData v m = V.unsafeWith v $ m (sizeOf (undefined::a) * V.length v) . castPtr
+  fromRawData bytes ptr = do
+    fp <- newForeignPtr_ $ castPtr ptr
+    return $ V.unsafeFromForeignPtr fp 0 (bytes `div` sizeOf (undefined::a))
 
 instance Storable a => BufferData [a] where
-    withRawData v m = withArrayLen v $ \n -> m (n * sizeOf (undefined::a)) . castPtr
-    fromRawData bytes = peekArray (bytes `div` sizeOf (undefined::a)) . castPtr
+  withRawData v m = withArrayLen v $ \n -> m (n * sizeOf (undefined::a)) . castPtr
+  fromRawData bytes = peekArray (bytes `div` sizeOf (undefined::a)) . castPtr
 
 -- * Buffer Access
 
@@ -168,31 +168,49 @@ bufferData (BufferTarget t _) = StateVar g s where
 
 -- | Vertex attributes
 pattern ArrayBuffer = BufferTarget GL_ARRAY_BUFFER GL_ARRAY_BUFFER_BINDING
+
 -- | Indirect command arguments
 pattern DrawIndirectBuffer = BufferTarget GL_DRAW_INDIRECT_BUFFER GL_DRAW_INDIRECT_BUFFER_BINDING
+
 -- | Vertex array indices
 pattern ElementArrayBuffer = BufferTarget GL_ELEMENT_ARRAY_BUFFER GL_ELEMENT_ARRAY_BUFFER_BINDING
+
 -- | Pixel read target
 pattern PixelPackBuffer = BufferTarget GL_PIXEL_PACK_BUFFER GL_PIXEL_PACK_BUFFER_BINDING
+
 -- | Texture data source
 pattern PixelUnpackBuffer = BufferTarget GL_PIXEL_UNPACK_BUFFER GL_PIXEL_UNPACK_BUFFER_BINDING
+
+-- | Read-write storage for shaders
+--
+-- You can use the 'Quine.GL.Block.STD140' and 'Quine.GL.Block.STD430' newtype wrappers around the contents.
+--
+-- Requires OpenGL 4.3+
+pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
+
 -- | Transform feedback buffer
 pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_TRANSFORM_FEEDBACK_BUFFER_BINDING
+
 -- | Uniform block storage
+--
+-- You should probably use the 'Quine.GL.Block.STD140' newtype wrapper around the contents.
 pattern UniformBuffer = BufferTarget GL_UNIFORM_BUFFER GL_UNIFORM_BUFFER_BINDING
 
 -- | Atomic counter storage
 -- pattern AtomicCounterBuffer = BufferTarget GL_ATOMIC_COUNTER_BUFFER GL_ATOMIC_COUNTER_BUFFER_BINDING
+
 -- | Buffer copy source
 -- pattern CopyReadBuffer = BufferTarget GL_COPY_READ_BUFFER GL_COPY_READ_BUFFER_BINDING
+
 -- | Buffer copy destination
 -- pattern CopyWriteBuffer = BufferTarget GL_COPY_WRITE_BUFFER GL_COPY_WRITE_BUFFER_BINDING
+
 -- | Indirect compute dispatch commands
 -- pattern DispatchIndirectBuffer = BufferTarget GL_DISPATCH_INDIRECT_BUFFER GL_DISPATCH_INDIRECT_BUFFER_BINDING
+
 -- | Query result buffer
 -- pattern QueryBuffer = BufferTarget GL_QUERY_BUFFER GL_QUERY_BUFFER_BINDING
--- | Read-write storage for shaders
--- pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
+
 -- | Texture data buffer
 -- pattern TextureBuffer = BufferTarget GL_TEXTURE_BUFFER GL_TEXTURE_BUFFER_BINDING
 
