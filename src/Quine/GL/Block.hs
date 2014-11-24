@@ -2,7 +2,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
--- | OpenGL STD140 an STD430 support
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) 2014 Edward Kmett
+-- License   :  BSD2
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- OpenGL STD140 and STD430 support
+--
+-- Note STD430 can only be used for shader storage blocks, NOT
+-- uniform blocks!
+--------------------------------------------------------------------
 module Quine.GL.Block
   ( Offset(..)
   , Block(..)
@@ -36,7 +48,7 @@ class Block b where
   default alignment140 :: Storable b => p b -> Int
   alignment140 _ = alignment (undefined :: b)
 
-  -- | As per 'Storable' 'alignment', but matching OpenGL STD140.
+  -- | As per 'Storable' 'sizeOf', but matching OpenGL STD140.
   sizeOf140 :: p b -> Int
   default sizeOf140 :: Storable b => p b -> Int
   sizeOf140 _ = sizeOf (undefined :: b)
@@ -56,10 +68,9 @@ class Block b where
   alignment430 :: p b -> Int
   alignment430 = alignment140
 
-  -- | As per 'Storable' 'alignment', but matching OpenGL STD430.
+  -- | As per 'Storable' 'sizeOf', but matching OpenGL STD430.
   sizeOf430 :: p b -> Int
   sizeOf430 = sizeOf140
-
 
   read430 :: MonadIO m => Ptr a -> Offset a b -> m b
   read430 = read140
