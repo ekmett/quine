@@ -22,13 +22,18 @@ module Quine.GL.Block
 
 import Control.Applicative
 import Control.Category
+import Control.Lens
 import Control.Monad.IO.Class
+import Data.Functor.Rep
 import Data.Int
+import Data.Proxy
+import Data.Traversable
 import Data.Word
 import Foreign.Storable
 import Foreign.Ptr
 import Linear
-import Prelude hiding (id,(.))
+import Linear.V
+import Prelude hiding (id,(.),sequence)
 import Quine.GL.Types
 
 newtype Offset a b = Offset Int
@@ -323,7 +328,7 @@ instance Block DMat2x3 where
     pokeByteOff p o        (V2 a d)
     pokeByteOff p (o + 16) (V2 b e)
     pokeByteOff p (o + 32) (V2 c f)
-  
+
 instance Block Mat3 where
   alignment140 _ = 16 -- per vec4, despite being vec3
   sizeOf140    _ = 48 -- 3 columns, each rounded up to vec4 size
@@ -545,3 +550,25 @@ instance Block DMat4 where
     pokeByteOff p (o + 32) (V4 b f j n)
     pokeByteOff p (o + 64) (V4 c g k q)
     pokeByteOff p (o + 96) (V4 d h l r)
+
+instance (Dim n, Block a) => Block (V n a) where
+  isStruct _ = isStruct (Proxy :: Proxy a)
+  alignment140 _ 
+    | isStruct (Proxy :: Proxy a) = lcm 16 n 
+    | otherwise = n
+    where n = alignment140 (Proxy :: Proxy a)
+  alignment430 _ = alignment430 (Proxy :: Proxy a)
+  sizeOf140 _ = roundUp (sizeOf140 (Proxy :: Proxy a)) (alignment140 (Proxy :: Proxy a)) * fromIntegral (reflectDim (Proxy :: Proxy n))
+  sizeOf430 _ = roundUp (sizeOf430 (Proxy :: Proxy a)) (alignment430 (Proxy :: Proxy a)) * fromIntegral (reflectDim (Proxy :: Proxy n))
+  read140 p (Offset o) = liftIO $ sequence $ tabulate $ \i -> read140 p $ Offset (o + i*d) where
+    d = roundUp (sizeOf140 (Proxy :: Proxy a)) (alignment140 (Proxy :: Proxy a))
+  write140 p (Offset o) v = liftIO $ iforM_ v $ \i -> write140 p (Offset (o + i*d)) where
+    d = roundUp (sizeOf140 (Proxy :: Proxy a)) (alignment140 (Proxy :: Proxy a))
+  read430 p (Offset o) = liftIO $ sequence $ tabulate $ \i -> read430 p $ Offset (o + i*d) where
+    d = roundUp (sizeOf430 (Proxy :: Proxy a)) (alignment430 (Proxy :: Proxy a))
+  write430 p (Offset o) v = liftIO $ iforM_ v $ \i -> write430 p (Offset (o + i*d)) where
+    d = roundUp (sizeOf430 (Proxy :: Proxy a)) (alignment430 (Proxy :: Proxy a))
+
+-- | @roundUp k n@ rounds up k up to an integral multiple of n
+roundUp :: Int -> Int -> Int
+roundUp k n = k + mod (n - k) n

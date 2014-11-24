@@ -106,6 +106,7 @@ library
     Paths_quine
 
   build-depends:
+    adjunctions,
     aeson,
     base >= 4.7 && < 5,
     bytestring,
@@ -124,7 +125,7 @@ library
     half,
     JuicyPixels,
     lens,
-    linear >= 1.15.1,
+    linear >= 1.15.3,
     monad-control >= 0.3.3,
     mtl,
     optparse-applicative,
