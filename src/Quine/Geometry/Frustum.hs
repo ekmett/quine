@@ -21,7 +21,7 @@ import Prelude hiding (any, all)
 import Quine.Geometry.Box
 import Quine.Geometry.Plane
 import Quine.Geometry.Sphere
---import Quine.GL.Block
+import Quine.GL.Block
 import Quine.GL.Types
 
 data Frustum = Frustum { _frustumPlanes :: V 6 Plane, _frustumPoints :: V 8 Vec3 }
@@ -30,8 +30,7 @@ data Frustum = Frustum { _frustumPlanes :: V 6 Plane, _frustumPoints :: V 8 Vec3
 makeClassy ''Frustum
 
 -- | encoded to match shaders/geometry/frustum.h
--- instance Block Frustum
-  
+instance Block Frustum
 
 {-
 -- | @buildFrustum origin direction nearZ farZ fovy aspectRatio@

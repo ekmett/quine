@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveFunctor #-}
@@ -48,7 +49,7 @@ import Linear.V
 import Prelude hiding (id,(.),sequence)
 import Quine.GL.Types
 
-newtype Offset a b = Offset Int
+newtype Offset (a :: *) (b :: *) = Offset Int
   deriving (Data,Typeable,Generic,Eq,Ord,Show,Read)
 
 instance Category Offset where
