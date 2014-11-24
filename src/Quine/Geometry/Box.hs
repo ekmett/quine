@@ -31,10 +31,13 @@ import Linear
 import Prelude hiding (and)
 import Quine.Geometry.Position
 import Quine.Geometry.Sphere
+import Quine.GL.Block
 import Quine.GL.Types
 
 data Box = Box { _lo, _hi :: Vec3 }
   deriving (Data, Typeable, Generic)
+
+instance Block Box
 
 instance ToSphere Box where
   toSphere (Box l h) = Sphere (l+d) (norm d) where d = (h-l)^/2
