@@ -50,7 +50,7 @@ instance HasPosition Beam where
 instance HasRay Beam where
   ray f (Beam r w d) = f r <&> \r' -> Beam r' w d
 
--- | encoded to match shaders/geometry/beam.h
+-- | encoded to match @shaders/geometry/beam.h@
 instance Block Beam where
   sizeOf140 _ = 44
   sizeOf430 _ = 44

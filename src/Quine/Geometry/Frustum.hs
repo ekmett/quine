@@ -29,7 +29,7 @@ data Frustum = Frustum { _frustumPlanes :: V 6 Plane, _frustumPoints :: V 8 Vec3
 
 makeClassy ''Frustum
 
--- | encoded to match shaders/geometry/frustum.h
+-- | encoded to match @shaders/geometry/frustum.h@
 instance Block Frustum
 
 {-

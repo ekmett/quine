@@ -35,6 +35,7 @@ import Control.Applicative
 import Control.Category
 import Control.Lens hiding (to, from)
 import Control.Monad.IO.Class
+import Data.Complex
 import Data.Data
 import Data.Foldable
 import Data.Functor.Rep hiding (Rep)
@@ -856,6 +857,60 @@ instance Block DMat4 where
   read430 = read140
   write430 = write140
 
+instance Block (Complex Float) where
+  alignment140 _ = 16
+  sizeOf140    _ = 16
+  alignment430 _ = 8
+  sizeOf430    _ = 8
+  isStruct     _ = True
+  read140 p (Offset o) = liftIO $ do
+    V2 a b <- peekByteOff p o
+    return $ a :+ b
+  write140 p (Offset o) (a :+ b) = liftIO $ pokeByteOff p o (V2 a b)
+  read430  = read140
+  write430 = write140
+
+instance Block (Complex Double) where
+  alignment140 _ = 16
+  sizeOf140    _ = 16
+  alignment430   = alignment140
+  sizeOf430      = sizeOf140
+  isStruct     _ = True
+  read140 p (Offset o) = liftIO $ do
+    V2 a b <- peekByteOff p o
+    return $ a :+ b
+  write140 p (Offset o) (a :+ b) = liftIO $ pokeByteOff p o (V2 a b)
+  read430  = read140
+  write430 = write140
+
+-- | encoded to match @shaders/math/quaternion.h@
+instance Block (Quaternion Float) where
+  alignment140 _ = 16
+  sizeOf140    _ = 16
+  alignment430   = alignment140
+  sizeOf430      = sizeOf140
+  isStruct     _ = True
+  read140 p (Offset o) = liftIO $ do
+    V4 a b c d <- peekByteOff p o
+    return $ Quaternion d (V3 a b c)
+  write140 p (Offset o) (Quaternion d (V3 a b c)) = liftIO $ pokeByteOff p o (V4 a b c d)
+  read430  = read140
+  write430 = write140
+
+instance Block (Quaternion Double) where
+  alignment140 _ = 32
+  sizeOf140    _ = 32
+  alignment430   = alignment140
+  sizeOf430      = sizeOf140
+  isStruct     _ = True
+  read140 p (Offset o) = liftIO $ do
+    V4 a b c d <- peekByteOff p o
+    return $ Quaternion d (V3 a b c)
+  write140 p (Offset o) (Quaternion d (V3 a b c)) = liftIO $ pokeByteOff p o (V4 a b c d)
+  read430  = read140
+  write430 = write140
+
+-- | Can be used for fixed-sized arrays
 instance (Dim n, Block a) => Block (V n a) where
   isStruct _ = isStruct (Proxy :: Proxy a)
   alignment140 _

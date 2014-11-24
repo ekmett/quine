@@ -37,6 +37,7 @@ import Quine.GL.Types
 data Box = Box { _lo, _hi :: Vec3 }
   deriving (Data, Typeable, Generic)
 
+-- | encoded to match @shaders/geometry/box.h@
 instance Block Box
 
 instance ToSphere Box where

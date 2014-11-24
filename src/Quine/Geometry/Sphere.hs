@@ -30,7 +30,7 @@ import Prelude hiding (any)
 
 data Sphere = Sphere !Vec3 !Float deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
--- | encoded to match shaders/geometry/sphere.h
+-- | encoded to match @shaders/geometry/sphere.h@
 instance Block Sphere where
   sizeOf140 _ = 16
   sizeOf430 _ = 16
