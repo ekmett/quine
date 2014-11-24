@@ -44,7 +44,7 @@ data Ray = Ray
   , _recipDirection :: Vec3 -- cache
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
 
--- | encoded to match shaders/geometry/ray.h
+-- | encoded to match @shaders/geometry/ray.h@
 instance Block Ray
 
 instance ToPosition Ray where

@@ -24,7 +24,7 @@ import Quine.Geometry.Sphere
 
 data Plane = Plane { _planeNormal :: !Vec3, _planeDistance :: !Float } deriving (Show,Ord,Eq,Typeable,Data,Generic)
 
--- | encoded to match shaders/geometry/plane.h
+-- | encoded to match @shaders/geometry/plane.h@
 instance Block Plane where
   sizeOf140 _ = 16
   sizeOf430 _ = 16

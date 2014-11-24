@@ -883,6 +883,7 @@ instance Block (Complex Double) where
   read430  = read140
   write430 = write140
 
+-- | encoded to match @shaders/math/quaternion.h@
 instance Block (Quaternion Float) where
   alignment140 _ = 16
   sizeOf140    _ = 16
@@ -909,6 +910,7 @@ instance Block (Quaternion Double) where
   read430  = read140
   write430 = write140
 
+-- | Can be used for fixed-sized arrays
 instance (Dim n, Block a) => Block (V n a) where
   isStruct _ = isStruct (Proxy :: Proxy a)
   alignment140 _
