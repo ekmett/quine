@@ -27,6 +27,7 @@ import Data.Data
 import Data.Functor
 import GHC.Generics
 import Linear
+import Quine.GL.Block
 import Quine.GL.Types
 
 -- * Surface normals
@@ -50,6 +51,8 @@ class ToNormal t => HasNormal t where
 data TangentSpace = TangentSpace
   { _tangentSpaceTangent, _tangentSpaceBitangent, _tangentSpaceNormal :: !Vec3
   } deriving (Eq,Ord,Show,Data,Typeable,Generic)
+
+instance Block TangentSpace
 
 instance ToNormal TangentSpace where
   toNormal = _tangentSpaceNormal
