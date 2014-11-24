@@ -39,14 +39,14 @@
 <a name="line-30"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>ElementArrayBuffer</span>
 <a name="line-31"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>PixelPackBuffer</span>
 <a name="line-32"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>PixelUnpackBuffer</span>
-<a name="line-33"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>TransformFeedbackBuffer</span>
-<a name="line-34"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>UniformBuffer</span>
-<a name="line-35"></a>  <span class='hs-comment'>-- , pattern AtomicCounterBuffer</span>
-<a name="line-36"></a>  <span class='hs-comment'>-- , pattern CopyReadBuffer</span>
-<a name="line-37"></a>  <span class='hs-comment'>-- , pattern CopyWriteBuffer</span>
-<a name="line-38"></a>  <span class='hs-comment'>-- , pattern DispatchIndirectBuffer</span>
-<a name="line-39"></a>  <span class='hs-comment'>-- , pattern QueryBuffer</span>
-<a name="line-40"></a>  <span class='hs-comment'>-- , pattern ShaderStorageBuffer</span>
+<a name="line-33"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>ShaderStorageBuffer</span>
+<a name="line-34"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>TransformFeedbackBuffer</span>
+<a name="line-35"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>pattern</span> <span class='hs-conid'>UniformBuffer</span>
+<a name="line-36"></a>  <span class='hs-comment'>-- , pattern AtomicCounterBuffer</span>
+<a name="line-37"></a>  <span class='hs-comment'>-- , pattern CopyReadBuffer</span>
+<a name="line-38"></a>  <span class='hs-comment'>-- , pattern CopyWriteBuffer</span>
+<a name="line-39"></a>  <span class='hs-comment'>-- , pattern DispatchIndirectBuffer</span>
+<a name="line-40"></a>  <span class='hs-comment'>-- , pattern QueryBuffer</span>
 <a name="line-41"></a>  <span class='hs-comment'>-- , pattern TextureBuffer</span>
 <a name="line-42"></a>
 <a name="line-43"></a>  <span class='hs-comment'>-- * Buffer Usage</span>
@@ -81,7 +81,7 @@
 <a name="line-72"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Foreign</span><span class='hs-varop'>.</span><span class='hs-conid'>Ptr</span>
 <a name="line-73"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Foreign</span><span class='hs-varop'>.</span><span class='hs-conid'>ForeignPtr</span>
 <a name="line-74"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>GHC</span><span class='hs-varop'>.</span><span class='hs-conid'>Generics</span>
-<a name="line-75"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Core41</span>
+<a name="line-75"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Core43</span>
 <a name="line-76"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Ext</span><span class='hs-varop'>.</span><span class='hs-conid'>EXT</span><span class='hs-varop'>.</span><span class='hs-conid'>DirectStateAccess</span>
 <a name="line-77"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Graphics</span><span class='hs-varop'>.</span><span class='hs-conid'>GL</span><span class='hs-varop'>.</span><span class='hs-conid'>Types</span>
 <a name="line-78"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Quine</span><span class='hs-varop'>.</span><span class='hs-conid'>StateVar</span>
@@ -120,19 +120,19 @@
 <a name="line-111"></a>
 <a name="line-112"></a><a name="BufferData"></a><span class='hs-comment'>-- | I bet there is already a package with</span>
 <a name="line-113"></a><a name="BufferData"></a><span class='hs-keyword'>class</span> <span class='hs-conid'>BufferData</span> <span class='hs-varid'>a</span> <span class='hs-keyword'>where</span>
-<a name="line-114"></a>    <span class='hs-comment'>-- | perfom a monadic action with the pointer to the raw content and the size of it in bytes</span>
-<a name="line-115"></a>    <span class='hs-varid'>withRawData</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-layout'>(</span><span class='hs-conid'>Int</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>()</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-conid'>()</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-conid'>()</span>
-<a name="line-116"></a>    <span class='hs-varid'>fromRawData</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Int</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>()</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-varid'>a</span>
+<a name="line-114"></a>  <span class='hs-comment'>-- | perfom a monadic action with the pointer to the raw content and the size of it in bytes</span>
+<a name="line-115"></a>  <span class='hs-varid'>withRawData</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-layout'>(</span><span class='hs-conid'>Int</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>()</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-conid'>()</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-conid'>()</span>
+<a name="line-116"></a>  <span class='hs-varid'>fromRawData</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Int</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Ptr</span> <span class='hs-conid'>()</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>IO</span> <span class='hs-varid'>a</span>
 <a name="line-117"></a>
 <a name="line-118"></a><a name="instance%20BufferData%20(V.Vector%20a)"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Storable</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>BufferData</span> <span class='hs-layout'>(</span><span class='hs-conid'>V</span><span class='hs-varop'>.</span><span class='hs-conid'>Vector</span> <span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-119"></a>    <span class='hs-varid'>withRawData</span> <span class='hs-varid'>v</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>V</span><span class='hs-varop'>.</span><span class='hs-varid'>unsafeWith</span> <span class='hs-varid'>v</span> <span class='hs-varop'>$</span> <span class='hs-varid'>m</span> <span class='hs-layout'>(</span><span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-varop'>*</span> <span class='hs-conid'>V</span><span class='hs-varop'>.</span><span class='hs-varid'>length</span> <span class='hs-varid'>v</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>castPtr</span>
-<a name="line-120"></a>    <span class='hs-varid'>fromRawData</span> <span class='hs-varid'>bytes</span> <span class='hs-varid'>ptr</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
-<a name="line-121"></a>      <span class='hs-varid'>fp</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>newForeignPtr_</span> <span class='hs-varop'>$</span> <span class='hs-varid'>castPtr</span> <span class='hs-varid'>ptr</span>
-<a name="line-122"></a>      <span class='hs-varid'>return</span> <span class='hs-varop'>$</span> <span class='hs-conid'>V</span><span class='hs-varop'>.</span><span class='hs-varid'>unsafeFromForeignPtr</span> <span class='hs-varid'>fp</span> <span class='hs-num'>0</span> <span class='hs-layout'>(</span><span class='hs-varid'>bytes</span> <span class='hs-varop'>`div`</span> <span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
+<a name="line-119"></a>  <span class='hs-varid'>withRawData</span> <span class='hs-varid'>v</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>V</span><span class='hs-varop'>.</span><span class='hs-varid'>unsafeWith</span> <span class='hs-varid'>v</span> <span class='hs-varop'>$</span> <span class='hs-varid'>m</span> <span class='hs-layout'>(</span><span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-varop'>*</span> <span class='hs-conid'>V</span><span class='hs-varop'>.</span><span class='hs-varid'>length</span> <span class='hs-varid'>v</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>castPtr</span>
+<a name="line-120"></a>  <span class='hs-varid'>fromRawData</span> <span class='hs-varid'>bytes</span> <span class='hs-varid'>ptr</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>do</span>
+<a name="line-121"></a>    <span class='hs-varid'>fp</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>newForeignPtr_</span> <span class='hs-varop'>$</span> <span class='hs-varid'>castPtr</span> <span class='hs-varid'>ptr</span>
+<a name="line-122"></a>    <span class='hs-varid'>return</span> <span class='hs-varop'>$</span> <span class='hs-conid'>V</span><span class='hs-varop'>.</span><span class='hs-varid'>unsafeFromForeignPtr</span> <span class='hs-varid'>fp</span> <span class='hs-num'>0</span> <span class='hs-layout'>(</span><span class='hs-varid'>bytes</span> <span class='hs-varop'>`div`</span> <span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
 <a name="line-123"></a>
 <a name="line-124"></a><a name="instance%20BufferData%20%5ba%5d"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Storable</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>BufferData</span> <span class='hs-keyglyph'>[</span><span class='hs-varid'>a</span><span class='hs-keyglyph'>]</span> <span class='hs-keyword'>where</span>
-<a name="line-125"></a>    <span class='hs-varid'>withRawData</span> <span class='hs-varid'>v</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>withArrayLen</span> <span class='hs-varid'>v</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>n</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-layout'>(</span><span class='hs-varid'>n</span> <span class='hs-varop'>*</span> <span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>castPtr</span>
-<a name="line-126"></a>    <span class='hs-varid'>fromRawData</span> <span class='hs-varid'>bytes</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>peekArray</span> <span class='hs-layout'>(</span><span class='hs-varid'>bytes</span> <span class='hs-varop'>`div`</span> <span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>castPtr</span>
+<a name="line-125"></a>  <span class='hs-varid'>withRawData</span> <span class='hs-varid'>v</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>withArrayLen</span> <span class='hs-varid'>v</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>n</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-layout'>(</span><span class='hs-varid'>n</span> <span class='hs-varop'>*</span> <span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>castPtr</span>
+<a name="line-126"></a>  <span class='hs-varid'>fromRawData</span> <span class='hs-varid'>bytes</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>peekArray</span> <span class='hs-layout'>(</span><span class='hs-varid'>bytes</span> <span class='hs-varop'>`div`</span> <span class='hs-varid'>sizeOf</span> <span class='hs-layout'>(</span><span class='hs-varid'>undefined</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-varop'>.</span> <span class='hs-varid'>castPtr</span>
 <a name="line-127"></a>
 <a name="line-128"></a><span class='hs-comment'>-- * Buffer Access</span>
 <a name="line-129"></a>
@@ -177,60 +177,78 @@
 <a name="line-168"></a>
 <a name="line-169"></a><a name="pattern"></a><span class='hs-comment'>-- | Vertex attributes</span>
 <a name="line-170"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>ArrayBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_ARRAY_BUFFER</span> <span class='hs-conid'>GL_ARRAY_BUFFER_BINDING</span>
-<a name="line-171"></a><span class='hs-comment'>-- | Indirect command arguments</span>
-<a name="line-172"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DrawIndirectBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_DRAW_INDIRECT_BUFFER</span> <span class='hs-conid'>GL_DRAW_INDIRECT_BUFFER_BINDING</span>
-<a name="line-173"></a><span class='hs-comment'>-- | Vertex array indices</span>
-<a name="line-174"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>ElementArrayBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_ELEMENT_ARRAY_BUFFER</span> <span class='hs-conid'>GL_ELEMENT_ARRAY_BUFFER_BINDING</span>
-<a name="line-175"></a><span class='hs-comment'>-- | Pixel read target</span>
-<a name="line-176"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>PixelPackBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_PIXEL_PACK_BUFFER</span> <span class='hs-conid'>GL_PIXEL_PACK_BUFFER_BINDING</span>
-<a name="line-177"></a><span class='hs-comment'>-- | Texture data source</span>
-<a name="line-178"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>PixelUnpackBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_PIXEL_UNPACK_BUFFER</span> <span class='hs-conid'>GL_PIXEL_UNPACK_BUFFER_BINDING</span>
-<a name="line-179"></a><span class='hs-comment'>-- | Transform feedback buffer</span>
-<a name="line-180"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>TransformFeedbackBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_TRANSFORM_FEEDBACK_BUFFER</span> <span class='hs-conid'>GL_TRANSFORM_FEEDBACK_BUFFER_BINDING</span>
-<a name="line-181"></a><span class='hs-comment'>-- | Uniform block storage</span>
-<a name="line-182"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>UniformBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_UNIFORM_BUFFER</span> <span class='hs-conid'>GL_UNIFORM_BUFFER_BINDING</span>
+<a name="line-171"></a>
+<a name="line-172"></a><span class='hs-comment'>-- | Indirect command arguments</span>
+<a name="line-173"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DrawIndirectBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_DRAW_INDIRECT_BUFFER</span> <span class='hs-conid'>GL_DRAW_INDIRECT_BUFFER_BINDING</span>
+<a name="line-174"></a>
+<a name="line-175"></a><span class='hs-comment'>-- | Vertex array indices</span>
+<a name="line-176"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>ElementArrayBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_ELEMENT_ARRAY_BUFFER</span> <span class='hs-conid'>GL_ELEMENT_ARRAY_BUFFER_BINDING</span>
+<a name="line-177"></a>
+<a name="line-178"></a><span class='hs-comment'>-- | Pixel read target</span>
+<a name="line-179"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>PixelPackBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_PIXEL_PACK_BUFFER</span> <span class='hs-conid'>GL_PIXEL_PACK_BUFFER_BINDING</span>
+<a name="line-180"></a>
+<a name="line-181"></a><span class='hs-comment'>-- | Texture data source</span>
+<a name="line-182"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>PixelUnpackBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_PIXEL_UNPACK_BUFFER</span> <span class='hs-conid'>GL_PIXEL_UNPACK_BUFFER_BINDING</span>
 <a name="line-183"></a>
-<a name="line-184"></a><span class='hs-comment'>-- | Atomic counter storage</span>
-<a name="line-185"></a><span class='hs-comment'>-- pattern AtomicCounterBuffer = BufferTarget GL_ATOMIC_COUNTER_BUFFER GL_ATOMIC_COUNTER_BUFFER_BINDING</span>
-<a name="line-186"></a><span class='hs-comment'>-- | Buffer copy source</span>
-<a name="line-187"></a><span class='hs-comment'>-- pattern CopyReadBuffer = BufferTarget GL_COPY_READ_BUFFER GL_COPY_READ_BUFFER_BINDING</span>
-<a name="line-188"></a><span class='hs-comment'>-- | Buffer copy destination</span>
-<a name="line-189"></a><span class='hs-comment'>-- pattern CopyWriteBuffer = BufferTarget GL_COPY_WRITE_BUFFER GL_COPY_WRITE_BUFFER_BINDING</span>
-<a name="line-190"></a><span class='hs-comment'>-- | Indirect compute dispatch commands</span>
-<a name="line-191"></a><span class='hs-comment'>-- pattern DispatchIndirectBuffer = BufferTarget GL_DISPATCH_INDIRECT_BUFFER GL_DISPATCH_INDIRECT_BUFFER_BINDING</span>
-<a name="line-192"></a><span class='hs-comment'>-- | Query result buffer</span>
-<a name="line-193"></a><span class='hs-comment'>-- pattern QueryBuffer = BufferTarget GL_QUERY_BUFFER GL_QUERY_BUFFER_BINDING</span>
-<a name="line-194"></a><span class='hs-comment'>-- | Read-write storage for shaders</span>
-<a name="line-195"></a><span class='hs-comment'>-- pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING</span>
-<a name="line-196"></a><span class='hs-comment'>-- | Texture data buffer</span>
-<a name="line-197"></a><span class='hs-comment'>-- pattern TextureBuffer = BufferTarget GL_TEXTURE_BUFFER GL_TEXTURE_BUFFER_BINDING</span>
+<a name="line-184"></a><span class='hs-comment'>-- | Read-write storage for shaders</span>
+<a name="line-185"></a><span class='hs-comment'>--</span>
+<a name="line-186"></a><span class='hs-comment'>-- You can use the 'Quine.GL.Block.STD140' and 'Quine.GL.Block.STD430' newtype wrappers around the contents.</span>
+<a name="line-187"></a><span class='hs-comment'>--</span>
+<a name="line-188"></a><span class='hs-comment'>-- Requires OpenGL 4.3+</span>
+<a name="line-189"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>ShaderStorageBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_SHADER_STORAGE_BUFFER</span> <span class='hs-conid'>GL_SHADER_STORAGE_BUFFER_BINDING</span>
+<a name="line-190"></a>
+<a name="line-191"></a><span class='hs-comment'>-- | Transform feedback buffer</span>
+<a name="line-192"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>TransformFeedbackBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_TRANSFORM_FEEDBACK_BUFFER</span> <span class='hs-conid'>GL_TRANSFORM_FEEDBACK_BUFFER_BINDING</span>
+<a name="line-193"></a>
+<a name="line-194"></a><span class='hs-comment'>-- | Uniform block storage</span>
+<a name="line-195"></a><span class='hs-comment'>--</span>
+<a name="line-196"></a><span class='hs-comment'>-- You should probably use the 'Quine.GL.Block.STD140' newtype wrapper around the contents.</span>
+<a name="line-197"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>UniformBuffer</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferTarget</span> <span class='hs-conid'>GL_UNIFORM_BUFFER</span> <span class='hs-conid'>GL_UNIFORM_BUFFER_BINDING</span>
 <a name="line-198"></a>
-<a name="line-199"></a><span class='hs-comment'>-- * Usage</span>
-<a name="line-200"></a>
-<a name="line-201"></a><span class='hs-comment'>-- $usage</span>
-<a name="line-202"></a><span class='hs-comment'>--</span>
-<a name="line-203"></a><span class='hs-comment'>-- Terminology:</span>
-<a name="line-204"></a><span class='hs-comment'>--</span>
-<a name="line-205"></a><span class='hs-comment'>-- [Stream] The data store contents will be modified once and used at most a few times.</span>
-<a name="line-206"></a><span class='hs-comment'>--</span>
-<a name="line-207"></a><span class='hs-comment'>-- [Static] The data store contents will be modified once and used many times.</span>
-<a name="line-208"></a><span class='hs-comment'>--</span>
-<a name="line-209"></a><span class='hs-comment'>-- [Dynamic] The data store contents will be modified repeatedly and used many times.</span>
-<a name="line-210"></a><span class='hs-comment'>--</span>
-<a name="line-211"></a><span class='hs-comment'>-- [Draw] The data store contents are modified by the application, and used as the source for GL drawing and image specification commands.</span>
-<a name="line-212"></a><span class='hs-comment'>--</span>
-<a name="line-213"></a><span class='hs-comment'>-- [Read] The data store contents are modified by reading data from the GL, and used to return that data when queried by the application.</span>
-<a name="line-214"></a><span class='hs-comment'>--</span>
-<a name="line-215"></a><span class='hs-comment'>-- [Copy] The data store contents are modified by reading data from the GL, and used as the source for GL drawing and image specification commands.</span>
+<a name="line-199"></a><span class='hs-comment'>-- | Atomic counter storage</span>
+<a name="line-200"></a><span class='hs-comment'>-- pattern AtomicCounterBuffer = BufferTarget GL_ATOMIC_COUNTER_BUFFER GL_ATOMIC_COUNTER_BUFFER_BINDING</span>
+<a name="line-201"></a>
+<a name="line-202"></a><span class='hs-comment'>-- | Buffer copy source</span>
+<a name="line-203"></a><span class='hs-comment'>-- pattern CopyReadBuffer = BufferTarget GL_COPY_READ_BUFFER GL_COPY_READ_BUFFER_BINDING</span>
+<a name="line-204"></a>
+<a name="line-205"></a><span class='hs-comment'>-- | Buffer copy destination</span>
+<a name="line-206"></a><span class='hs-comment'>-- pattern CopyWriteBuffer = BufferTarget GL_COPY_WRITE_BUFFER GL_COPY_WRITE_BUFFER_BINDING</span>
+<a name="line-207"></a>
+<a name="line-208"></a><span class='hs-comment'>-- | Indirect compute dispatch commands</span>
+<a name="line-209"></a><span class='hs-comment'>-- pattern DispatchIndirectBuffer = BufferTarget GL_DISPATCH_INDIRECT_BUFFER GL_DISPATCH_INDIRECT_BUFFER_BINDING</span>
+<a name="line-210"></a>
+<a name="line-211"></a><span class='hs-comment'>-- | Query result buffer</span>
+<a name="line-212"></a><span class='hs-comment'>-- pattern QueryBuffer = BufferTarget GL_QUERY_BUFFER GL_QUERY_BUFFER_BINDING</span>
+<a name="line-213"></a>
+<a name="line-214"></a><span class='hs-comment'>-- | Texture data buffer</span>
+<a name="line-215"></a><span class='hs-comment'>-- pattern TextureBuffer = BufferTarget GL_TEXTURE_BUFFER GL_TEXTURE_BUFFER_BINDING</span>
 <a name="line-216"></a>
-<a name="line-217"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StreamDraw</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STREAM_DRAW</span>
-<a name="line-218"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StreamRead</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STREAM_READ</span>
-<a name="line-219"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StreamCopy</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STREAM_COPY</span>
-<a name="line-220"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StaticDraw</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STATIC_DRAW</span>
-<a name="line-221"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StaticRead</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STATIC_READ</span>
-<a name="line-222"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StaticCopy</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STATIC_COPY</span>
-<a name="line-223"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DynamicDraw</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_DYNAMIC_DRAW</span>
-<a name="line-224"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DynamicRead</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_DYNAMIC_READ</span>
-<a name="line-225"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DynamicCopy</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_DYNAMIC_COPY</span>
+<a name="line-217"></a><span class='hs-comment'>-- * Usage</span>
+<a name="line-218"></a>
+<a name="line-219"></a><span class='hs-comment'>-- $usage</span>
+<a name="line-220"></a><span class='hs-comment'>--</span>
+<a name="line-221"></a><span class='hs-comment'>-- Terminology:</span>
+<a name="line-222"></a><span class='hs-comment'>--</span>
+<a name="line-223"></a><span class='hs-comment'>-- [Stream] The data store contents will be modified once and used at most a few times.</span>
+<a name="line-224"></a><span class='hs-comment'>--</span>
+<a name="line-225"></a><span class='hs-comment'>-- [Static] The data store contents will be modified once and used many times.</span>
+<a name="line-226"></a><span class='hs-comment'>--</span>
+<a name="line-227"></a><span class='hs-comment'>-- [Dynamic] The data store contents will be modified repeatedly and used many times.</span>
+<a name="line-228"></a><span class='hs-comment'>--</span>
+<a name="line-229"></a><span class='hs-comment'>-- [Draw] The data store contents are modified by the application, and used as the source for GL drawing and image specification commands.</span>
+<a name="line-230"></a><span class='hs-comment'>--</span>
+<a name="line-231"></a><span class='hs-comment'>-- [Read] The data store contents are modified by reading data from the GL, and used to return that data when queried by the application.</span>
+<a name="line-232"></a><span class='hs-comment'>--</span>
+<a name="line-233"></a><span class='hs-comment'>-- [Copy] The data store contents are modified by reading data from the GL, and used as the source for GL drawing and image specification commands.</span>
+<a name="line-234"></a>
+<a name="line-235"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StreamDraw</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STREAM_DRAW</span>
+<a name="line-236"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StreamRead</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STREAM_READ</span>
+<a name="line-237"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StreamCopy</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STREAM_COPY</span>
+<a name="line-238"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StaticDraw</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STATIC_DRAW</span>
+<a name="line-239"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StaticRead</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STATIC_READ</span>
+<a name="line-240"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>StaticCopy</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_STATIC_COPY</span>
+<a name="line-241"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DynamicDraw</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_DYNAMIC_DRAW</span>
+<a name="line-242"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DynamicRead</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_DYNAMIC_READ</span>
+<a name="line-243"></a><span class='hs-definition'>pattern</span> <span class='hs-conid'>DynamicCopy</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BufferUsage</span> <span class='hs-conid'>GL_DYNAMIC_COPY</span>
 </pre></body>
 </html>
