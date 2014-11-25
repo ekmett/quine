@@ -8,19 +8,19 @@ I reserve the right to get bored and go do something else that actually makes mo
 A couple of shader toys:
 
 ```
-$ quine -F shaders/examples/generators.frag
+$ toy -F shaders/examples/generators.frag
 ```
 
 ![screenshot of generators](https://raw.githubusercontent.com/wiki/ekmett/quine/generators.png)
 
 ```
-$ quine -F shaders/examples/dodecahedron.frag
+$ toy -F shaders/examples/dodecahedron.frag
 ```
 
 ![screenshot of a dodecahedron](https://raw.githubusercontent.com/wiki/ekmett/quine/dodecahedron.png)
 
 ```
-$ quine -F shaders/examples/chains.frag
+$ toy -F shaders/examples/chains.frag
 ```
 
 ![screenshot of chains](https://raw.githubusercontent.com/wiki/ekmett/quine/chains.png)
@@ -34,7 +34,7 @@ Usage Instructions
 You can start up the process with just
 
 ```
-$ quine
+$ toy
 ```
 
 Resolution Settings
@@ -43,7 +43,7 @@ Resolution Settings
 Full-screen can be accessed on a mac with `Cmd-Enter`, or you can start there with `-f`
 
 ```
-$ quine -f
+$ toy -f
 ```
 
 Due to a bug in SDL 2.0.3 on OSX when rendering through Cocoa, this currently has to use the "fullscreen via desktop" method
@@ -52,14 +52,14 @@ otherwise I can't let you return to the desktop.
 If you want to use native fullscreen then you can get coarser resolutions that run much faster (due to the lack of upsampling) with
 
 ```
-$ quine -f -n -x 1024 -y 768
+$ toy -f -n -x 1024 -y 768
 ```
 
 Retina rendering supported via `-r`, but figuring out the device scaling factor is currently not, I'll guess 2.0 as it is the default, but
 you can play with the ratio with `-s`.
 
 ```
-$ quine -r -s 2.0
+$ toy -r -s 2.0
 ```
 
 Mac "Deferred Updates"
