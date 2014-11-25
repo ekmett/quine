@@ -25,6 +25,7 @@ module Quine.GL.Buffer
   , bufferData
   , bufferDataDirect
   -- * Buffer Targets
+  , BufferTarget(..)
   , pattern ArrayBuffer
   , pattern DrawIndirectBuffer
   , pattern ElementArrayBuffer
@@ -41,7 +42,7 @@ module Quine.GL.Buffer
   -- , pattern TextureBuffer
 
   -- * Buffer Usage
-  , BufferUsage
+  , BufferUsage(..)
   -- * Usage Types
   -- $usage
   -- $stream
@@ -109,12 +110,13 @@ instance Default (Buffer a) where
 
 -- * Buffer Data
 
--- | I bet there is already a package with
 class BufferData a where
   -- | perfom a monadic action with the pointer to the raw content and the size of it in bytes
   withRawData :: a -> (Int -> Ptr () -> IO ()) -> IO ()
   fromRawData :: Int -> Ptr () -> IO a
 
+-- | This instance writes the data interleaved because the 'Vector' structure is already interleaved.
+-- If you want an different layout use a newtype wrapper or an own data structure.
 instance Storable a => BufferData (V.Vector a) where
   withRawData v m = V.unsafeWith v $ m (sizeOf (undefined::a) * V.length v) . castPtr
   fromRawData bytes ptr = do
