@@ -1,3 +1,7 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -14,20 +18,67 @@ import Test.Hspec
 import Control.Exception.Base
 import Control.Monad hiding (sequence)
 import Data.Bits
+import Data.Proxy
+import qualified Data.ByteString.Lazy.Char8 as BS
 
+import GHC.Generics
 import Data.Default
 import qualified Data.Vector.Storable as V
 import Foreign.C.String
+import Foreign.Storable
+import Foreign.Ptr
+import Foreign.Marshal.Array
 
 import Quine.GL.Buffer
+import Quine.GL.Attribute
 import Quine.GL.VertexArray
 import Quine.GL.Object
 import Quine.GL.Error
+import Quine.GL.Types
+import Quine.GL.Program
+import Quine.GL.Uniform
+import Quine.GL.Block
+import Quine.GL.Shader
+import Quine.GL
 import Quine.StateVar
 import Quine.SDL
 import Graphics.UI.SDL as SDL
+import Linear
 
 import Graphics.GL.Ext.EXT.DirectStateAccess
+import Graphics.GL.Internal.Shared
+import Graphics.GL.Types
+
+data VertexStream = VertexStream 
+  { position :: [Vec3]
+  , normal   :: [Vec3]
+  , texture  :: [Vec2]
+  } deriving (Generic)
+vertexStream = VertexStream ([V3 (-1) 0 0, V3 0 1 0, V3 1 0 0])
+                            ([V3 0 0 1   , V3 0 0 1, V3 0 0 1])
+                            ([V2 0 0     , V2 0.5 1, V2 1 0])
+
+
+
+vertexSrc = BS.pack $ unlines 
+  [ "#version 410"
+  , "in vec3 aPosition;"
+  , "in vec3 aNormal;"
+  -- , "in vec2 aTexture;"
+  , "void main(){aNormal;gl_Position=vec4(aPosition, 1.0);}"
+  ]
+
+fragSrc = BS.pack $ unlines 
+  [ "#version 410"
+  , "out vec4 color;"
+  , "void main(){color=vec4(1.0);}"
+  ]
+
+-- TODO remove me
+instance Storable a => Storable [a] where
+  sizeOf as = length as * sizeOf (undefined :: a)
+  alignment _ = alignment (undefined :: a)
+  poke ptr = pokeArray (castPtr ptr)
 
 withGLContext :: IO a -> IO a
 withGLContext action = do
@@ -44,6 +95,7 @@ withGLContext action = do
     )
    (\(win, cxt) -> glDeleteContext cxt >> destroyWindow win >> quit)
    (const action)
+
 
 main :: IO ()
 main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ around_ withGLContext $ do
@@ -167,3 +219,36 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
         _re <- (get $ bufferDataDirect def) :: IO (BufferUsage, V.Vector Int)
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
 
+  describe "Vertex Attributes" $ do
+
+    it "(smoke test) are written to the buffer" $ do
+
+      vertShader <- createShader GL_VERTEX_SHADER
+      fragShader <- createShader GL_FRAGMENT_SHADER
+      shaderSource vertShader $= vertexSrc
+      shaderSource fragShader $= fragSrc
+      compileShader vertShader
+      compileShader fragShader
+      compileStatus vertShader `shouldReturn` True
+      compileStatus fragShader `shouldReturn` True
+  
+      prog <- link [vertShader,fragShader]
+
+      iPosition <- attributeLocation prog "aPosition"
+      iNormal   <- attributeLocation prog "aNormal"
+      -- iTexture  <- attributeLocation prog "aTexture"
+      posNormBuff <- gen :: IO (Buffer (STD140 VertexStream)) -- FIX type
+      
+
+      -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
+      (boundVertexArray $=) =<< gen
+      -- in production: enable the vertex arrays, but it's not necessary for filling the buffer 
+      -- glEnableVertexAttribArray (fromIntegral iPosition)
+      -- glEnableVertexAttribArray (fromIntegral iNormal)
+
+      boundBufferAt ArrayBuffer $= posNormBuff
+      writeBufferData ArrayBuffer StaticDraw $ do
+        assignAttribute iPosition AsFloating $ position vertexStream
+        assignAttribute iNormal   AsFloating $ normal vertexStream
+
+      errors >>= (`shouldSatisfy` null)
