@@ -10,52 +10,43 @@
 --------------------------------------------------------------------
 module Main where
 
-import Prelude hiding (sequence)
 import Test.Hspec
 import Control.Exception.Base
 import Control.Monad hiding (sequence)
-import Graphics.UI.GLFW as GLFW
-import Data.Traversable
-import Data.Coerce
+import Data.Bits
+
 import Data.Default
 import qualified Data.Vector.Storable as V
+import Foreign.C.String
 
 import Quine.GL.Buffer
 import Quine.GL.VertexArray
 import Quine.GL.Object
 import Quine.GL.Error
 import Quine.StateVar
+import Quine.SDL
+import Graphics.UI.SDL as SDL
 
 import Graphics.GL.Ext.EXT.DirectStateAccess
-import Graphics.GL.Types
-import Graphics.GL.Internal.Shared
 
-gl41Test =
-  [ WindowHint'Visible False
-  , WindowHint'ClientAPI ClientAPI'OpenGL
-  , WindowHint'ContextVersionMajor 4
-  , WindowHint'ContextVersionMinor 1
-  -- ^ 4.1 max on os x, 4.4 on windows with nvidia 344.75
-  , WindowHint'OpenGLForwardCompat  True
-  , WindowHint'OpenGLProfile OpenGLProfile'Core
-  , WindowHint'OpenGLDebugContext False
-  ]
-
-withGLContext :: [WindowHint] -> IO a -> IO a
-withGLContext settings action = do
+withGLContext :: IO a -> IO a
+withGLContext action = do
   bracket
     (do
-      bInited <- GLFW.init
-      unless bInited $ error "GLFW not initialized"
-      traverse windowHint settings
-      Just win <- createWindow 1 1 "hspec" Nothing Nothing
-      makeContextCurrent $ Just win
-      return win
+      SDL.init SDL_INIT_EVERYTHING >>= err
+      contextMajorVersion $= 4
+      contextMinorVersion $= 1
+      contextProfileMask $= SDL_GL_CONTEXT_PROFILE_CORE
+      win <- withCString "shaders" $ \windowName -> createWindow windowName SDL_WINDOWPOS_CENTERED SDL_WINDOWPOS_CENTERED 1 1 (SDL_WINDOW_OPENGL .|. SDL_WINDOW_HIDDEN)
+      cxt <- glCreateContext win
+      makeCurrent win  cxt
+      return (win, cxt)
     )
-   (\win -> destroyWindow win >> terminate)
+   (\(win, cxt) -> glDeleteContext cxt >> destroyWindow win >> quit)
    (const action)
 
-main = withGLContext gl41Test (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ around_ (withGLContext gl41Test) $ do
+main :: IO ()
+main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ around_ withGLContext $ do
   -- * Buffer generation
   describe "Buffer generation" $ do
     it "at least some buffers generatable" $ do
@@ -99,7 +90,7 @@ main = withGLContext gl41Test (evaluate gl_EXT_direct_state_access) >>= \dsa -> 
 
     when dsa $ context "direct upload data to buffer" $ do
       it "is possible to direct upload" $ do
-        vao <- gen :: IO VertexArray
+        _vao <- gen :: IO VertexArray
         buff <- gen :: IO (Buffer [Int])
 
         -- inital setup to define buffer type
@@ -169,10 +160,10 @@ main = withGLContext gl41Test (evaluate gl_EXT_direct_state_access) >>= \dsa -> 
 
       it "should fail to download something for the 0-default buffer" $ do
         boundBufferAt ArrayBuffer $= def
-        re <- (get $ bufferData ArrayBuffer) :: IO (BufferUsage, V.Vector Int)
+        _re <- (get $ bufferData ArrayBuffer) :: IO (BufferUsage, V.Vector Int)
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
 
       it "should fail to download directly something for the 0-default buffer" $ do
-        re <- (get $ bufferDataDirect def) :: IO (BufferUsage, V.Vector Int)
+        _re <- (get $ bufferDataDirect def) :: IO (BufferUsage, V.Vector Int)
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
 
