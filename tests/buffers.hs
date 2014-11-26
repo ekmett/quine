@@ -49,15 +49,32 @@ import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Internal.Shared
 import Graphics.GL.Types
 
-data VertexStream = VertexStream 
+
+-- * Fixtures
+
+data AttributeBlock = AttributeBlock 
   { position :: [Vec3]
   , normal   :: [Vec3]
   , texture  :: [Vec2]
   } deriving (Generic)
-vertexStream = VertexStream ([V3 (-1) 0 0, V3 0 1 0, V3 1 0 0])
-                            ([V3 0 0 1   , V3 0 0 1, V3 0 0 1])
-                            ([V2 0 0     , V2 0.5 1, V2 1 0])
 
+data Attribute = Attribute
+  { attrPosition :: Vec3
+  , attrNormal   :: Vec3
+  , attrTexture  :: Vec2
+  }
+
+attributeBlock = AttributeBlock
+  ([V3 (-1) 0 0, V3 0 1 0, V3 1 0 0])
+  ([V3 0 0 1   , V3 0 0 1, V3 0 0 1])
+  ([V2 0 0     , V2 0.5 1, V2 1 0])
+
+-- transposition of stream
+attributeInterleaved = 
+  [ Attribute (V3 (-1) 0 0) (V3 0 0 1) (V2 0   0)
+  , Attribute (V3   0  1 0) (V3 0 0 1) (V2 0.5 0)
+  , Attribute (V3   1 0 0)  (V3 0 0 1) (V2 1   0)
+  ]
 
 
 vertexSrc = BS.pack $ unlines 
@@ -80,6 +97,8 @@ instance Storable a => Storable [a] where
   alignment _ = alignment (undefined :: a)
   poke ptr = pokeArray (castPtr ptr)
 
+-- * Setup
+
 withGLContext :: IO a -> IO a
 withGLContext action = do
   bracket
@@ -96,6 +115,7 @@ withGLContext action = do
    (\(win, cxt) -> glDeleteContext cxt >> destroyWindow win >> quit)
    (const action)
 
+-- * Tests
 
 main :: IO ()
 main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ around_ withGLContext $ do
@@ -221,7 +241,7 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
 
   describe "Vertex Attributes" $ do
 
-    it "(smoke test) are written to the buffer" $ do
+    it "are written to the buffer (smoke test)" $ do
 
       vertShader <- createShader GL_VERTEX_SHADER
       fragShader <- createShader GL_FRAGMENT_SHADER
@@ -237,18 +257,17 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
       iPosition <- attributeLocation prog "aPosition"
       iNormal   <- attributeLocation prog "aNormal"
       -- iTexture  <- attributeLocation prog "aTexture"
-      posNormBuff <- gen :: IO (Buffer (STD140 VertexStream)) -- FIX type
-      
+      posNormBuff <- gen :: IO (Buffer AttributeBlock) -- FIX type
 
       -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
       (boundVertexArray $=) =<< gen
       -- in production: enable the vertex arrays, but it's not necessary for filling the buffer 
       -- glEnableVertexAttribArray (fromIntegral iPosition)
       -- glEnableVertexAttribArray (fromIntegral iNormal)
-
+      
       boundBufferAt ArrayBuffer $= posNormBuff
       writeBufferData ArrayBuffer StaticDraw $ do
-        assignAttribute iPosition AsFloating $ position vertexStream
-        assignAttribute iNormal   AsFloating $ normal vertexStream
+        assignAttribute iPosition AsFloating $ position attributeBlock
+        assignAttribute iNormal   AsFloating $ normal attributeBlock
 
       errors >>= (`shouldSatisfy` null)
