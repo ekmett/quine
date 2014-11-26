@@ -105,23 +105,23 @@ instance Default (Buffer a) where
 
 class BufferData a where
   -- | perfom a monadic action with the pointer to the raw content and the number of elements
-  withRawData :: a -> (Ptr () -> IO ()) -> IO ()
-  fromRawData :: Int -> Ptr () -> IO a
+  withRawData :: MonadIO m => a -> (Ptr () -> IO b) -> m b
+  fromRawData :: MonadIO m => Int -> Ptr () -> m a
   -- | size of the complete data in bytes
   sizeOfData :: a -> Int
 
 -- | This instance writes the data interleaved because the 'Vector' structure is already interleaved.
 -- If you want an different layout use a newtype wrapper or an own data structure.
 instance Storable a => BufferData (V.Vector a) where
-  withRawData v m = V.unsafeWith v $ m . castPtr
-  fromRawData num ptr = do
+  withRawData v m = liftIO $ V.unsafeWith v $ m . castPtr
+  fromRawData num ptr = liftIO $ do
     fp <- newForeignPtr_ $ castPtr ptr
     return $ V.unsafeFromForeignPtr fp 0 num
   sizeOfData v = V.length v * sizeOf (undefined::a)
 
 instance Storable a => BufferData [a] where
-  withRawData v m = withArray v $ m . castPtr
-  fromRawData num = peekArray num . castPtr
+  withRawData v m = liftIO $ withArray v $ m . castPtr
+  fromRawData num = liftIO . peekArray num . castPtr
   sizeOfData v = length v * sizeOf (undefined::a)
 
 -- * Buffer Access
