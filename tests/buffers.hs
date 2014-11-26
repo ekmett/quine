@@ -19,6 +19,7 @@ module Main where
 
 import Test.Hspec
 import Control.Exception.Base
+import Control.Monad.IO.Class
 import Control.Monad hiding (sequence)
 import Control.Applicative
 import Data.Bits
@@ -28,10 +29,14 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import GHC.Generics
 import Data.Default
 import qualified Data.Vector.Storable as V
+import Data.Vector.Storable.Internal (updPtr)
 import Foreign.C.String
 import Foreign.Storable
 import Foreign.Ptr
+import Foreign.ForeignPtr
 import Foreign.Marshal.Array
+import Foreign.Marshal.Utils
+import Foreign.Marshal.Alloc
 
 import Quine.GL.Buffer
 import Quine.GL.Attribute
@@ -57,14 +62,6 @@ import Graphics.GL.Types
 -- * Fixtures
 --------------------------------------------------------------------------------
 
-data AttributeBlock = AttributeBlock 
-  { position :: V.Vector Vec3
-  , normal   :: V.Vector Vec3
-  , texture  :: V.Vector Vec2
-  } deriving (Generic)
-
-instance BufferData AttributeBlock where
-
 
 data AnAttribute f = AnAttribute
   { attrPosition :: f Vec3
@@ -86,13 +83,14 @@ instance Storable (AnAttribute UnAnnotated) where
     pokeByteOff p (o + sizeOf(attrPosition)) attrNormal
     pokeByteOff p (o + sizeOf(attrPosition) + sizeOf(attrNormal)) attrTexture
 
+instance HasLayoutAnnotation AnAttribute where
+  layoutAnnotation p = AnAttribute
+    { attrPosition = LayoutAnnotation $ Layout (components $ attrPosition <$> p) (baseType $ attrPosition <$> p) False (sizeOfProxy p) nullPtr
+    , attrNormal   = LayoutAnnotation $ Layout (components $ attrNormal   <$> p) (baseType $ attrNormal   <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p))
+    , attrTexture  = LayoutAnnotation $ Layout (components $ attrTexture  <$> p) (baseType $ attrTexture  <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p) `plusPtr` sizeOfProxy (attrNormal <$> p))
+    }
 
-attributeBlock = AttributeBlock
-  (V.fromList [V3 (-1) 0 0, V3 0 1 0, V3 1 0 0])
-  (V.fromList [V3 0 0 1   , V3 0 0 1, V3 0 0 1])
-  (V.fromList [V2 0 0     , V2 0.5 1, V2 1 0])
 
--- transposition of stream
 attributeInterleaved :: V.Vector (AnAttribute UnAnnotated)
 attributeInterleaved = V.fromList
   [ mkAttribute (V3 (-1) 0 0) (V3 0 0 1) (V2 0   0)
@@ -103,13 +101,6 @@ attributeInterleaved = V.fromList
 -- with annotations it is a bit clumsy to construct an attribute now (=RFC)
 mkAttribute :: Vec3 -> Vec3 -> Vec2 -> AnAttribute UnAnnotated
 mkAttribute p n t = AnAttribute (UnAnnotated p) (UnAnnotated n) (UnAnnotated t)
-
-instance HasLayoutAnnotation AnAttribute where
-  layoutAnnotation p = AnAttribute
-    { attrPosition = LayoutAnnotation $ Layout (components $ attrPosition <$> p) (baseType $ attrPosition <$> p) False (sizeOfProxy p) nullPtr
-    , attrNormal   = LayoutAnnotation $ Layout (components $ attrNormal   <$> p) (baseType $ attrNormal   <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p))
-    , attrTexture  = LayoutAnnotation $ Layout (components $ attrTexture  <$> p) (baseType $ attrTexture  <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p) `plusPtr` sizeOfProxy (attrNormal <$> p))
-    }
 
 
 vertexSrc = BS.pack $ unlines 
@@ -272,34 +263,7 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
         _re <- (get $ bufferDataDirect def) :: IO (BufferUsage, V.Vector Int)
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
 
-  describe "Vertex Attributes" $ do
-
-    it "are written with 'writeBufferData' to the buffer without error (smoke test)" $ do
-
-      vertShader <- createShaderFromSource GL_VERTEX_SHADER vertexSrc
-      fragShader <- createShaderFromSource GL_FRAGMENT_SHADER fragSrc
-  
-      prog <- link [vertShader,fragShader]
-
-      iPosition <- attributeLocation prog "aPosition"
-      iNormal   <- attributeLocation prog "aNormal"
-      -- iTexture  <- attributeLocation prog "aTexture"
-      posNormBuff <- gen :: IO (Buffer AttributeBlock) -- FIX type
-
-      -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
-      (boundVertexArray $=) =<< gen
-      -- in production: enable the vertex arrays, but it's not necessary for filling the buffer 
-      -- glEnableVertexAttribArray (fromIntegral iPosition)
-      -- glEnableVertexAttribArray (fromIntegral iNormal)
-      
-      boundBufferAt ArrayBuffer $= posNormBuff
-      -- writeBufferData ArrayBuffer StaticDraw $ do
-      --   assignAttribute iPosition AsFloating $ position attributeBlock
-      --   assignAttribute iNormal   AsFloating $ normal attributeBlock
-
-      errors >>= (`shouldSatisfy` null)
-
-    it "are written interleaved to the buffer without error (smoke test)" $ do
+    it "can be written interleaved (VNTVNTVNTVNT) to the buffer and linked to vertex shader attributes without an error (smoke test)" $ do
 
       vertShader <- createShaderFromSource GL_VERTEX_SHADER vertexSrc
       fragShader <- createShaderFromSource GL_FRAGMENT_SHADER fragSrc
