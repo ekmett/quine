@@ -43,6 +43,7 @@ import Data.Data
 import Data.Coerce
 import Data.Foldable
 import Foreign.Storable
+import Foreign.Marshal.Utils
 import Data.Word
 import Data.Int
 import Foreign.C.String
@@ -51,7 +52,6 @@ import Foreign.Marshal.Alloc
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Quine.GL.Program
-import Quine.GL.Error
 import Quine.GL.Buffer
 import Quine.GL.Types
 
@@ -89,13 +89,14 @@ type AttributeWriter = StateT BufferBackend IO ()
 -- | assign a stream of data to an 'AttributeLocation' in a 'Program'.
 -- with 'glGetVertexAttrib' its possible to form a 'StateVar' but a bound buffer is necessary :( 
 -- some day it could be a full 'StateVar' with with bindless
-assignAttribute :: forall a f. (Storable (f a), Attribute a) => AttributeLocation -> AsType -> f a -> AttributeWriter
+assignAttribute :: forall a f. (Storable a, BufferData (f a), Attribute a) => AttributeLocation -> AsType -> f a -> AttributeWriter
 assignAttribute loc asType dat = do
     BufferBackend{..} <- get
-    let newSize = bytesWritten + sizeOf dat
-    ptr <- liftIO $ do reallocBytes bufferedData newSize -- possible fragmentation?
-    liftIO $ pokeByteOff ptr bytesWritten dat
-    put $ BufferBackend ptr newSize ((loc, asType, attribLayout (Proxy :: Proxy a) 0 (nullPtr `plusPtr` bytesWritten)):attributeLayout)
+    let newSize = bytesWritten + sizeOfData dat
+    put =<< (withRawData dat $ \inPtr -> do
+        ptr <- do reallocBytes bufferedData newSize -- possible source of fragmentation?
+        copyBytes (ptr `plusPtr` bytesWritten) inPtr (sizeOfData dat)
+        return $ BufferBackend ptr newSize ((loc, asType, attribLayout (Proxy :: Proxy a) 0 (nullPtr `plusPtr` bytesWritten)):attributeLayout))
     where
     attribLayout p = Layout (components p) (baseType p) (normalize p)
 

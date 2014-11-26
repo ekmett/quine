@@ -11,7 +11,7 @@
 -- Portability: non-portable
 --
 -- Tests for `Quine.GL.Buffer`
---------------------------------------------------------------------
+--------------------------------------------------------------------------------
 module Main where
 
 import Test.Hspec
@@ -49,8 +49,9 @@ import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Internal.Shared
 import Graphics.GL.Types
 
-
+--------------------------------------------------------------------------------
 -- * Fixtures
+--------------------------------------------------------------------------------
 
 data AttributeBlock = AttributeBlock 
   { position :: [Vec3]
@@ -91,13 +92,9 @@ fragSrc = BS.pack $ unlines
   , "void main(){color=vec4(1.0);}"
   ]
 
--- TODO remove me
-instance Storable a => Storable [a] where
-  sizeOf as = length as * sizeOf (undefined :: a)
-  alignment _ = alignment (undefined :: a)
-  poke ptr = pokeArray (castPtr ptr)
-
+--------------------------------------------------------------------------------
 -- * Setup
+--------------------------------------------------------------------------------
 
 withGLContext :: IO a -> IO a
 withGLContext action = do
@@ -115,7 +112,9 @@ withGLContext action = do
    (\(win, cxt) -> glDeleteContext cxt >> destroyWindow win >> quit)
    (const action)
 
+--------------------------------------------------------------------------------
 -- * Tests
+--------------------------------------------------------------------------------
 
 main :: IO ()
 main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ around_ withGLContext $ do
@@ -241,7 +240,7 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
 
   describe "Vertex Attributes" $ do
 
-    it "are written to the buffer (smoke test)" $ do
+    it "are written to the buffer without error (smoke test)" $ do
 
       vertShader <- createShader GL_VERTEX_SHADER
       fragShader <- createShader GL_FRAGMENT_SHADER
