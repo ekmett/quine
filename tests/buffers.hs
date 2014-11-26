@@ -99,8 +99,8 @@ vertexSrc = BS.pack $ unlines
   [ "#version 410"
   , "in vec3 aPosition;"
   , "in vec3 aNormal;"
-  -- , "in vec2 aTexture;"
-  , "void main(){aNormal;gl_Position=vec4(aPosition, 1.0);}"
+  , "in vec2 aTexture;"
+  , "void main(){aNormal;aTexture;gl_Position=vec4(aPosition, 1.0);}"
   ]
 
 fragSrc = BS.pack $ unlines 
@@ -259,14 +259,8 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
 
     it "are written with 'writeBufferData' to the buffer without error (smoke test)" $ do
 
-      vertShader <- createShader GL_VERTEX_SHADER
-      fragShader <- createShader GL_FRAGMENT_SHADER
-      shaderSource vertShader $= vertexSrc
-      shaderSource fragShader $= fragSrc
-      compileShader vertShader
-      compileShader fragShader
-      compileStatus vertShader `shouldReturn` True
-      compileStatus fragShader `shouldReturn` True
+      vertShader <- createShaderFromSource GL_VERTEX_SHADER vertexSrc
+      fragShader <- createShaderFromSource GL_FRAGMENT_SHADER fragSrc
   
       prog <- link [vertShader,fragShader]
 
@@ -290,36 +284,40 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
 
     it "are written interleaved to the buffer without error (smoke test)" $ do
 
-      vertShader <- createShader GL_VERTEX_SHADER
-      fragShader <- createShader GL_FRAGMENT_SHADER
-      shaderSource vertShader $= vertexSrc
-      shaderSource fragShader $= fragSrc
-      compileShader vertShader
-      compileShader fragShader
-      compileStatus vertShader `shouldReturn` True
-      compileStatus fragShader `shouldReturn` True
+      vertShader <- createShaderFromSource GL_VERTEX_SHADER vertexSrc
+      fragShader <- createShaderFromSource GL_FRAGMENT_SHADER fragSrc
+
   
       prog <- link [vertShader,fragShader]
 
       iPosition <- attributeLocation prog "aPosition"
       iNormal   <- attributeLocation prog "aNormal"
-      -- iTexture  <- attributeLocation prog "aTexture"
-      posNormBuff <- gen :: IO (Buffer (V.Vector Attribute)) -- FIX type
+      iTexture  <- attributeLocation prog "aTexture"
 
       -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
       (boundVertexArray $=) =<< gen
-      -- in production: enable the vertex arrays, but it's not necessary for filling the buffer 
-      -- glEnableVertexAttribArray (fromIntegral iPosition)
-      -- glEnableVertexAttribArray (fromIntegral iNormal)
-      boundBufferAt ArrayBuffer $= posNormBuff
+      
+      (boundBufferAt ArrayBuffer $=) =<< gen :: IO (Buffer (V.Vector Attribute))
       bufferData ArrayBuffer $= (StaticDraw, attributeInterleaved)
-      -- big ???
-      -- vertexAttribPointer iPosition (layout attrPosition attributeInterleaved )
-      -- writeBufferData ArrayBuffer StaticDraw $ do
-      --   assignAttribute iPosition AsFloating $ position attributeBlock
-      --   assignAttribute iNormal   AsFloating $ normal attributeBlock
+      
+      -- consolidate
+      glEnableVertexAttribArray (fromIntegral iPosition)
+      vertexAttribPointer iPosition (attrPosition $ attributeLayout attributeInterleaved)
+      
+      glEnableVertexAttribArray (fromIntegral iNormal  )
+      vertexAttribPointer iNormal   (attrNormal   $ attributeLayout attributeInterleaved)
+      
+      glEnableVertexAttribArray (fromIntegral iTexture )
+      vertexAttribPointer iTexture  (attrTexture  $ attributeLayout attributeInterleaved)
 
       errors >>= (`shouldSatisfy` null)
       (get (bufferData ArrayBuffer)) `shouldReturn` (StaticDraw, attributeInterleaved)
       errors >>= (`shouldSatisfy` null)
 
+
+createShaderFromSource shaderType src = do
+  s <- createShader shaderType
+  shaderSource s $= src
+  compileShader s    
+  compileStatus s `shouldReturn` True
+  return s
