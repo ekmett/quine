@@ -21,21 +21,21 @@
 -- OpenGL Attribute
 --------------------------------------------------------------------
 module Quine.GL.Attribute
-    ( 
-    -- * Attribute Location
-      AttributeLocation
-    , attributeLocation
-    , vertexAttribPointerI
-    , vertexAttribPointer
-    
-    -- * Attribute Stream To Buffer
-    , writeBufferData
-    , assignAttribute
-    , AsType(..)
+  ( 
+  -- * Attribute Location
+    AttributeLocation
+  , attributeLocation
+  , vertexAttribPointerI
+  , vertexAttribPointer
+  
+  -- * Attribute Stream To Buffer
+  , writeBufferData
+  , assignAttribute
+  , AsType(..)
 
-    -- * Base Types
-    , BaseType
-    ) where
+  -- * Base Types
+  , BaseType
+  ) where
 
 import Control.Monad.IO.Class
 import Control.Monad.Trans.State
@@ -73,13 +73,13 @@ data AsType = AsInteger | AsFloating
 data Layout = Layout Components BaseType Normalized Stride OffsetPtr
 
 data BufferBackend = BufferBackend
-    { bufferedData :: Ptr ()
-    -- ^ written raw data
-    , bytesWritten :: Int
-    -- ^ simple byte counter to keep track of the bytes stored in the Ptr
-    , attributeLayout :: [(AttributeLocation, AsType, Layout)] 
-    -- ^ maps for each written attribute the memory layout
-    }
+  { bufferedData :: Ptr ()
+  -- ^ written raw data
+  , bytesWritten :: Int
+  -- ^ simple byte counter to keep track of the bytes stored in the Ptr
+  , attributeLayout :: [(AttributeLocation, AsType, Layout)] 
+  -- ^ maps for each written attribute the memory layout
+  }
 
 emptyBufferBackend :: BufferBackend
 emptyBufferBackend = BufferBackend nullPtr 0 []
@@ -91,87 +91,87 @@ type AttributeWriter = StateT BufferBackend IO ()
 -- some day it could be a full 'StateVar' with with bindless
 assignAttribute :: forall a f. (Storable a, BufferData (f a), Attribute a) => AttributeLocation -> AsType -> f a -> AttributeWriter
 assignAttribute loc asType dat = do
-    BufferBackend{..} <- get
-    let newSize = bytesWritten + sizeOfData dat
-    put =<< (withRawData dat $ \inPtr -> do
-        ptr <- do reallocBytes bufferedData newSize -- possible source of fragmentation?
-        copyBytes (ptr `plusPtr` bytesWritten) inPtr (sizeOfData dat)
-        return $ BufferBackend ptr newSize ((loc, asType, attribLayout (Proxy :: Proxy a) 0 (nullPtr `plusPtr` bytesWritten)):attributeLayout))
-    where
-    attribLayout p = Layout (components p) (baseType p) (normalize p)
+  BufferBackend{..} <- get
+  let newSize = bytesWritten + sizeOfData dat
+  put =<< (withRawData dat $ \inPtr -> do
+    ptr <- do reallocBytes bufferedData newSize -- possible source of fragmentation?
+    copyBytes (ptr `plusPtr` bytesWritten) inPtr (sizeOfData dat)
+    return $ BufferBackend ptr newSize ((loc, asType, attribLayout (Proxy :: Proxy a) 0 (nullPtr `plusPtr` bytesWritten)):attributeLayout))
+  where
+  attribLayout p = Layout (components p) (baseType p) (normalize p)
 
 writeBufferData :: MonadIO m => BufferTarget -> BufferUsage -> AttributeWriter -> m ()
 writeBufferData (BufferTarget t _) (BufferUsage u) w = liftIO $ do
-    BufferBackend{..} <- execStateT w emptyBufferBackend
-    -- push the pointer to the buffer
-    glBufferData t (fromIntegral $ bytesWritten) bufferedData (coerce u)
-    free bufferedData
-    forM_ attributeLayout $ \case
-              (loc, AsInteger, layout)  -> vertexAttribPointerI loc layout
-              (loc, AsFloating, layout) -> vertexAttribPointer loc layout
+  BufferBackend{..} <- execStateT w emptyBufferBackend
+  -- push the pointer to the buffer
+  glBufferData t (fromIntegral $ bytesWritten) bufferedData (coerce u)
+  free bufferedData
+  forM_ attributeLayout $ \case
+    (loc, AsInteger, layout)  -> vertexAttribPointerI loc layout
+    (loc, AsFloating, layout) -> vertexAttribPointer loc layout
 
 vertexAttribPointerI :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointerI loc (Layout comp ty _norm stride offPtr) = 
-    liftIO $ glVertexAttribIPointer (fromIntegral loc) (fromIntegral comp) ty (fromIntegral stride) offPtr
-                                    -- ^ why is coerce here not possible (like in Quine/GL/Uniform.hs)?
+  liftIO $ glVertexAttribIPointer (fromIntegral loc) (fromIntegral comp) ty (fromIntegral stride) offPtr
+                                  -- ^ why is coerce here not possible (like in Quine/GL/Uniform.hs)?
 
 vertexAttribPointer :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointer loc (Layout comp ty norm stride offPtr) =
-    liftIO $ glVertexAttribPointer (fromIntegral loc) (fromIntegral comp) ty (if norm then GL_TRUE else GL_FALSE) (fromIntegral stride) offPtr
+  liftIO $ glVertexAttribPointer (fromIntegral loc) (fromIntegral comp) ty (if norm then GL_TRUE else GL_FALSE) (fromIntegral stride) offPtr
 
 --------------------------------------------------------------------------------
 -- * Attribute Definition
 --------------------------------------------------------------------------------
 
--- maybe mergeable with Block in some way to build a generic GLStorable class?
 class Attribute a where
-    -- | 1, 2, 3 or 4 supported
-    components :: p a -> Int
-    baseType :: p a -> BaseType
-    -- | specifies whether integer data values should be normalized ('True') or converted directly as float values ('False') when they are accessed
-    normalize :: p a -> Bool
-    normalize _ = False
+  -- | 1, 2, 3 or 4 supported
+  components :: p a -> Int
+  baseType :: p a -> BaseType
+  -- | specifies whether integer data values should be normalized ('True') 
+  -- or converted directly as float values ('False') when they are accessed
+  normalize :: p a -> Bool
+  normalize _ = False
 
 instance Attribute Float where
-    components _ = 1
-    baseType _ = GL_FLOAT
+  components _ = 1
+  baseType _ = GL_FLOAT
 
 instance Attribute Double where
-    components _ = 1
-    baseType _ = GL_DOUBLE
+  components _ = 1
+  baseType _ = GL_DOUBLE
 
 instance Attribute Int32 where
-    components _ = 1
-    baseType _ = GL_INT
+  components _ = 1
+  baseType _ = GL_INT
 
 instance Attribute Int16 where
-    components _ = 1
-    baseType _ = GL_SHORT
+  components _ = 1
+  baseType _ = GL_SHORT
 
 instance Attribute Int8 where
-    components _ = 1
-    baseType _ = GL_BYTE
+  components _ = 1
+  baseType _ = GL_BYTE
 
 instance Attribute Word32 where
-    components _ = 1
-    baseType _ = GL_UNSIGNED_INT
+  components _ = 1
+  baseType _ = GL_UNSIGNED_INT
 
 instance Attribute Word16 where
-    components _ = 1
-    baseType _ = GL_UNSIGNED_SHORT
+  components _ = 1
+  baseType _ = GL_UNSIGNED_SHORT
 
 instance Attribute Word8 where
-    components _ = 1
-    baseType _ = GL_UNSIGNED_BYTE
+  components _ = 1
+  baseType _ = GL_UNSIGNED_BYTE
 
 instance Attribute Vec2 where
-    components _ = 2
-    baseType _ = GL_FLOAT
+  components _ = 2
+  baseType _ = GL_FLOAT
 
 instance Attribute Vec3 where
-    components _ = 3
-    baseType _ = GL_FLOAT
+  components _ = 3
+  baseType _ = GL_FLOAT
 
 instance Attribute Vec4 where
-    components _ = 4
-    baseType _ = GL_FLOAT
+  components _ = 4
+  baseType _ = GL_FLOAT
