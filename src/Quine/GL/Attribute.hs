@@ -110,11 +110,15 @@ writeBufferData (BufferTarget t _) (BufferUsage u) w = liftIO $ do
     (loc, AsInteger, layout)  -> vertexAttribPointerI loc layout
     (loc, AsFloating, layout) -> vertexAttribPointer loc layout
 
+-- | a not so low level binding to 'glVertexAttribIPointer'
+-- sets the attribute array pointer for an integer attribute (no conversion)
 vertexAttribPointerI :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointerI loc (Layout comp ty _norm stride offPtr) = 
   liftIO $ glVertexAttribIPointer (fromIntegral loc) (fromIntegral comp) ty (fromIntegral stride) offPtr
                                   -- ^ why is coerce here not possible (like in Quine/GL/Uniform.hs)?
 
+-- | a not so low level binding to 'glVertexAttribPointer'
+-- sets the attribute array pointer for an integer or floating attribute (integers are converted to the floating type)
 vertexAttribPointer :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointer loc (Layout comp ty norm stride offPtr) =
   liftIO $ glVertexAttribPointer (fromIntegral loc) (fromIntegral comp) ty (if norm then GL_TRUE else GL_FALSE) (fromIntegral stride) offPtr
