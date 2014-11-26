@@ -22,38 +22,40 @@
 --------------------------------------------------------------------
 module Quine.GL.Attribute
   ( 
+    Attribute(..)
   -- * Attribute Location
-    AttributeLocation
+  , AttributeLocation
   , attributeLocation
+
+  -- * Attribute Pointer
   , vertexAttribPointerI
   , vertexAttribPointer
-  
-  -- * Attribute Stream To Buffer
-  , writeBufferData
-  , assignAttribute
-  , AsType(..)
 
-  -- * Base Types
-  , BaseType
+  -- * Layout
+  , Layout(..)
+  , BaseType, Components, Normalized, Stride, OffsetPtr
+  -- * Layout Annotation
+  , UnAnnotated(..), LayoutAnnotation(..)
+  , HasLayoutAnnotation(..)
+  
+  , AsType(..)
   ) where
 
 import Control.Monad.IO.Class
-import Control.Monad.Trans.State
-import Data.Data
-import Data.Coerce
-import Data.Foldable
-import Foreign.Storable
-import Foreign.Marshal.Utils
 import Data.Word
 import Data.Int
+import Data.Data
+import GHC.Generics
+import Data.Foldable
+import Data.Traversable
 import Foreign.C.String
+import Foreign.Storable
 import Foreign.Ptr
-import Foreign.Marshal.Alloc
 import Graphics.GL.Core41
 import Graphics.GL.Types
-import Quine.GL.Program
 import Quine.GL.Buffer
 import Quine.GL.Types
+import Quine.GL.Program
 
 --------------------------------------------------------------------------------
 -- * Attribute Locations
@@ -64,60 +66,43 @@ type AttributeLocation = GLint
 attributeLocation :: MonadIO m => Program -> String -> m AttributeLocation
 attributeLocation (Program p) s = liftIO $ withCString s (glGetAttribLocation p . castPtr)
 
-type BaseType = GLenum
+--------------------------------------------------------------------------------
+-- * Layout Definition
+--------------------------------------------------------------------------------
+
+type BaseType   = GLenum
 type Components = Int
-type Stride = Int
+type Stride     = Int
 type Normalized = Bool
-type OffsetPtr = Ptr ()
-data AsType = AsInteger | AsFloating
-data Layout = Layout Components BaseType Normalized Stride OffsetPtr
+type OffsetPtr  = Ptr ()
+data AsType     = AsInteger | AsFloating
 
-data BufferBackend = BufferBackend
-  { bufferedData :: Ptr ()
-  -- ^ written raw data
-  , bytesWritten :: Int
-  -- ^ simple byte counter to keep track of the bytes stored in the Ptr
-  , attributeLayout :: [(AttributeLocation, AsType, Layout)] 
-  -- ^ maps for each written attribute the memory layout
-  }
+data Layout     = Layout Components BaseType Normalized Stride OffsetPtr
+  deriving (Data,Typeable,Generic,Eq,Ord,Show)
 
-emptyBufferBackend :: BufferBackend
-emptyBufferBackend = BufferBackend nullPtr 0 []
+newtype UnAnnotated a = UnAnnotated { unAnnotate :: a }
+  deriving (Data,Typeable,Generic,Functor,Foldable,Traversable,Eq,Ord,Show,Read)
+newtype LayoutAnnotation a = LayoutAnnotation { getLayout :: Layout }
+  deriving (Data,Typeable,Generic,Eq,Ord,Show)
 
-type AttributeWriter = StateT BufferBackend IO ()
+instance Storable a => Storable (UnAnnotated a) where
+  sizeOf _ = sizeOf (undefined::a)
+  alignment _ = alignment (undefined::a)
+  peek = fmap UnAnnotated . peek . castPtr
+  poke ptr = poke (castPtr ptr) . unAnnotate
 
--- | assign a stream of data to an 'AttributeLocation' in a 'Program'.
--- with 'glGetVertexAttrib' its possible to form a 'StateVar' but a bound buffer is necessary :( 
--- some day it could be a full 'StateVar' with with bindless
-assignAttribute :: forall a f. (Storable a, BufferData (f a), Attribute a) => AttributeLocation -> AsType -> f a -> AttributeWriter
-assignAttribute loc asType dat = do
-  BufferBackend{..} <- get
-  let newSize = bytesWritten + sizeOfData dat
-  put =<< (withRawData dat $ \inPtr -> do
-    ptr <- do reallocBytes bufferedData newSize -- possible source of fragmentation?
-    copyBytes (ptr `plusPtr` bytesWritten) inPtr (sizeOfData dat)
-    return $ BufferBackend ptr newSize ((loc, asType, attribLayout (Proxy :: Proxy a) 0 (nullPtr `plusPtr` bytesWritten)):attributeLayout))
-  where
-  attribLayout p = Layout (components p) (baseType p) (normalize p)
+class HasLayoutAnnotation a where
+  -- | annotates any proxy 'p' of an attribute 'a' with memory 'Layout' informations 
+  layoutAnnotation :: Functor p => p (a UnAnnotated) -> a LayoutAnnotation
 
-writeBufferData :: MonadIO m => BufferTarget -> BufferUsage -> AttributeWriter -> m ()
-writeBufferData (BufferTarget t _) (BufferUsage u) w = liftIO $ do
-  BufferBackend{..} <- execStateT w emptyBufferBackend
-  -- push the pointer to the buffer
-  glBufferData t (fromIntegral $ bytesWritten) bufferedData (coerce u)
-  free bufferedData
-  forM_ attributeLayout $ \case
-    (loc, AsInteger, layout)  -> vertexAttribPointerI loc layout
-    (loc, AsFloating, layout) -> vertexAttribPointer loc layout
-
--- | a not so low level binding to 'glVertexAttribIPointer'
+-- | a not so high level binding to 'glVertexAttribIPointer'
 -- sets the attribute array pointer for an integer attribute (no conversion)
 vertexAttribPointerI :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointerI loc (Layout comp ty _norm stride offPtr) = 
   liftIO $ glVertexAttribIPointer (fromIntegral loc) (fromIntegral comp) ty (fromIntegral stride) offPtr
-                                  -- ^ why is coerce here not possible (like in Quine/GL/Uniform.hs)?
+                                  -- ^ why is coerce here not possible (like in Quine/GL/Uniform.hs#L112)?
 
--- | a not so low level binding to 'glVertexAttribPointer'
+-- | a not so high level binding to 'glVertexAttribPointer'
 -- sets the attribute array pointer for an integer or floating attribute (integers are converted to the floating type)
 vertexAttribPointer :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointer loc (Layout comp ty norm stride offPtr) =
@@ -135,6 +120,10 @@ class Attribute a where
   -- or converted directly as float values ('False') when they are accessed
   normalize :: p a -> Bool
   normalize _ = False
+
+instance Attribute a => Attribute (UnAnnotated a) where
+  components _ = components (Proxy::Proxy a)
+  baseType _ = baseType (Proxy::Proxy a)
 
 instance Attribute Float where
   components _ = 1

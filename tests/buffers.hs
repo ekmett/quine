@@ -3,6 +3,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -64,22 +66,25 @@ data AttributeBlock = AttributeBlock
 instance BufferData AttributeBlock where
 
 
-data Attribute = Attribute
-  { attrPosition :: Vec3
-  , attrNormal   :: Vec3
-  , attrTexture  :: Vec2
-  } deriving (Show,Eq,Generic)
+data AnAttribute f = AnAttribute
+  { attrPosition :: f Vec3
+  , attrNormal   :: f Vec3
+  , attrTexture  :: f Vec2
+  } deriving (Generic)
 
-instance Storable Attribute where
+deriving instance Show (AnAttribute UnAnnotated)
+deriving instance Eq (AnAttribute UnAnnotated)
+
+instance Storable (AnAttribute UnAnnotated) where
   sizeOf _ = 2 * sizeOf (undefined::Vec3) + sizeOf (undefined::Vec2)
   alignment _ = alignment (undefined::Vec3) 
-  peekByteOff p o = Attribute <$> peekByteOff p o 
-                              <*> peekByteOff p (o + sizeOf(undefined::Vec3)) 
+  peekByteOff p o = AnAttribute <$> peekByteOff p o
+                              <*> peekByteOff p (o + sizeOf(undefined::Vec3))
                               <*> peekByteOff p (o + sizeOf(undefined::Vec3) + sizeOf(undefined::Vec3))
-  pokeByteOff p o Attribute{..} = do
+  pokeByteOff p o AnAttribute{..} = do
     pokeByteOff p o attrPosition
-    pokeByteOff p (o + sizeOf(undefined::Vec3)) attrNormal
-    pokeByteOff p (o + sizeOf(undefined::Vec3) + sizeOf(undefined::Vec3)) attrTexture 
+    pokeByteOff p (o + sizeOf(attrPosition)) attrNormal
+    pokeByteOff p (o + sizeOf(attrPosition) + sizeOf(attrNormal)) attrTexture
 
 
 attributeBlock = AttributeBlock
@@ -88,11 +93,23 @@ attributeBlock = AttributeBlock
   (V.fromList [V2 0 0     , V2 0.5 1, V2 1 0])
 
 -- transposition of stream
+attributeInterleaved :: V.Vector (AnAttribute UnAnnotated)
 attributeInterleaved = V.fromList
-  [ Attribute (V3 (-1) 0 0) (V3 0 0 1) (V2 0   0)
-  , Attribute (V3   0  1 0) (V3 0 0 1) (V2 0.5 0)
-  , Attribute (V3   1 0 0)  (V3 0 0 1) (V2 1   0)
+  [ mkAttribute (V3 (-1) 0 0) (V3 0 0 1) (V2 0   0)
+  , mkAttribute (V3   0  1 0) (V3 0 0 1) (V2 0.5 0)
+  , mkAttribute (V3   1 0 0)  (V3 0 0 1) (V2 1   0)
   ]
+
+-- with annotations it is a bit clumsy to construct an attribute now (=RFC)
+mkAttribute :: Vec3 -> Vec3 -> Vec2 -> AnAttribute UnAnnotated
+mkAttribute p n t = AnAttribute (UnAnnotated p) (UnAnnotated n) (UnAnnotated t)
+
+instance HasLayoutAnnotation AnAttribute where
+  layoutAnnotation p = AnAttribute
+    { attrPosition = LayoutAnnotation $ Layout (components $ attrPosition <$> p) (baseType $ attrPosition <$> p) False (sizeOfProxy p) nullPtr
+    , attrNormal   = LayoutAnnotation $ Layout (components $ attrNormal   <$> p) (baseType $ attrNormal   <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p))
+    , attrTexture  = LayoutAnnotation $ Layout (components $ attrTexture  <$> p) (baseType $ attrTexture  <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p) `plusPtr` sizeOfProxy (attrNormal <$> p))
+    }
 
 
 vertexSrc = BS.pack $ unlines 
@@ -276,9 +293,9 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
       -- glEnableVertexAttribArray (fromIntegral iNormal)
       
       boundBufferAt ArrayBuffer $= posNormBuff
-      writeBufferData ArrayBuffer StaticDraw $ do
-        assignAttribute iPosition AsFloating $ position attributeBlock
-        assignAttribute iNormal   AsFloating $ normal attributeBlock
+      -- writeBufferData ArrayBuffer StaticDraw $ do
+      --   assignAttribute iPosition AsFloating $ position attributeBlock
+      --   assignAttribute iNormal   AsFloating $ normal attributeBlock
 
       errors >>= (`shouldSatisfy` null)
 
@@ -297,18 +314,18 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
       -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
       (boundVertexArray $=) =<< gen
       
-      (boundBufferAt ArrayBuffer $=) =<< gen :: IO (Buffer (V.Vector Attribute))
+      (boundBufferAt ArrayBuffer $=) =<< (gen :: IO (Buffer (V.Vector (AnAttribute UnAnnotated))))
       bufferData ArrayBuffer $= (StaticDraw, attributeInterleaved)
       
       -- consolidate
       glEnableVertexAttribArray (fromIntegral iPosition)
-      vertexAttribPointer iPosition (attrPosition $ attributeLayout attributeInterleaved)
+      vertexAttribPointer iPosition (getLayout . attrPosition $ layoutAnnotation (Proxy::Proxy (AnAttribute UnAnnotated)))
       
       glEnableVertexAttribArray (fromIntegral iNormal  )
-      vertexAttribPointer iNormal   (attrNormal   $ attributeLayout attributeInterleaved)
+      vertexAttribPointer iNormal   (getLayout . attrNormal   $ layoutAnnotation (Proxy::Proxy (AnAttribute UnAnnotated)))
       
       glEnableVertexAttribArray (fromIntegral iTexture )
-      vertexAttribPointer iTexture  (attrTexture  $ attributeLayout attributeInterleaved)
+      vertexAttribPointer iTexture  (getLayout . attrTexture  $ layoutAnnotation (Proxy::Proxy (AnAttribute UnAnnotated)))
 
       errors >>= (`shouldSatisfy` null)
       (get (bufferData ArrayBuffer)) `shouldReturn` (StaticDraw, attributeInterleaved)
@@ -321,3 +338,7 @@ createShaderFromSource shaderType src = do
   compileShader s    
   compileStatus s `shouldReturn` True
   return s
+
+
+sizeOfProxy :: forall a p. Storable a => p a -> Int
+sizeOfProxy _ = sizeOf (undefined::a)
