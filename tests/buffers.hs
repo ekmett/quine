@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE RecordWildCards #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -17,6 +18,7 @@ module Main where
 import Test.Hspec
 import Control.Exception.Base
 import Control.Monad hiding (sequence)
+import Control.Applicative
 import Data.Bits
 import Data.Proxy
 import qualified Data.ByteString.Lazy.Char8 as BS
@@ -54,24 +56,39 @@ import Graphics.GL.Types
 --------------------------------------------------------------------------------
 
 data AttributeBlock = AttributeBlock 
-  { position :: [Vec3]
-  , normal   :: [Vec3]
-  , texture  :: [Vec2]
+  { position :: V.Vector Vec3
+  , normal   :: V.Vector Vec3
+  , texture  :: V.Vector Vec2
   } deriving (Generic)
+
+instance BufferData AttributeBlock where
+
 
 data Attribute = Attribute
   { attrPosition :: Vec3
   , attrNormal   :: Vec3
   , attrTexture  :: Vec2
-  }
+  } deriving (Show,Eq,Generic)
+
+instance Storable Attribute where
+  sizeOf _ = 2 * sizeOf (undefined::Vec3) + sizeOf (undefined::Vec2)
+  alignment _ = alignment (undefined::Vec3) 
+  peekByteOff p o = Attribute <$> peekByteOff p o 
+                              <*> peekByteOff p (o + sizeOf(undefined::Vec3)) 
+                              <*> peekByteOff p (o + sizeOf(undefined::Vec3) + sizeOf(undefined::Vec3))
+  pokeByteOff p o Attribute{..} = do
+    pokeByteOff p o attrPosition
+    pokeByteOff p (o + sizeOf(undefined::Vec3)) attrNormal
+    pokeByteOff p (o + sizeOf(undefined::Vec3) + sizeOf(undefined::Vec3)) attrTexture 
+
 
 attributeBlock = AttributeBlock
-  ([V3 (-1) 0 0, V3 0 1 0, V3 1 0 0])
-  ([V3 0 0 1   , V3 0 0 1, V3 0 0 1])
-  ([V2 0 0     , V2 0.5 1, V2 1 0])
+  (V.fromList [V3 (-1) 0 0, V3 0 1 0, V3 1 0 0])
+  (V.fromList [V3 0 0 1   , V3 0 0 1, V3 0 0 1])
+  (V.fromList [V2 0 0     , V2 0.5 1, V2 1 0])
 
 -- transposition of stream
-attributeInterleaved = 
+attributeInterleaved = V.fromList
   [ Attribute (V3 (-1) 0 0) (V3 0 0 1) (V2 0   0)
   , Attribute (V3   0  1 0) (V3 0 0 1) (V2 0.5 0)
   , Attribute (V3   1 0 0)  (V3 0 0 1) (V2 1   0)
@@ -229,7 +246,7 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
         (get $ bufferDataDirect buff) `shouldReturn` (StaticDraw, vec)
         errors >>= (`shouldSatisfy` null)
 
-      it "should fail to download something for the 0-default buffer" $ do
+      it "should fail to download something from the 0-default buffer" $ do
         boundBufferAt ArrayBuffer $= def
         _re <- (get $ bufferData ArrayBuffer) :: IO (BufferUsage, V.Vector Int)
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
@@ -240,7 +257,7 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
 
   describe "Vertex Attributes" $ do
 
-    it "are written to the buffer without error (smoke test)" $ do
+    it "are written with 'writeBufferData' to the buffer without error (smoke test)" $ do
 
       vertShader <- createShader GL_VERTEX_SHADER
       fragShader <- createShader GL_FRAGMENT_SHADER
@@ -270,3 +287,39 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
         assignAttribute iNormal   AsFloating $ normal attributeBlock
 
       errors >>= (`shouldSatisfy` null)
+
+    it "are written interleaved to the buffer without error (smoke test)" $ do
+
+      vertShader <- createShader GL_VERTEX_SHADER
+      fragShader <- createShader GL_FRAGMENT_SHADER
+      shaderSource vertShader $= vertexSrc
+      shaderSource fragShader $= fragSrc
+      compileShader vertShader
+      compileShader fragShader
+      compileStatus vertShader `shouldReturn` True
+      compileStatus fragShader `shouldReturn` True
+  
+      prog <- link [vertShader,fragShader]
+
+      iPosition <- attributeLocation prog "aPosition"
+      iNormal   <- attributeLocation prog "aNormal"
+      -- iTexture  <- attributeLocation prog "aTexture"
+      posNormBuff <- gen :: IO (Buffer (V.Vector Attribute)) -- FIX type
+
+      -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
+      (boundVertexArray $=) =<< gen
+      -- in production: enable the vertex arrays, but it's not necessary for filling the buffer 
+      -- glEnableVertexAttribArray (fromIntegral iPosition)
+      -- glEnableVertexAttribArray (fromIntegral iNormal)
+      boundBufferAt ArrayBuffer $= posNormBuff
+      bufferData ArrayBuffer $= (StaticDraw, attributeInterleaved)
+      -- big ???
+      -- vertexAttribPointer iPosition (layout attrPosition attributeInterleaved )
+      -- writeBufferData ArrayBuffer StaticDraw $ do
+      --   assignAttribute iPosition AsFloating $ position attributeBlock
+      --   assignAttribute iNormal   AsFloating $ normal attributeBlock
+
+      errors >>= (`shouldSatisfy` null)
+      (get (bufferData ArrayBuffer)) `shouldReturn` (StaticDraw, attributeInterleaved)
+      errors >>= (`shouldSatisfy` null)
+
