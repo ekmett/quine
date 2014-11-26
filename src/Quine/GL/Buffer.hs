@@ -104,21 +104,25 @@ instance Default (Buffer a) where
 -- * Buffer Data
 
 class BufferData a where
-  -- | perfom a monadic action with the pointer to the raw content and the size of it in bytes
-  withRawData :: a -> (Int -> Ptr () -> IO ()) -> IO ()
+  -- | perfom a monadic action with the pointer to the raw content and the number of elements
+  withRawData :: a -> (Ptr () -> IO ()) -> IO ()
   fromRawData :: Int -> Ptr () -> IO a
+  -- | size of the complete data in bytes
+  sizeOfData :: a -> Int
 
 -- | This instance writes the data interleaved because the 'Vector' structure is already interleaved.
 -- If you want an different layout use a newtype wrapper or an own data structure.
 instance Storable a => BufferData (V.Vector a) where
-  withRawData v m = V.unsafeWith v $ m (sizeOf (undefined::a) * V.length v) . castPtr
-  fromRawData bytes ptr = do
+  withRawData v m = V.unsafeWith v $ m . castPtr
+  fromRawData num ptr = do
     fp <- newForeignPtr_ $ castPtr ptr
-    return $ V.unsafeFromForeignPtr fp 0 (bytes `div` sizeOf (undefined::a))
+    return $ V.unsafeFromForeignPtr fp 0 num
+  sizeOfData v = V.length v * sizeOf (undefined::a)
 
 instance Storable a => BufferData [a] where
-  withRawData v m = withArrayLen v $ \n -> m (n * sizeOf (undefined::a)) . castPtr
-  fromRawData bytes = peekArray (bytes `div` sizeOf (undefined::a)) . castPtr
+  withRawData v m = withArray v $ m . castPtr
+  fromRawData num = peekArray num . castPtr
+  sizeOfData v = length v * sizeOf (undefined::a)
 
 -- * Buffer Access
 
@@ -130,7 +134,7 @@ boundBufferAt (BufferTarget target binding) = StateVar g s where
   s = glBindBuffer target . coerce
 
 -- | bindless uploading data to the argumented buffer (since OpenGL 4.4+ or with gl_EXT_direct_state_access)
-bufferDataDirect :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
+bufferDataDirect :: forall f a. (Storable a, BufferData (f a)) => Buffer (f a) -> StateVar (BufferUsage, f a)
 bufferDataDirect (Buffer i)
   | gl_EXT_direct_state_access = StateVar g s
   | otherwise = throw $ BufferException "gl_EXT_direct_state_access unsupported" where
@@ -142,11 +146,11 @@ bufferDataDirect (Buffer i)
         size  <- peek sizePtr
         allocaBytes (fromIntegral size) $ \rawPtr -> do
           glGetNamedBufferSubDataEXT i 0 (fromIntegral size) (castPtr rawPtr)
-          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
-  s (u,v) = withRawData v $ \size ptr -> glNamedBufferDataEXT i (fromIntegral size) ptr (coerce u)
+          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size `div` sizeOf (undefined::a)) rawPtr
+  s (u,v) = withRawData v $ \ptr -> glNamedBufferDataEXT i (fromIntegral $ sizeOfData v) ptr (coerce u)
 
 -- | uploading data to the currently at 'BufferTarget' bound buffer
-bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
+bufferData :: forall f a. (Storable a, BufferData (f a)) => BufferTarget -> StateVar (BufferUsage, f a)
 bufferData (BufferTarget t _) = StateVar g s where
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
@@ -156,8 +160,8 @@ bufferData (BufferTarget t _) = StateVar g s where
         size  <- peek sizePtr
         allocaBytes (fromIntegral size) $ \rawPtr -> do
           glGetBufferSubData t 0 (fromIntegral size) (castPtr rawPtr)
-          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
-  s (u,v) = withRawData v $ \size ptr -> glBufferData t (fromIntegral size) ptr (coerce u)
+          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size  `div` sizeOf (undefined::a)) rawPtr
+  s (u,v) = withRawData v $ \ptr -> glBufferData t (fromIntegral $ sizeOfData v) ptr (coerce u)
 
 -- * Buffer Types
 
