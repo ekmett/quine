@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TupleSections #-}
 --------------------------------------------------------------------
 -- |
@@ -62,6 +63,7 @@ import qualified Data.Vector.Storable as V
 import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
+import Foreign.Marshal.Utils (with)
 import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
@@ -106,6 +108,7 @@ instance Default (Buffer a) where
 class BufferData a where
   -- | perfom a monadic action with the pointer to the raw content and the number of elements
   withRawData :: MonadIO m => a -> (Ptr () -> IO b) -> m b
+  -- | reads 'a' from a pointer and the given size of a in bytes 
   fromRawData :: MonadIO m => Int -> Ptr () -> m a
   -- | size of the complete data in bytes
   sizeOfData :: a -> Int
@@ -114,14 +117,14 @@ class BufferData a where
 -- If you want an different layout use a newtype wrapper or an own data structure.
 instance Storable a => BufferData (V.Vector a) where
   withRawData v m = liftIO $ V.unsafeWith v $ m . castPtr
-  fromRawData num ptr = liftIO $ do
+  fromRawData bytes ptr = liftIO $ do
     fp <- newForeignPtr_ $ castPtr ptr
-    return $ V.unsafeFromForeignPtr fp 0 num
+    return $ V.unsafeFromForeignPtr0 fp (bytes `div` sizeOf (undefined::a))
   sizeOfData v = V.length v * sizeOf (undefined::a)
 
 instance Storable a => BufferData [a] where
-  withRawData v m = liftIO $ withArray v $ m . castPtr
-  fromRawData num = liftIO . peekArray num . castPtr
+  withRawData v m = liftIO . withArray v $ m . castPtr
+  fromRawData bytes = liftIO . peekArray (bytes `div` sizeOf (undefined::a)) . castPtr
   sizeOfData v = length v * sizeOf (undefined::a)
 
 -- * Buffer Access
@@ -146,21 +149,21 @@ bufferDataDirect (Buffer i)
         size  <- peek sizePtr
         allocaBytes (fromIntegral size) $ \rawPtr -> do
           glGetNamedBufferSubDataEXT i 0 (fromIntegral size) (castPtr rawPtr)
-          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size `div` sizeOf (undefined::a)) rawPtr
+          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
   s (u,v) = withRawData v $ \ptr -> glNamedBufferDataEXT i (fromIntegral $ sizeOfData v) ptr (coerce u)
 
 -- | uploading data to the currently at 'BufferTarget' bound buffer
-bufferData :: forall f a. (Storable a, BufferData (f a)) => BufferTarget -> StateVar (BufferUsage, f a)
+bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
 bufferData (BufferTarget t _) = StateVar g s where
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
         glGetBufferParameteriv t GL_BUFFER_SIZE sizePtr
         glGetBufferParameteriv t GL_BUFFER_USAGE usagePtr
-        usage <- peek usagePtr
+        usage <- BufferUsage . fromIntegral <$> peek usagePtr
         size  <- peek sizePtr
         allocaBytes (fromIntegral size) $ \rawPtr -> do
           glGetBufferSubData t 0 (fromIntegral size) (castPtr rawPtr)
-          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size  `div` sizeOf (undefined::a)) rawPtr
+          (usage,) <$> fromRawData (fromIntegral size) rawPtr
   s (u,v) = withRawData v $ \ptr -> glBufferData t (fromIntegral $ sizeOfData v) ptr (coerce u)
 
 -- * Buffer Types
