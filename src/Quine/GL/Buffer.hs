@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TupleSections #-}
 --------------------------------------------------------------------
 -- |
@@ -31,15 +32,8 @@ module Quine.GL.Buffer
   , pattern ElementArrayBuffer
   , pattern PixelPackBuffer
   , pattern PixelUnpackBuffer
-  , pattern ShaderStorageBuffer
   , pattern TransformFeedbackBuffer
   , pattern UniformBuffer
-  -- , pattern AtomicCounterBuffer
-  -- , pattern CopyReadBuffer
-  -- , pattern CopyWriteBuffer
-  -- , pattern DispatchIndirectBuffer
-  -- , pattern QueryBuffer
-  -- , pattern TextureBuffer
 
   -- * Buffer Usage
   , BufferUsage(..)
@@ -69,11 +63,12 @@ import qualified Data.Vector.Storable as V
 import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
+import Foreign.Marshal.Utils (with)
 import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
-import Graphics.GL.Core43
+import Graphics.GL.Core41
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
@@ -111,21 +106,26 @@ instance Default (Buffer a) where
 -- * Buffer Data
 
 class BufferData a where
-  -- | perfom a monadic action with the pointer to the raw content and the size of it in bytes
-  withRawData :: a -> (Int -> Ptr () -> IO ()) -> IO ()
-  fromRawData :: Int -> Ptr () -> IO a
+  -- | perfom a monadic action with the pointer to the raw content and the number of elements
+  withRawData :: MonadIO m => a -> (Ptr () -> IO b) -> m b
+  -- | reads 'a' from a pointer and the given size of a in bytes 
+  fromRawData :: MonadIO m => Int -> Ptr () -> m a
+  -- | size of the complete data in bytes
+  sizeOfData :: a -> Int
 
 -- | This instance writes the data interleaved because the 'Vector' structure is already interleaved.
 -- If you want an different layout use a newtype wrapper or an own data structure.
 instance Storable a => BufferData (V.Vector a) where
-  withRawData v m = V.unsafeWith v $ m (sizeOf (undefined::a) * V.length v) . castPtr
-  fromRawData bytes ptr = do
+  withRawData v m = liftIO $ V.unsafeWith v $ m . castPtr
+  fromRawData bytes ptr = liftIO $ do
     fp <- newForeignPtr_ $ castPtr ptr
-    return $ V.unsafeFromForeignPtr fp 0 (bytes `div` sizeOf (undefined::a))
+    return $ V.unsafeFromForeignPtr0 fp (bytes `div` sizeOf (undefined::a))
+  sizeOfData v = V.length v * sizeOf (undefined::a)
 
 instance Storable a => BufferData [a] where
-  withRawData v m = withArrayLen v $ \n -> m (n * sizeOf (undefined::a)) . castPtr
-  fromRawData bytes = peekArray (bytes `div` sizeOf (undefined::a)) . castPtr
+  withRawData v m = liftIO . withArray v $ m . castPtr
+  fromRawData bytes = liftIO . peekArray (bytes `div` sizeOf (undefined::a)) . castPtr
+  sizeOfData v = length v * sizeOf (undefined::a)
 
 -- * Buffer Access
 
@@ -136,7 +136,7 @@ boundBufferAt (BufferTarget target binding) = StateVar g s where
     return $ Buffer (fromIntegral i)
   s = glBindBuffer target . coerce
 
--- | bindless uploading data to the argumented buffer (since OpenGL 4.4+ or with gl_EXT_direct_state_access)
+-- | bindless uploading data to the argumented buffer (since OpenGL 4.4+ or with 'gl_EXT_direct_state_access')
 bufferDataDirect :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
 bufferDataDirect (Buffer i)
   | gl_EXT_direct_state_access = StateVar g s
@@ -150,7 +150,7 @@ bufferDataDirect (Buffer i)
         allocaBytes (fromIntegral size) $ \rawPtr -> do
           glGetNamedBufferSubDataEXT i 0 (fromIntegral size) (castPtr rawPtr)
           (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
-  s (u,v) = withRawData v $ \size ptr -> glNamedBufferDataEXT i (fromIntegral size) ptr (coerce u)
+  s (u,v) = withRawData v $ \ptr -> glNamedBufferDataEXT i (fromIntegral $ sizeOfData v) ptr (coerce u)
 
 -- | uploading data to the currently at 'BufferTarget' bound buffer
 bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
@@ -159,12 +159,12 @@ bufferData (BufferTarget t _) = StateVar g s where
       alloca $ \usagePtr -> do
         glGetBufferParameteriv t GL_BUFFER_SIZE sizePtr
         glGetBufferParameteriv t GL_BUFFER_USAGE usagePtr
-        usage <- peek usagePtr
+        usage <- BufferUsage . fromIntegral <$> peek usagePtr
         size  <- peek sizePtr
         allocaBytes (fromIntegral size) $ \rawPtr -> do
           glGetBufferSubData t 0 (fromIntegral size) (castPtr rawPtr)
-          (BufferUsage $ fromIntegral usage,) <$> fromRawData (fromIntegral size) rawPtr
-  s (u,v) = withRawData v $ \size ptr -> glBufferData t (fromIntegral size) ptr (coerce u)
+          (usage,) <$> fromRawData (fromIntegral size) rawPtr
+  s (u,v) = withRawData v $ \ptr -> glBufferData t (fromIntegral $ sizeOfData v) ptr (coerce u)
 
 -- * Buffer Types
 
@@ -183,13 +183,6 @@ pattern PixelPackBuffer = BufferTarget GL_PIXEL_PACK_BUFFER GL_PIXEL_PACK_BUFFER
 -- | Texture data source
 pattern PixelUnpackBuffer = BufferTarget GL_PIXEL_UNPACK_BUFFER GL_PIXEL_UNPACK_BUFFER_BINDING
 
--- | Read-write storage for shaders
---
--- You can use the 'Quine.GL.Block.STD140' and 'Quine.GL.Block.STD430' newtype wrappers around the contents.
---
--- Requires OpenGL 4.3+
-pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
-
 -- | Transform feedback buffer
 pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_TRANSFORM_FEEDBACK_BUFFER_BINDING
 
@@ -197,24 +190,6 @@ pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_T
 --
 -- You should probably use the 'Quine.GL.Block.STD140' newtype wrapper around the contents.
 pattern UniformBuffer = BufferTarget GL_UNIFORM_BUFFER GL_UNIFORM_BUFFER_BINDING
-
--- | Atomic counter storage
--- pattern AtomicCounterBuffer = BufferTarget GL_ATOMIC_COUNTER_BUFFER GL_ATOMIC_COUNTER_BUFFER_BINDING
-
--- | Buffer copy source
--- pattern CopyReadBuffer = BufferTarget GL_COPY_READ_BUFFER GL_COPY_READ_BUFFER_BINDING
-
--- | Buffer copy destination
--- pattern CopyWriteBuffer = BufferTarget GL_COPY_WRITE_BUFFER GL_COPY_WRITE_BUFFER_BINDING
-
--- | Indirect compute dispatch commands
--- pattern DispatchIndirectBuffer = BufferTarget GL_DISPATCH_INDIRECT_BUFFER GL_DISPATCH_INDIRECT_BUFFER_BINDING
-
--- | Query result buffer
--- pattern QueryBuffer = BufferTarget GL_QUERY_BUFFER GL_QUERY_BUFFER_BINDING
-
--- | Texture data buffer
--- pattern TextureBuffer = BufferTarget GL_TEXTURE_BUFFER GL_TEXTURE_BUFFER_BINDING
 
 -- * Usage
 

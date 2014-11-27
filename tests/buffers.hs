@@ -1,3 +1,10 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -7,27 +14,113 @@
 -- Portability: non-portable
 --
 -- Tests for `Quine.GL.Buffer`
---------------------------------------------------------------------
+--------------------------------------------------------------------------------
 module Main where
 
 import Test.Hspec
 import Control.Exception.Base
 import Control.Monad hiding (sequence)
+import Control.Applicative
 import Data.Bits
+import Data.Proxy
+import qualified Data.ByteString.Lazy.Char8 as BS
 
+import GHC.Generics
 import Data.Default
 import qualified Data.Vector.Storable as V
+import Data.Vector.Storable.Internal (updPtr)
 import Foreign.C.String
+import Foreign.Storable
+import Foreign.Ptr
+import Foreign.ForeignPtr
+import Foreign.Marshal.Array
+import Foreign.Marshal.Utils
+import Foreign.Marshal.Alloc
 
 import Quine.GL.Buffer
+import Quine.GL.Attribute
 import Quine.GL.VertexArray
 import Quine.GL.Object
 import Quine.GL.Error
+import Quine.GL.Types
+import Quine.GL.Program
+import Quine.GL.Uniform
+import Quine.GL.Block
+import Quine.GL.Shader
+import Quine.GL
 import Quine.StateVar
 import Quine.SDL
 import Graphics.UI.SDL as SDL
+import Linear
 
 import Graphics.GL.Ext.EXT.DirectStateAccess
+import Graphics.GL.Internal.Shared
+import Graphics.GL.Types
+
+--------------------------------------------------------------------------------
+-- * Fixtures
+--------------------------------------------------------------------------------
+
+
+data AnAttribute f = AnAttribute
+  { attrPosition :: f Vec3
+  , attrNormal   :: f Vec3
+  , attrTexture  :: f Vec2
+  } deriving (Generic)
+type VertexAttribute = AnAttribute UnAnnotated
+
+deriving instance Show VertexAttribute
+deriving instance Eq VertexAttribute
+
+instance Storable VertexAttribute where
+  sizeOf _ = 2 * sizeOf (undefined::Vec3) + sizeOf (undefined::Vec2)
+  alignment _ = alignment (undefined::Vec3) 
+  peekByteOff p o = 
+    AnAttribute <$> peekByteOff p o
+                <*> peekByteOff p (o + sizeOf(undefined::Vec3))
+                <*> peekByteOff p (o + sizeOf(undefined::Vec3) + sizeOf(undefined::Vec3))
+
+  pokeByteOff p o AnAttribute{..} = do
+    pokeByteOff p o attrPosition
+    pokeByteOff p (o + sizeOf(attrPosition)) attrNormal
+    pokeByteOff p (o + sizeOf(attrPosition) + sizeOf(attrNormal)) attrTexture
+
+instance HasLayoutAnnotation AnAttribute where
+  layoutAnnotation p = AnAttribute
+    { attrPosition = LayoutAnnotation $ Layout (components $ attrPosition <$> p) (baseType $ attrPosition <$> p) False (sizeOfProxy p) nullPtr
+    , attrNormal   = LayoutAnnotation $ Layout (components $ attrNormal   <$> p) (baseType $ attrNormal   <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p))
+    , attrTexture  = LayoutAnnotation $ Layout (components $ attrTexture  <$> p) (baseType $ attrTexture  <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p) `plusPtr` sizeOfProxy (attrNormal <$> p))
+    }
+
+attributeInterleaved :: V.Vector (VertexAttribute)
+attributeInterleaved = V.fromList
+  [ mkAttribute (V3 (-1) 0 0) (V3 0 0 1) (V2 0   0)
+  , mkAttribute (V3   0  1 0) (V3 0 0 1) (V2 0.5 0)
+  , mkAttribute (V3   1 0 0)  (V3 0 0 1) (V2 1   0)
+  ]
+
+-- with annotations it is a bit clumsy to construct an attribute now (=RFC)
+mkAttribute :: Vec3 -> Vec3 -> Vec2 -> VertexAttribute
+mkAttribute p n t = AnAttribute (UnAnnotated p) (UnAnnotated n) (UnAnnotated t)
+
+
+vertexSrc = BS.pack $ unlines 
+  [ "#version 410"
+  , "in vec3 aPosition;"
+  , "in vec3 aNormal;"
+  , "in vec2 aTexture;"
+  , "void main(){aNormal;aTexture;gl_Position=vec4(aPosition, 1.0);}"
+  ]
+
+fragSrc = BS.pack $ unlines 
+  [ "#version 410"
+  , "out vec4 color;"
+  , "void main(){color=vec4(1.0);}"
+  ]
+
+--------------------------------------------------------------------------------
+-- * Setup
+--------------------------------------------------------------------------------
 
 withGLContext :: IO a -> IO a
 withGLContext action = do
@@ -44,6 +137,10 @@ withGLContext action = do
     )
    (\(win, cxt) -> glDeleteContext cxt >> destroyWindow win >> quit)
    (const action)
+
+--------------------------------------------------------------------------------
+-- * Tests
+--------------------------------------------------------------------------------
 
 main :: IO ()
 main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ around_ withGLContext $ do
@@ -158,7 +255,7 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
         (get $ bufferDataDirect buff) `shouldReturn` (StaticDraw, vec)
         errors >>= (`shouldSatisfy` null)
 
-      it "should fail to download something for the 0-default buffer" $ do
+      it "should fail to download something from the 0-default buffer" $ do
         boundBufferAt ArrayBuffer $= def
         _re <- (get $ bufferData ArrayBuffer) :: IO (BufferUsage, V.Vector Int)
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
@@ -167,3 +264,40 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
         _re <- (get $ bufferDataDirect def) :: IO (BufferUsage, V.Vector Int)
         errors >>= (`shouldSatisfy` (==[InvalidOperation]))
 
+    it "can be written interleaved (VNTVNTVNTVNT) to the buffer and linked to vertex shader attributes without an error (smoke test)" $ do
+
+      vertShader <- createShaderFromSource GL_VERTEX_SHADER vertexSrc
+      fragShader <- createShaderFromSource GL_FRAGMENT_SHADER fragSrc
+
+  
+      prog <- link [vertShader,fragShader]
+
+      iPosition <- attributeLocation prog "aPosition"
+      iNormal   <- attributeLocation prog "aNormal"
+      iTexture  <- attributeLocation prog "aTexture"
+
+      -- a vao is necessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
+      (boundVertexArray $=) =<< gen
+      
+      (boundBufferAt ArrayBuffer $=) =<< (gen :: IO (Buffer (V.Vector VertexAttribute)))
+      bufferData ArrayBuffer $= (StaticDraw, attributeInterleaved)
+      
+      vertexAttribute iPosition $= Just attrPosition
+      vertexAttribute iNormal   $= Just attrNormal
+      vertexAttribute iTexture  $= Just attrTexture
+
+      errors >>= (`shouldSatisfy` null)
+      (get (bufferData ArrayBuffer)) `shouldReturn` (StaticDraw, attributeInterleaved)
+      errors >>= (`shouldSatisfy` null)
+
+
+createShaderFromSource shaderType src = do
+  s <- createShader shaderType
+  shaderSource s $= src
+  compileShader s    
+  compileStatus s `shouldReturn` True
+  return s
+
+
+sizeOfProxy :: forall a p. Storable a => p a -> Int
+sizeOfProxy _ = sizeOf (undefined::a)
