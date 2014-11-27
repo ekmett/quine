@@ -183,6 +183,11 @@ pattern PixelPackBuffer = BufferTarget GL_PIXEL_PACK_BUFFER GL_PIXEL_PACK_BUFFER
 -- | Texture data source
 pattern PixelUnpackBuffer = BufferTarget GL_PIXEL_UNPACK_BUFFER GL_PIXEL_UNPACK_BUFFER_BINDING
 
+-- | Shader storage buffers
+--
+-- You should probably use the 'Quine.GL.Block.STD140' or 'Quine.GL.Block.STD430' newtype wrapper around the contents.
+pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
+
 -- | Transform feedback buffer
 pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_TRANSFORM_FEEDBACK_BUFFER_BINDING
 
@@ -190,11 +195,6 @@ pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_T
 --
 -- You should probably use the 'Quine.GL.Block.STD140' newtype wrapper around the contents.
 pattern UniformBuffer = BufferTarget GL_UNIFORM_BUFFER GL_UNIFORM_BUFFER_BINDING
-
--- | Shader storage buffers
---
--- You should probably use the 'Quine.GL.Block.STD140' or 'Quine.GL.Block.STD430' newtype wrapper around the contents.
-pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
 
 -- * Usage
 
