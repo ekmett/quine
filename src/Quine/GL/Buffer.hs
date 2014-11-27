@@ -32,6 +32,7 @@ module Quine.GL.Buffer
   , pattern ElementArrayBuffer
   , pattern PixelPackBuffer
   , pattern PixelUnpackBuffer
+  , pattern ShaderStorageBuffer
   , pattern TransformFeedbackBuffer
   , pattern UniformBuffer
 
@@ -63,12 +64,11 @@ import qualified Data.Vector.Storable as V
 import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
-import Foreign.Marshal.Utils (with)
 import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
-import Graphics.GL.Core41
+import Graphics.GL.Core45
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
@@ -190,6 +190,11 @@ pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_T
 --
 -- You should probably use the 'Quine.GL.Block.STD140' newtype wrapper around the contents.
 pattern UniformBuffer = BufferTarget GL_UNIFORM_BUFFER GL_UNIFORM_BUFFER_BINDING
+
+-- | Shader storage buffers
+--
+-- You should probably use the 'Quine.GL.Block.STD140' or 'Quine.GL.Block.STD430' newtype wrapper around the contents.
+pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
 
 -- * Usage
 
