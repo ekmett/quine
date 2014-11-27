@@ -59,7 +59,7 @@
 <a name="line-50"></a><a name="instance%20HasRay%20Beam"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>HasRay</span> <span class='hs-conid'>Beam</span> <span class='hs-keyword'>where</span>
 <a name="line-51"></a>  <span class='hs-varid'>ray</span> <span class='hs-varid'>f</span> <span class='hs-layout'>(</span><span class='hs-conid'>Beam</span> <span class='hs-varid'>r</span> <span class='hs-varid'>w</span> <span class='hs-varid'>d</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>f</span> <span class='hs-varid'>r</span> <span class='hs-varop'>&lt;&amp;&gt;</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>r'</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Beam</span> <span class='hs-varid'>r'</span> <span class='hs-varid'>w</span> <span class='hs-varid'>d</span>
 <a name="line-52"></a>
-<a name="line-53"></a><a name="instance%20Block%20Beam"></a><span class='hs-comment'>-- | encoded to match shaders/geometry/beam.h</span>
+<a name="line-53"></a><a name="instance%20Block%20Beam"></a><span class='hs-comment'>-- | encoded to match @shaders/geometry/beam.h@</span>
 <a name="line-54"></a><a name="instance%20Block%20Beam"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Block</span> <span class='hs-conid'>Beam</span> <span class='hs-keyword'>where</span>
 <a name="line-55"></a>  <span class='hs-varid'>sizeOf140</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-num'>44</span>
 <a name="line-56"></a>  <span class='hs-varid'>sizeOf430</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-num'>44</span>

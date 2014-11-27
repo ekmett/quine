@@ -39,7 +39,7 @@
 <a name="line-30"></a>
 <a name="line-31"></a><a name="Sphere"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Sphere</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Sphere</span> <span class='hs-varop'>!</span><span class='hs-conid'>Vec3</span> <span class='hs-varop'>!</span><span class='hs-conid'>Float</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Eq</span><span class='hs-layout'>,</span> <span class='hs-conid'>Ord</span><span class='hs-layout'>,</span> <span class='hs-conid'>Show</span><span class='hs-layout'>,</span> <span class='hs-conid'>Data</span><span class='hs-layout'>,</span> <span class='hs-conid'>Typeable</span><span class='hs-layout'>,</span> <span class='hs-conid'>Generic</span><span class='hs-layout'>)</span>
 <a name="line-32"></a>
-<a name="line-33"></a><a name="instance%20Block%20Sphere"></a><span class='hs-comment'>-- | encoded to match shaders/geometry/sphere.h</span>
+<a name="line-33"></a><a name="instance%20Block%20Sphere"></a><span class='hs-comment'>-- | encoded to match @shaders/geometry/sphere.h@</span>
 <a name="line-34"></a><a name="instance%20Block%20Sphere"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Block</span> <span class='hs-conid'>Sphere</span> <span class='hs-keyword'>where</span>
 <a name="line-35"></a>  <span class='hs-varid'>sizeOf140</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-num'>16</span>
 <a name="line-36"></a>  <span class='hs-varid'>sizeOf430</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-num'>16</span>
