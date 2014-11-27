@@ -74,6 +74,7 @@ library
     Quine.Geometry.Ray
     Quine.Geometry.Sphere
     Quine.GL
+    Quine.GL.Attribute
     Quine.GL.Block
     Quine.GL.Buffer
     Quine.GL.Error
@@ -208,6 +209,8 @@ test-suite test-buffers
       sdl2,
       hspec,
       quine,
+      linear,
+      bytestring,
       vector
 
 test-suite test-shaders
