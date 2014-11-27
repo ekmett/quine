@@ -142,7 +142,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 
   makeCurrent window cxt
 
-  _ <- glSetSwapInterval 0 -- turn of sync at least on everything but OSX.
+  _ <- glSetSwapInterval 0 -- turn off sync at least on everything but OSX.
 
   when (opts^.optionsDebug) installDebugHook
 
