@@ -32,21 +32,4 @@ uint sum(uvec4 a) {
   return b.x + b.y;
 }
 
-#ifdef GL_ARB_gpu_shader_fp64
-double sum(dvec2 a) {
-  const dvec2 ones = dvec2(1.0);
-  return dot(a,ones);
-}
-
-double sum(dvec3 a) {
-  const dvec3 ones = dvec3(1.0);
-  return dot(a,ones);
-}
-
-double sum(dvec4 a) {
-  dvec4 ones = dvec4(1.0);
-  return dot(a,ones);
-}
-#endif // GL_ARB_gpu_shader_fp64
-
 #endif // INCLUDED_MATH_SUM_H

@@ -18,10 +18,4 @@ uint quadrance(uvec4 a) { return udot(a,a); }
 uint quadrance(uvec3 a) { return udot(a,a); }
 uint quadrance(uvec2 a) { return udot(a,a); }
 
-#ifdef GL_ARB_gpu_shader_fp64
-double quadrance(dvec4 a) { return dot(a,a); }
-double quadrance(dvec3 a) { return dot(a,a); }
-double quadrance(dvec2 a) { return dot(a,a); }
-#endif // GL_ARB_gpu_shader_fp64
-
 #endif // INCLUDED_MATH_QUADRANCE_H

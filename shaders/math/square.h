@@ -16,11 +16,4 @@ uvec3 square(uvec3 x) { return x*x; }
 uvec2 square(uvec2 x) { return x*x; }
 uint square(uint x) { return x*x; }
 
-#ifdef GL_ARB_gpu_shader_fp64
-dvec4 square(dvec4 x) { return x*x; }
-dvec3 square(dvec3 x) { return x*x; }
-dvec2 square(dvec2 x) { return x*x; }
-double square(double x) { return x*x; }
-#endif // GL_ARB_gpu_shader_fp64
-
 #endif // INCLUDED_MATH_SQUARE_H

@@ -91,8 +91,8 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
  
   -- start SDL
   init SDL_INIT_EVERYTHING >>= err
-  contextMajorVersion $= 4
-  contextMinorVersion $= 1
+  contextMajorVersion $= 3
+  contextMinorVersion $= 3
   contextProfileMask  $= SDL_GL_CONTEXT_PROFILE_CORE
   redSize   $= 5
   greenSize $= 5
