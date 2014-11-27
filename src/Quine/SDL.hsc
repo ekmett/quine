@@ -51,6 +51,7 @@ module Quine.SDL
   -- * Utilities
   , poll
   , err
+  , errOnNull
   ) where
 
 import Control.Exception
@@ -61,6 +62,7 @@ import Data.Typeable
 import Data.Version as Data
 import Foreign
 import Foreign.C
+import Foreign.Ptr
 import Quine.StateVar
 import Graphics.UI.SDL as SDL
 import Prelude hiding (init)
@@ -73,6 +75,14 @@ newtype SDLException = SDLException String
   deriving (Show, Typeable)
 
 instance Exception SDLException
+
+errOnNull :: MonadIO m => Ptr a -> m (Ptr a)
+errOnNull p
+  | p == nullPtr = liftIO $ do
+    msg <- getError >>= peekCString
+    clearError
+    throw $ SDLException $ if null msg then "Something went wrong, but SDL won't tell me what." else msg
+  | otherwise = return p
 
 -- | Treat negative return codes as prompting an error check.
 err :: MonadIO m => CInt -> m ()

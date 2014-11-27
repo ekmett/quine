@@ -108,10 +108,10 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
           .|. (if | not (opts^.optionsFullScreen) -> 0
                   | opts^.optionsFullScreenNormal -> SDL_WINDOW_FULLSCREEN
                   | otherwise                     -> SDL_WINDOW_FULLSCREEN_DESKTOP)
-  window <- createWindow windowName SDL_WINDOWPOS_CENTERED SDL_WINDOWPOS_CENTERED (fromIntegral w) (fromIntegral h) flags
+  window <- createWindow windowName SDL_WINDOWPOS_CENTERED SDL_WINDOWPOS_CENTERED (fromIntegral w) (fromIntegral h) flags >>= errOnNull
 
   -- start OpenGL
-  cxt <- glCreateContext window
+  cxt <- glCreateContext window >>= errOnNull
   makeCurrent window cxt
 
   when (opts^.optionsDebug) installDebugHook
