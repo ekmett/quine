@@ -1,4 +1,4 @@
-#version 410 core
+#version 330 core
 #extension GL_ARB_shading_language_include : require
 #include <locations.h>
 

@@ -42,9 +42,10 @@ module Quine.GL.Attribute
   ) where
 
 import Control.Monad.IO.Class
-import Data.Word
-import Data.Int
 import Data.Data
+import Data.Functor
+import Data.Int
+import Data.Word
 import GHC.Generics
 import Data.Foldable
 import Data.Traversable
@@ -61,10 +62,14 @@ import Quine.StateVar
 -- * Attribute Locations
 --------------------------------------------------------------------------------
 
-type AttributeLocation = GLint
+type AttributeLocation = GLuint
 
-attributeLocation :: MonadIO m => Program -> String -> m AttributeLocation
-attributeLocation (Program p) s = liftIO $ withCString s (glGetAttribLocation p . castPtr)
+-- | Returns 'Nothing' if the attribute is unbound within the program.
+attributeLocation :: MonadIO m => Program -> String -> m (Maybe AttributeLocation)
+attributeLocation (Program p) s = liftIO $ check <$> withCString s (glGetAttribLocation p . castPtr) where
+  check n
+    | n < 0     = Nothing
+    | otherwise = Just $ fromIntegral n
 
 --------------------------------------------------------------------------------
 -- * Layout Definition
@@ -101,9 +106,9 @@ type AttributeAccessor a b = a LayoutAnnotation -> LayoutAnnotation b
 -- The association is stored in the vertex array object 'OpenGL' wise, so a VAO must be bound
 vertexAttribute :: HasLayoutAnnotation a => AttributeLocation -> SettableStateVar (Maybe (AttributeAccessor a b))
 vertexAttribute l = SettableStateVar $ \case
-  Nothing -> glDisableVertexAttribArray (fromIntegral l)
+  Nothing -> glDisableVertexAttribArray l
   Just accessor -> do
-    glEnableVertexAttribArray (fromIntegral l)
+    glEnableVertexAttribArray l
     vertexAttribPointer l (getLayout . accessor $ layoutAnnotation (Proxy::Proxy a))
       
 
@@ -111,14 +116,13 @@ vertexAttribute l = SettableStateVar $ \case
 -- sets the attribute array pointer for an integer attribute (no conversion)
 vertexAttribPointerI :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointerI loc (Layout comp ty _norm stride offPtr) = 
-  liftIO $ glVertexAttribIPointer (fromIntegral loc) (fromIntegral comp) ty (fromIntegral stride) offPtr
-                                  -- ^ why is coerce here not possible (like in Quine/GL/Uniform.hs#L112)?
+  liftIO $ glVertexAttribIPointer loc (fromIntegral comp) ty (fromIntegral stride) offPtr
 
 -- | A not so high level binding to 'glVertexAttribPointer'
 -- sets the attribute array pointer for an integer or floating attribute (integers are converted to the floating type)
 vertexAttribPointer :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointer loc (Layout comp ty norm stride offPtr) =
-  liftIO $ glVertexAttribPointer (fromIntegral loc) (fromIntegral comp) ty (if norm then GL_TRUE else GL_FALSE) (fromIntegral stride) offPtr
+  liftIO $ glVertexAttribPointer loc (fromIntegral comp) ty (if norm then GL_TRUE else GL_FALSE) (fromIntegral stride) offPtr
 
 --------------------------------------------------------------------------------
 -- * Attribute Definition

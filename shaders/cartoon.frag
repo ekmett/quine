@@ -1,4 +1,4 @@
-#version 410 core
+#version 330 core
 
 // none of these includes actually needed, but they are nice for testing
 #extension GL_ARB_shading_language_include : require

@@ -32,6 +32,7 @@ module Quine.GL.Buffer
   , pattern ElementArrayBuffer
   , pattern PixelPackBuffer
   , pattern PixelUnpackBuffer
+  , pattern ShaderStorageBuffer
   , pattern TransformFeedbackBuffer
   , pattern UniformBuffer
 
@@ -63,12 +64,11 @@ import qualified Data.Vector.Storable as V
 import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
-import Foreign.Marshal.Utils (with)
 import Foreign.Storable
 import Foreign.Ptr
 import Foreign.ForeignPtr
 import GHC.Generics
-import Graphics.GL.Core41
+import Graphics.GL.Core45
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Types
 import Quine.StateVar
@@ -136,8 +136,8 @@ boundBufferAt (BufferTarget target binding) = StateVar g s where
     return $ Buffer (fromIntegral i)
   s = glBindBuffer target . coerce
 
--- | bindless uploading data to the argumented buffer (since OpenGL 4.4+ or with gl_EXT_direct_state_access)
-bufferDataDirect :: forall f a. (Storable a, BufferData (f a)) => Buffer (f a) -> StateVar (BufferUsage, f a)
+-- | bindless uploading data to the argumented buffer (since OpenGL 4.4+ or with 'gl_EXT_direct_state_access')
+bufferDataDirect :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
 bufferDataDirect (Buffer i)
   | gl_EXT_direct_state_access = StateVar g s
   | otherwise = throw $ BufferException "gl_EXT_direct_state_access unsupported" where
@@ -182,6 +182,11 @@ pattern PixelPackBuffer = BufferTarget GL_PIXEL_PACK_BUFFER GL_PIXEL_PACK_BUFFER
 
 -- | Texture data source
 pattern PixelUnpackBuffer = BufferTarget GL_PIXEL_UNPACK_BUFFER GL_PIXEL_UNPACK_BUFFER_BINDING
+
+-- | Shader storage buffers
+--
+-- You should probably use the 'Quine.GL.Block.STD140' or 'Quine.GL.Block.STD430' newtype wrapper around the contents.
+pattern ShaderStorageBuffer = BufferTarget GL_SHADER_STORAGE_BUFFER GL_SHADER_STORAGE_BUFFER_BINDING
 
 -- | Transform feedback buffer
 pattern TransformFeedbackBuffer = BufferTarget GL_TRANSFORM_FEEDBACK_BUFFER GL_TRANSFORM_FEEDBACK_BUFFER_BINDING
