@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -19,7 +19,6 @@ module Main where
 
 import Test.Hspec
 import Control.Exception.Base
-import Control.Monad.IO.Class
 import Control.Monad hiding (sequence)
 import Control.Applicative
 import Data.Bits
@@ -68,16 +67,19 @@ data AnAttribute f = AnAttribute
   , attrNormal   :: f Vec3
   , attrTexture  :: f Vec2
   } deriving (Generic)
+type VertexAttribute = AnAttribute UnAnnotated
 
-deriving instance Show (AnAttribute UnAnnotated)
-deriving instance Eq (AnAttribute UnAnnotated)
+deriving instance Show VertexAttribute
+deriving instance Eq VertexAttribute
 
-instance Storable (AnAttribute UnAnnotated) where
+instance Storable VertexAttribute where
   sizeOf _ = 2 * sizeOf (undefined::Vec3) + sizeOf (undefined::Vec2)
   alignment _ = alignment (undefined::Vec3) 
-  peekByteOff p o = AnAttribute <$> peekByteOff p o
-                              <*> peekByteOff p (o + sizeOf(undefined::Vec3))
-                              <*> peekByteOff p (o + sizeOf(undefined::Vec3) + sizeOf(undefined::Vec3))
+  peekByteOff p o = 
+    AnAttribute <$> peekByteOff p o
+                <*> peekByteOff p (o + sizeOf(undefined::Vec3))
+                <*> peekByteOff p (o + sizeOf(undefined::Vec3) + sizeOf(undefined::Vec3))
+
   pokeByteOff p o AnAttribute{..} = do
     pokeByteOff p o attrPosition
     pokeByteOff p (o + sizeOf(attrPosition)) attrNormal
@@ -90,8 +92,7 @@ instance HasLayoutAnnotation AnAttribute where
     , attrTexture  = LayoutAnnotation $ Layout (components $ attrTexture  <$> p) (baseType $ attrTexture  <$> p) False (sizeOfProxy p) (nullPtr `plusPtr` sizeOfProxy (attrPosition <$> p) `plusPtr` sizeOfProxy (attrNormal <$> p))
     }
 
-
-attributeInterleaved :: V.Vector (AnAttribute UnAnnotated)
+attributeInterleaved :: V.Vector (VertexAttribute)
 attributeInterleaved = V.fromList
   [ mkAttribute (V3 (-1) 0 0) (V3 0 0 1) (V2 0   0)
   , mkAttribute (V3   0  1 0) (V3 0 0 1) (V2 0.5 0)
@@ -99,7 +100,7 @@ attributeInterleaved = V.fromList
   ]
 
 -- with annotations it is a bit clumsy to construct an attribute now (=RFC)
-mkAttribute :: Vec3 -> Vec3 -> Vec2 -> AnAttribute UnAnnotated
+mkAttribute :: Vec3 -> Vec3 -> Vec2 -> VertexAttribute
 mkAttribute p n t = AnAttribute (UnAnnotated p) (UnAnnotated n) (UnAnnotated t)
 
 
@@ -278,18 +279,12 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
       -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
       (boundVertexArray $=) =<< gen
       
-      (boundBufferAt ArrayBuffer $=) =<< (gen :: IO (Buffer (V.Vector (AnAttribute UnAnnotated))))
+      (boundBufferAt ArrayBuffer $=) =<< (gen :: IO (Buffer (V.Vector VertexAttribute)))
       bufferData ArrayBuffer $= (StaticDraw, attributeInterleaved)
       
-      -- consolidate
-      glEnableVertexAttribArray (fromIntegral iPosition)
-      vertexAttribPointer iPosition (getLayout . attrPosition $ layoutAnnotation (Proxy::Proxy (AnAttribute UnAnnotated)))
-      
-      glEnableVertexAttribArray (fromIntegral iNormal  )
-      vertexAttribPointer iNormal   (getLayout . attrNormal   $ layoutAnnotation (Proxy::Proxy (AnAttribute UnAnnotated)))
-      
-      glEnableVertexAttribArray (fromIntegral iTexture )
-      vertexAttribPointer iTexture  (getLayout . attrTexture  $ layoutAnnotation (Proxy::Proxy (AnAttribute UnAnnotated)))
+      vertexAttribute iPosition $= Just attrPosition
+      vertexAttribute iNormal   $= Just attrNormal
+      vertexAttribute iTexture  $= Just attrTexture
 
       errors >>= (`shouldSatisfy` null)
       (get (bufferData ArrayBuffer)) `shouldReturn` (StaticDraw, attributeInterleaved)
