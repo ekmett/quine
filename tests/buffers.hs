@@ -276,7 +276,7 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
       iNormal   <- attributeLocation prog "aNormal"
       iTexture  <- attributeLocation prog "aTexture"
 
-      -- a vao is neccessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
+      -- a vao is necessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
       (boundVertexArray $=) =<< gen
       
       (boundBufferAt ArrayBuffer $=) =<< (gen :: IO (Buffer (V.Vector VertexAttribute)))
