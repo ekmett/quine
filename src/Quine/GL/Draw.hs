@@ -26,14 +26,19 @@ module Quine.GL.Draw
   , pattern LinesWithAdjacent
   , pattern TrianglesWithAdjacent
   , pattern TriangleStripWithAdjacent
-  -- * Indirect Drawing
+  -- * Draw Calls
+  -- ** Indirect Arrays
   , DrawArraysIndirectCommand(..)
   , drawArrayIndirect
+  -- ** Indirect Elements
+  , DrawElementsIndirectCommand(..)
+  , drawElementsIndirect
   ) where
 
 
 import Control.Applicative
 import Control.Monad.IO.Class
+import Control.Monad
 import Data.Data
 import Data.Word
 import Foreign.Ptr
@@ -45,7 +50,11 @@ import Graphics.GL.Types
 
 type DrawMode = GLenum
 
-data DrawArraysIndirectCommand = DrawArraysIndirectCommand { count, primCount, first, reserved :: Word32 }
+-- * Draw Calls
+
+-- ** Indirect Arrays
+
+data DrawArraysIndirectCommand = DrawArraysIndirectCommand { aCount, aPrimCount, aFirstIdx, __reserved :: Word32 }
   deriving (Show,Read,Eq,Typeable,Data,Generic)
 
 instance Storable DrawArraysIndirectCommand where
@@ -56,11 +65,30 @@ instance Storable DrawArraysIndirectCommand where
     in DrawArraysIndirectCommand <$> peekElemOff wPtr 0 <*> peekElemOff wPtr 1 <*> peekElemOff wPtr 2 <*> peekElemOff wPtr 3
   poke ptr DrawArraysIndirectCommand{..} =
     let wPtr = castPtr ptr
-    in pokeElemOff wPtr 0 count >> pokeElemOff wPtr 1 primCount >> pokeElemOff wPtr 2 first >> pokeElemOff wPtr 3 reserved
+    in pokeElemOff wPtr 0 aCount >> pokeElemOff wPtr 1 aPrimCount >> pokeElemOff wPtr 2 aFirstIdx >> pokeElemOff wPtr 3 __reserved
 
--- | Draws multipe primitives from the 
+-- | Draws multiple primitives from the a set of elements
 drawArrayIndirect :: MonadIO m => DrawMode -> DrawArraysIndirectCommand -> m ()
 drawArrayIndirect mode cmd = liftIO . with cmd $ glDrawArraysIndirect mode . castPtr
+
+-- ** Indirect Elements
+
+data DrawElementsIndirectCommand = DrawElementsIndirectCommand { eCount, ePrimCount, eFirstIdx, eBaseVertex, eBaseInstance :: Word32 }
+  deriving (Show,Read,Eq,Typeable,Data,Generic)
+
+instance Storable DrawElementsIndirectCommand where
+  sizeOf _ = 4 * sizeOf (undefined::Word32)
+  alignment _ = alignment (undefined::Word32)
+  peek ptr =
+    let wPtr = castPtr ptr
+    in DrawElementsIndirectCommand <$> peekElemOff wPtr 0 <*> peekElemOff wPtr 1 <*> peekElemOff wPtr 2 <*> peekElemOff wPtr 3 <*> peekElemOff wPtr 4
+  poke ptr DrawElementsIndirectCommand{..} =
+    let wPtr = castPtr ptr
+    in zipWithM_ (pokeElemOff wPtr) [0..] [eCount, ePrimCount, eFirstIdx, eBaseVertex, eBaseInstance]
+
+-- | Draws multiple primitives from the a set of elements
+drawElementsIndirect :: MonadIO m => DrawMode -> GLenum -> DrawElementsIndirectCommand -> m ()
+drawElementsIndirect mode ty cmd = liftIO . with cmd $ glDrawElementsIndirect mode ty . castPtr
 
 -- * Drawing Primitves
 
