@@ -13,7 +13,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 --------------------------------------------------------------------
 -- |
--- Copyright :  (c) 2014 Edward Kmett
+-- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
 -- License   :  BSD2
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
 -- Stability :  experimental
@@ -32,8 +32,6 @@ import Control.Monad hiding (forM_)
 import Control.Monad.Reader
 import Control.Monad.State hiding (get)
 import Data.Default
-import Data.Foldable
-import Data.Traversable
 import Data.FileEmbed
 import Data.Monoid
 import qualified Data.Vector.Storable as V
@@ -122,9 +120,6 @@ instance HasLayoutAnnotation Vertex where
     { _vPosition = LayoutAnnotation $ Layout (components $ _vPosition <$> p) (baseType $ _vPosition <$> p) False (sizeOf (undefined::Vertex UnAnnotated)) nullPtr
     , _vColor    = LayoutAnnotation $ Layout (components $ _vColor <$> p) (baseType $ _vColor <$> p) False (sizeOf (undefined::Vertex UnAnnotated)) (nullPtr `plusPtr` sizeOf (undefined::Vec3))
     } 
-
-data Triangle a = Triangle !a !a !a
-  deriving (Generic,Functor,Traversable,Foldable)
 
 -- * State
 
@@ -220,8 +215,8 @@ core = do
   liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
   throwErrors
   liftIO $ putStrLn "compiling"
-  transformVert <- compile GL_VERTEX_SHADER   "shaders/perspective.vert"
-  colorFrag     <- compile GL_FRAGMENT_SHADER "shaders/color-out.frag"
+  transformVert <- compile GL_VERTEX_SHADER   "shaders/pass-vertex.vert"
+  colorFrag     <- compile GL_FRAGMENT_SHADER "shaders/pass-color.frag"
   prog <- link [transformVert,colorFrag]
   currentProgram $= prog
   
@@ -233,13 +228,22 @@ core = do
   boundVertexArray $= emptyVAO
 
   liftIO $ putStrLn "generate triangle"
-  let triangle = toList $ Triangle ( Vertex (UnAnnotated $ V3 (-1)  0 0) (UnAnnotated $ V3 1 0 0) )
-                                   ( Vertex (UnAnnotated $ V3   1   0 0) (UnAnnotated $ V3 0 1 0) )
-                                   ( Vertex (UnAnnotated $ V3   0 0.5 0) (UnAnnotated $ V3 0 0 1) )
+  let vertices = [ Vertex (UnAnnotated $ V3 (-1)  0    0) (UnAnnotated $ V3 1 0 0)
+                 , Vertex (UnAnnotated $ V3   1   0    0) (UnAnnotated $ V3 0 1 0)
+                 , Vertex (UnAnnotated $ V3   0   1    0) (UnAnnotated $ V3 0 0 1)
+                 , Vertex (UnAnnotated $ V3   0   (-1) 0) (UnAnnotated $ V3 1 0 1)
+                 ]
+      idxs :: [Word32]
+      idxs = [0, 1, 2, 0, 3, 1]
 
-  (triBuff :: Buffer (V.Vector (Vertex UnAnnotated))) <- gen
-  boundBufferAt ArrayBuffer $= triBuff
-  bufferData ArrayBuffer $= (StaticDraw, V.fromList $ toList triangle)
+  (vertBuff :: Buffer (V.Vector (Vertex UnAnnotated))) <- gen
+  boundBufferAt ArrayBuffer $= vertBuff
+  bufferData ArrayBuffer $= (StaticDraw, V.fromList vertices)
+  throwErrors
+
+  (idxBuff :: Buffer (V.Vector Word32)) <- gen
+  boundBufferAt ElementArrayBuffer $= idxBuff
+  bufferData ElementArrayBuffer $= (StaticDraw, V.fromList idxs)
   throwErrors
 
   liftIO $ putStrLn "link vertex attributes"
@@ -263,7 +267,7 @@ core = do
     updateCamera
 
     render $ do
-      glDrawArrays GL_TRIANGLES 0 3
+      glDrawElements GL_TRIANGLES 6 GL_UNSIGNED_INT nullPtr
 
 render :: (MonadIO m, MonadReader e m, HasEnv e, MonadState s m, HasDisplay s) => m () -> m ()
 render kernel = do

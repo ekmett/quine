@@ -2,10 +2,7 @@
 
 // (c) 2014 Jan-Philip Loos
 //
-// Simple Transform & Projection
-//
-// Transform with Model and View
-// Projection with View Frustum
+// Passes vertex position & color
 
 layout(location = 0) in vec3 aPosition;
 layout(location = 3) in vec3 aColor;

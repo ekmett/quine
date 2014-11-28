@@ -2,7 +2,7 @@
 
 // (c) 2014 Jan-Philip Loos
 //
-// Just writes color out 
+// passes fragment color out
 
 in vec3 color;
 layout(location = 0) out vec4 fragColor;
