@@ -42,7 +42,6 @@ import Control.Monad
 import Data.Data
 import Data.Word
 import Foreign.Ptr
-import Foreign.Marshal.Utils (with)
 import Foreign.Storable
 import GHC.Generics
 import Graphics.GL.Core45
@@ -68,8 +67,8 @@ instance Storable DrawArraysIndirectCommand where
     in pokeElemOff wPtr 0 aCount >> pokeElemOff wPtr 1 aPrimCount >> pokeElemOff wPtr 2 aFirstIdx >> pokeElemOff wPtr 3 __reserved
 
 -- | Draws multiple primitives from the a set of elements
-drawArrayIndirect :: MonadIO m => DrawMode -> DrawArraysIndirectCommand -> m ()
-drawArrayIndirect mode cmd = liftIO . with cmd $ glDrawArraysIndirect mode . castPtr
+drawArrayIndirect :: MonadIO m => DrawMode -> Ptr DrawArraysIndirectCommand -> m ()
+drawArrayIndirect mode = liftIO . glDrawArraysIndirect mode . castPtr
 
 -- ** Indirect Elements
 
@@ -87,8 +86,8 @@ instance Storable DrawElementsIndirectCommand where
     in zipWithM_ (pokeElemOff wPtr) [0..] [eCount, ePrimCount, eFirstIdx, eBaseVertex, eBaseInstance]
 
 -- | Draws multiple primitives from the a set of elements
-drawElementsIndirect :: MonadIO m => DrawMode -> GLenum -> DrawElementsIndirectCommand -> m ()
-drawElementsIndirect mode ty cmd = liftIO . with cmd $ glDrawElementsIndirect mode ty . castPtr
+drawElementsIndirect :: MonadIO m => DrawMode -> GLenum -> Ptr DrawElementsIndirectCommand -> m ()
+drawElementsIndirect mode ty = liftIO . glDrawElementsIndirect mode ty . castPtr
 
 -- * Drawing Primitves
 
