@@ -16,7 +16,7 @@
 -- OpenGL Doc: <https://www.opengl.org/sdk/docs/man/html/glBindBuffer.xhtml>
 --
 -- Also usable for bindless rendering:
--- <https://www.opengl.org/discussion_boards/showthread.php/170388-Bindless-Stuff>
+-- <https://www.opengl.org/discussion_boards/showthread.php/170388-Bindless-Stuff?p=1199088&viewfull=1#post1199088>
 --------------------------------------------------------------------
 module Quine.GL.Buffer
   ( Buffer(..)
