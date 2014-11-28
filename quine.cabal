@@ -81,6 +81,7 @@ library
     Quine.GL.Attribute
     Quine.GL.Block
     Quine.GL.Buffer
+    Quine.GL.Draw
     Quine.GL.Error
     Quine.GL.Object
     Quine.GL.Pixel
