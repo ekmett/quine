@@ -19,3 +19,4 @@ codex.tags
 old
 notes
 .ghci
+cabal.config
