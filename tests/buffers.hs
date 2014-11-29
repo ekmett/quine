@@ -272,9 +272,9 @@ main = withGLContext (evaluate gl_EXT_direct_state_access) >>= \dsa -> hspec $ a
   
       prog <- link [vertShader,fragShader]
 
-      iPosition <- attributeLocation prog "aPosition"
-      iNormal   <- attributeLocation prog "aNormal"
-      iTexture  <- attributeLocation prog "aTexture"
+      Just iPosition <- attributeLocation prog "aPosition"
+      Just iNormal   <- attributeLocation prog "aNormal"
+      Just iTexture  <- attributeLocation prog "aTexture"
 
       -- a vao is necessary because it "stores all of the state needed to supply vertex data" -- from the opengl wiki
       (boundVertexArray $=) =<< gen
