@@ -20,9 +20,6 @@ import Control.Applicative
 import Control.Lens
 import Data.Default
 import Options.Applicative
-#ifdef RELEASE
-import Paths_quine
-#endif
 import Prelude hiding (init)
 import Quine.Monitor
 
@@ -53,7 +50,7 @@ parseOptions = Options
        <*> option auto (long "scale"  <> short 's' <> help "retina pixel ratio" <> metavar "RATIO" <> value 2.0)
        <*> option auto (long "width" <> short 'x' <> help "window width in pixels" <> metavar "WIDTH" <> value 800)
        <*> option auto (long "height" <> short 'y' <> help "window height in pixels" <> metavar "HEIGHT" <> value 600)
-       <*> strOption (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> action "file" <> value "shaders/cartoon.frag")
+       <*> strOption (long "fragment" <> short 'F' <> help "fragment shader" <> metavar "FILE" <> action "file" <> value "shaders/examples/cartoon.frag")
        <*> switch (long "debug" <> help "turn on synchronous opengl debugging if available")
 
 instance Default Options where

@@ -17,3 +17,9 @@
 ## Reflections
 
 * [The Future of Screenspace Reflections](http://www.gamasutra.com/blogs/BartlomiejWronski/20140129/209609/The_future_of_screenspace_reflections.php) by Bartlomiej Wronski talks about some of the issues with using screen space approaches for reflections. However, it is interesting that at least in screenspace the reflections can reflect specular highlights.
+
+## BVH Construction
+
+* [Fast, Effective BVH Updates for Animated Scenes](http://www.cs.utah.edu/hwrt/papers/hwrt_rotations.pdf) by Kopta et al. covers one interesting way to optimize a static BVH via the surface area heuristic through incremental swaps.
+* On the other hand the approach in [Clustered Deferred and Forward Shading](http://www.cse.chalmers.se/~uffe/clustered_shading_preprint.pdf) by Ola Olsson et al. approach of just sorting things in Morton order and gathering 32-way trees out of consecutive entries makes a much flatter structure.
+* We could apply an incremental approximate sorting algorithm such as the one advocated by Smash (Matt Swoboda) in his article on [a thoroughly modern particle system](http://directtovideo.wordpress.com/2009/10/06/a-thoroughly-modern-particle-system/). In theory tagging the entries in the map with a dirty bit / card marking when they swap places / move would be enough to avoid touching everything all the time as you only have to propagate dirty bounds up the tree.
