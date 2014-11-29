@@ -122,8 +122,8 @@ vertexAttribPointerI loc (Layout comp ty _norm stride offPtr) =
 -- | A not so high level binding to 'glVertexAttribPointer'
 -- sets the attribute array pointer for an integer or floating attribute (integers are converted to the floating type)
 vertexAttribPointer :: MonadIO m => AttributeLocation -> Layout -> m ()
-vertexAttribPointer loc (Layout comp ty norm stride offPtr) =
-  liftIO $ glVertexAttribPointer loc (fromIntegral comp) ty (if norm then GL_TRUE else GL_FALSE) (fromIntegral stride) offPtr
+vertexAttribPointer loc (Layout comp ty toNorm stride offPtr) =
+  liftIO $ glVertexAttribPointer loc (fromIntegral comp) ty (if toNorm then GL_TRUE else GL_FALSE) (fromIntegral stride) offPtr
 
 --------------------------------------------------------------------------------
 -- * Attribute Definition
