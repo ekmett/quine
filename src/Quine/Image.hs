@@ -151,10 +151,10 @@ downloadM x y (MutableImage w h mv) = liftIO $ do
 -- * Upload
 
 class Image2D i where
-  upload :: MonadIO m => i -> TextureTarget -> m ()
+  upload :: MonadIO m => i -> TextureTarget -> MipmapLevel -> m ()
 
 instance ImageFormat a => Image2D (Image a) where
-  upload i@(Image w h v) ta@(TextureTarget t _) = liftIO $ do
+  upload i@(Image w h v) ta@(TextureTarget t _) l = liftIO $ do
     glPixelStorei GL_PACK_LSB_FIRST    0
     glPixelStorei GL_PACK_SWAP_BYTES   0
     glPixelStorei GL_PACK_ROW_LENGTH   0
@@ -163,11 +163,11 @@ instance ImageFormat a => Image2D (Image a) where
     glPixelStorei GL_PACK_SKIP_PIXELS  0
     glPixelStorei GL_PACK_SKIP_IMAGES  0
     glPixelStorei GL_PACK_ALIGNMENT    1 -- normally 4!
-    V.unsafeWith v $ glTexImage2D t 0 (internalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelType i) . castPtr
+    V.unsafeWith v $ glTexImage2D t l (internalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelType i) . castPtr
     swizzle i ta
 
 instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
-  upload i@(MutableImage w h v) ta@(TextureTarget t _) = liftIO $ do
+  upload i@(MutableImage w h v) ta@(TextureTarget t _) l = liftIO $ do
     glPixelStorei GL_PACK_LSB_FIRST    0
     glPixelStorei GL_PACK_SWAP_BYTES   0
     glPixelStorei GL_PACK_ROW_LENGTH   0
@@ -176,7 +176,7 @@ instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
     glPixelStorei GL_PACK_SKIP_PIXELS  0
     glPixelStorei GL_PACK_SKIP_IMAGES  0
     glPixelStorei GL_PACK_ALIGNMENT    1 -- normally 4!
-    MV.unsafeWith v $ glTexImage2D t 0 (internalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelType i) . castPtr
+    MV.unsafeWith v $ glTexImage2D t l (internalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelType i) . castPtr
     swizzle i ta
 
 instance Image2D DynamicImage where
