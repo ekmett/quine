@@ -66,6 +66,7 @@ type Vec2 = V2 Float
 type Vec3 = V3 Float
 type Vec4 = V4 Float
 
+-- | creates a mapping from basic haskell types to 'GLenum' types
 class HasGLType a where
   asGLType :: p a -> GLenum
 
