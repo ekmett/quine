@@ -22,11 +22,15 @@ module Quine.GL.Types
   , DMat3x4, DMat4x2, DMat4x3
   , Mat2x3, Mat2x4, Mat3x2
   , Mat3x4, Mat4x2, Mat4x3
+  -- * Type Mapping
+  , HasGLType(..)
   ) where
 
 import Data.Int
 import Data.Word
 import Linear
+import Graphics.GL.Core45
+import Graphics.GL.Types
 
 type BVec2 = V2 Bool
 type BVec3 = V3 Bool
@@ -61,3 +65,30 @@ type UVec4 = V4 Word32
 type Vec2 = V2 Float
 type Vec3 = V3 Float
 type Vec4 = V4 Float
+
+class HasGLType a where
+  asGLType :: p a -> GLenum
+
+instance HasGLType Float where
+  asGLType _ = GL_FLOAT
+
+instance HasGLType Double where
+  asGLType _ = GL_DOUBLE
+
+instance HasGLType Word8 where
+  asGLType _ = GL_UNSIGNED_BYTE
+
+instance HasGLType Word16 where
+  asGLType _ = GL_UNSIGNED_SHORT
+
+instance HasGLType Word32 where
+  asGLType _ = GL_UNSIGNED_INT
+
+instance HasGLType Int8 where
+  asGLType _ = GL_BYTE
+
+instance HasGLType Int16 where
+  asGLType _ = GL_SHORT
+
+instance HasGLType Int where
+  asGLType _ = GL_INT
