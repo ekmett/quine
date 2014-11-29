@@ -46,7 +46,7 @@ import Data.Data
 import Data.Functor
 import Data.Int
 import Data.Word
-import GHC.Generics
+import GHC.Generics hiding (V1)
 import Data.Foldable
 import Data.Traversable
 import Foreign.C.String
@@ -57,6 +57,7 @@ import Graphics.GL.Types
 import Quine.GL.Types
 import Quine.GL.Program
 import Quine.StateVar
+import Linear
 
 --------------------------------------------------------------------------------
 -- * Attribute Locations
@@ -173,14 +174,18 @@ instance Attribute Word8 where
   components _ = 1
   baseType _ = GL_UNSIGNED_BYTE
 
-instance Attribute Vec2 where
+instance HasGLType a => Attribute (V1 a) where
+  components _ = 1
+  baseType _ = asGLType (Proxy::Proxy a)
+
+instance HasGLType a => Attribute (V2 a) where
   components _ = 2
-  baseType _ = GL_FLOAT
+  baseType _ = asGLType (Proxy::Proxy a)
 
-instance Attribute Vec3 where
+instance HasGLType a => Attribute (V3 a) where
   components _ = 3
-  baseType _ = GL_FLOAT
+  baseType _ = asGLType (Proxy::Proxy a)
 
-instance Attribute Vec4 where
+instance HasGLType a => Attribute (V4 a) where
   components _ = 4
-  baseType _ = GL_FLOAT
+  baseType _ = asGLType (Proxy::Proxy a)
