@@ -21,6 +21,7 @@ module Quine.GL.Draw
   , pattern TriangleFan
   , pattern Triangles
   , pattern TriangleStrip
+  , pattern Patches
   -- $usage
   , pattern LineStripWithAdjacent
   , pattern LinesWithAdjacent
@@ -66,7 +67,14 @@ instance Storable DrawArraysIndirectCommand where
     let wPtr = castPtr ptr
     in pokeElemOff wPtr 0 aCount >> pokeElemOff wPtr 1 aPrimCount >> pokeElemOff wPtr 2 aFirstIdx >> pokeElemOff wPtr 3 __reserved
 
--- | Draws multiple primitives from the a set of elements
+-- | Draws multiple primitives
+--
+-- Arguments:
+--
+-- [DrawMode] one of the 3.3+ supported modes
+--
+-- [Offset]   an offset pointer into the currently bound 'DrawIndirectBuffer' (in machine units)  
+--
 drawArrayIndirect :: MonadIO m => DrawMode -> Ptr DrawArraysIndirectCommand -> m ()
 drawArrayIndirect mode = liftIO . glDrawArraysIndirect mode . castPtr
 
@@ -86,6 +94,15 @@ instance Storable DrawElementsIndirectCommand where
     in zipWithM_ (pokeElemOff wPtr) [0..] [eCount, ePrimCount, eFirstIdx, eBaseVertex, eBaseInstance]
 
 -- | Draws multiple primitives from the a set of elements
+--
+-- Arguments:
+--
+-- [DrawMode] one of the 3.3+ supported modes
+--
+-- [Type]     The type of the indices of the currently bound 'ElementArrayBuffer' ('GL_UNSIGNED_BYTE', 'GL_UNSIGNED_SHORT', 'GL_UNSIGNED_INT')
+--
+-- [Offset]   an offset pointer into the currently bound 'DrawIndirectBuffer' (in machine units)  
+--
 drawElementsIndirect :: MonadIO m => DrawMode -> GLenum -> Ptr DrawElementsIndirectCommand -> m ()
 drawElementsIndirect mode ty = liftIO . glDrawElementsIndirect mode ty . castPtr
 
@@ -126,3 +143,7 @@ pattern TriangleStrip = GL_TRIANGLE_STRIP
 
 -- | Adjacent connected triangles with gs access to adjacent
 pattern TriangleStripWithAdjacent = GL_TRIANGLE_STRIP_ADJACENCY
+
+-- | Patches for tesselation
+pattern Patches = GL_PATCHES
+
