@@ -13,7 +13,7 @@
 -- Tell OpenGL to draw something
 --------------------------------------------------------------------
 module Quine.GL.Draw
-  ( DrawMode
+  ( PrimitiveMode
   -- * Draw Calls
   -- ** Indirect Arrays
   , DrawArraysIndirectCommand(..)
@@ -35,7 +35,7 @@ import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
 
-type DrawMode = GLenum
+type PrimitiveMode = GLenum
 type IndexType = GLenum
 
 -- * Draw Calls
@@ -59,11 +59,11 @@ instance Storable DrawArraysIndirectCommand where
 --
 -- Arguments:
 --
--- [DrawMode] one of the 3.3+ supported modes
+-- [PrimitiveMode] one of the 3.3+ supported modes
 --
 -- [Offset]   an offset pointer into the currently bound 'DrawIndirectBuffer' (in machine units)  
 --
-drawArrayIndirect :: MonadIO m => DrawMode -> Ptr DrawArraysIndirectCommand -> m ()
+drawArrayIndirect :: MonadIO m => PrimitiveMode -> Ptr DrawArraysIndirectCommand -> m ()
 drawArrayIndirect mode = liftIO . glDrawArraysIndirect mode . castPtr
 
 -- ** Indirect Elements
@@ -85,12 +85,15 @@ instance Storable DrawElementsIndirectCommand where
 --
 -- Arguments:
 --
--- [DrawMode]   one of the 3.3+ supported modes
+-- [PrimitiveMode]
+--    one of the 3.3+ supported modes
 --
--- [IndexType]  The type of the indices of the currently bound 'ElementArrayBuffer' ('GL_UNSIGNED_BYTE', 'GL_UNSIGNED_SHORT', 'GL_UNSIGNED_INT')
+-- [IndexType]
+--    The type of the indices of the currently bound 'ElementArrayBuffer' ('GL_UNSIGNED_BYTE', 'GL_UNSIGNED_SHORT', 'GL_UNSIGNED_INT')
 --
--- [Offset]     an offset pointer into the currently bound 'DrawIndirectBuffer' (in machine units)  
+-- [Offset]     
+--    an offset pointer into the currently bound 'DrawIndirectBuffer' (in machine units)  
 --
-drawElementsIndirect :: MonadIO m => DrawMode -> IndexType -> Ptr DrawElementsIndirectCommand -> m ()
+drawElementsIndirect :: MonadIO m => PrimitiveMode -> IndexType -> Ptr DrawElementsIndirectCommand -> m ()
 drawElementsIndirect mode ty = liftIO . glDrawElementsIndirect mode ty . castPtr
 

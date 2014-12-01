@@ -15,6 +15,7 @@
 --------------------------------------------------------------------
 module Quine.GL.Framebuffer
   ( Framebuffer
+  -- * Binding
   , boundFramebuffer
   -- * Attaching
   , framebufferTexture
@@ -50,7 +51,6 @@ data FramebufferTarget = FramebufferTarget GLenum GLenum deriving (Eq,Ord,Show,R
 newtype FramebufferError = FramebufferError GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 type FramebufferAttachmentPoint = GLenum
 
-
 instance Object Framebuffer where
   object = coerce
   isa i = (GL_FALSE /=) `liftM` glIsFramebuffer (coerce i)
@@ -68,6 +68,7 @@ instance Gen Framebuffer where
 instance Default Framebuffer where
   def = Framebuffer 0
 
+-- * Binding
 
 boundFramebuffer :: FramebufferTarget -> StateVar Framebuffer
 boundFramebuffer (FramebufferTarget target binding) = StateVar g s where
