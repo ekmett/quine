@@ -1,6 +1,6 @@
 --------------------------------------------------------------------
 -- |
--- Copyright :  (c) 2014 Edward Kmett
+-- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
 -- License   :  BSD2
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
 -- Stability :  experimental
@@ -34,6 +34,8 @@ module Quine.GL.Program
   , geometryInputType
   , geometryOutputType
   , currentProgram
+  -- * Separable Program
+  , createSeparableProgramInclude
   ) where
 
 import Control.Applicative
@@ -41,6 +43,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString as Strict
 import qualified Data.ByteString.Internal as Strict
+import qualified Data.ByteString.Lazy as Lazy
 import Data.Default
 import Data.Coerce
 import Foreign.Marshal.Alloc
@@ -65,6 +68,7 @@ instance Gen Program where
 
 instance Default Program where
   def = Program 0
+
 
 -- * Attaching Shaders
 
@@ -212,3 +216,24 @@ currentProgram :: StateVar Program
 currentProgram = StateVar
   (fmap (Program . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv GL_CURRENT_PROGRAM) peek)
   (glUseProgram . object)
+
+-- * Separable Program
+
+-- | @'createSeparableProgram' shaderType source paths@ emulates the missing OpenGL functionality to
+-- create a separable 'Program' from source with 'glCreateShaderProgram' but 
+-- with 'GL_ARB_shading_language_include' support.
+createSeparableProgramInclude :: MonadIO m => ShaderType -> Lazy.ByteString -> [FilePath] -> m Program
+createSeparableProgramInclude shaderTy source paths = do
+  s <- createShader shaderTy
+  shaderSource s $= source
+  compileShaderInclude s paths
+  compiled <- compileStatus s
+  prog <- gen
+  when compiled $ do
+    programSeparable prog $= True
+    attachShader prog s
+    linkProgram prog
+    detachShader prog s
+  delete s
+  return prog
+
