@@ -26,6 +26,7 @@ module Quine.GL.Texture
   -- * Texture Parameter
   , TextureParameter
   -- ** Bound Based
+  -- $texParameter
   , texParameterf
   , texParameteri
   , texParameterfv
@@ -98,6 +99,10 @@ boundTexture target binding = StateVar g s where
   s = glBindTexture target . coerce
 
 -- * Texture Parameter
+
+-- $texParameter
+-- Settings for the current bound 'Texture'.
+-- Consider using 'Quine.GL.Sampler' to store settings 'Texture' independent
 
 texParameterf :: TextureTarget -> TextureParameter -> StateVar Float
 texParameterf t p = StateVar g s where
