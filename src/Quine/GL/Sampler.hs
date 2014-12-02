@@ -18,6 +18,7 @@ module Quine.GL.Sampler
   -- * Binding
   , boundSampler
   -- * Sampler Parameter
+  -- $samplerParameter
   , SamplerParameter
   , samplerParameterf
   , samplerParameter2f
@@ -81,6 +82,11 @@ boundSampler u = StateVar g s where
   s = glBindSampler u . coerce
 
 -- * Sampler Parameter
+
+-- $samplerParameter
+--
+-- Using 'Sampler's is the prefered way to store 'TextureParameter' settings. When a sampler is bound to
+-- a 'TextureUnit' _all_ settings tied to the 'Texture' are ignored.
 
 samplerParameterf :: Sampler -> SamplerParameter -> StateVar Float
 samplerParameterf sampler p = StateVar g s where
