@@ -88,6 +88,7 @@ library
     Quine.GL.Object
     Quine.GL.Pixel
     Quine.GL.Program
+    Quine.GL.ProgramPipeline
     Quine.GL.Renderbuffer
     Quine.GL.Sampler
     Quine.GL.Shader
