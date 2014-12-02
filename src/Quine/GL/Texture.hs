@@ -38,6 +38,8 @@ module Quine.GL.Texture
   , texParameter4i
   , texParameterIiv
   , texParameterIuiv
+  -- * Texture Unit
+  , activeTexture
   ) where
 
 import Control.Applicative
@@ -150,3 +152,11 @@ texParameterIuiv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n 
 texParameterIuiv t p = StateVar g s where
   g = alloca $ (>>) <$> glGetTexParameterIuiv t p . castPtr <*> peek
   s v = alloca $ (>>) <$> glTexParameterIuiv t p . castPtr <*> (`poke` v)
+
+-- * Texture Unit
+
+activeTexture :: StateVar Word32
+activeTexture = StateVar g s where
+  g = fmap fromIntegral $ alloca $ liftM2 (>>) (glGetIntegerv GL_SAMPLER_BINDING) peek
+  s n | n > GL_MAX_TEXTURE_IMAGE_UNITS - 1 = undefined
+      | otherwise = glActiveTexture (GL_TEXTURE0 + n)
