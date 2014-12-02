@@ -15,16 +15,22 @@
 --------------------------------------------------------------------
 module Quine.GL.Sampler
   ( Sampler
+  -- * Binding
+  , boundSampler
   -- * Sampler Parameter
   , SamplerParameter
   , samplerParameterf
   , samplerParameter2f
   , samplerParameter3f
   , samplerParameter4f
+  , samplerParameterfv
   , samplerParameteri
   , samplerParameter2i
   , samplerParameter3i
   , samplerParameter4i
+  , samplerParameteriv
+  , samplerParameterIiv
+  , samplerParameterIuiv
   ) where
 
 import Control.Applicative
@@ -36,6 +42,7 @@ import Data.Int
 import Data.Word
 import Data.Default
 import Linear
+import Linear.V
 import Foreign.Marshal.Array
 import Foreign.Marshal.Alloc
 import Foreign.Storable
@@ -45,6 +52,7 @@ import Graphics.GL.Core45
 import Graphics.GL.Types
 import Quine.GL.Object
 import Quine.StateVar
+import Quine.GL.Texture (TextureUnit)
 
 newtype Sampler = Sampler GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 type SamplerParameter = GLenum
@@ -65,6 +73,13 @@ instance Gen Sampler where
 instance Default Sampler where
   def = Sampler 0
 
+-- * Binding
+
+boundSampler :: TextureUnit -> StateVar Sampler
+boundSampler u = StateVar g s where
+  g = fmap (Sampler . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv GL_SAMPLER_BINDING) peek
+  s = glBindSampler u . coerce
+
 -- * Sampler Parameter
 
 samplerParameterf :: Sampler -> SamplerParameter -> StateVar Float
@@ -76,6 +91,9 @@ samplerParameterfv' :: Storable (f Float) => Sampler -> SamplerParameter -> Stat
 samplerParameterfv' sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameterfv (coerce sampler) p . castPtr <*> peek
   s v = alloca $ (>>) <$> glSamplerParameterfv (coerce sampler) p . castPtr <*> (`poke` v)
+
+samplerParameterfv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Float)
+samplerParameterfv = samplerParameterfv'
 
 samplerParameter2f :: Sampler -> SamplerParameter -> StateVar (V2 Float)
 samplerParameter2f = samplerParameterfv'
@@ -96,6 +114,9 @@ samplerParameteriv' sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameteriv (coerce sampler) p . castPtr <*> peek
   s v = alloca $ (>>) <$> glSamplerParameteriv (coerce sampler) p . castPtr <*> (`poke` v)
 
+samplerParameteriv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Int32)
+samplerParameteriv = samplerParameteriv'
+
 samplerParameter2i :: Sampler -> SamplerParameter -> StateVar (V2 Int32)
 samplerParameter2i = samplerParameteriv'
 
@@ -104,3 +125,14 @@ samplerParameter3i = samplerParameteriv'
 
 samplerParameter4i :: Sampler -> SamplerParameter -> StateVar (V4 Int32)
 samplerParameter4i = samplerParameteriv'
+
+samplerParameterIiv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Int32)
+samplerParameterIiv sampler p = StateVar g s where
+  g = alloca $ (>>) <$> glGetSamplerParameterIiv (coerce sampler) p . castPtr <*> peek
+  s v = alloca $ (>>) <$> glSamplerParameterIiv (coerce sampler) p . castPtr <*> (`poke` v)
+
+samplerParameterIuiv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Word32)
+samplerParameterIuiv sampler p = StateVar g s where
+  g = alloca $ (>>) <$> glGetSamplerParameterIuiv (coerce sampler) p . castPtr <*> peek
+  s v = alloca $ (>>) <$> glSamplerParameterIuiv (coerce sampler) p . castPtr <*> (`poke` v)
+

@@ -18,6 +18,7 @@ module Quine.GL.Texture
   , TextureMagnificationFilter
   , MipmapLevel
   , TextureLayer
+  , TextureUnit
   -- * Texture Binding
   , boundTexture
   -- * Texture Targets
@@ -67,6 +68,7 @@ type TextureMinificationFilter = GLenum
 type TextureMagnificationFilter = GLenum
 type MipmapLevel = GLint
 type TextureLayer = GLint
+type TextureUnit = GLuint
 
 newtype Texture = Texture GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 
