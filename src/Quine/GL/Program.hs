@@ -15,6 +15,7 @@ module Quine.GL.Program
   , numAttachedShaders
   , linkProgram
   , linkStatus
+  , programSeparable
   , validateProgram
   , validateStatus
   , programInfoLog
@@ -41,6 +42,7 @@ import Control.Monad.IO.Class
 import qualified Data.ByteString as Strict
 import qualified Data.ByteString.Internal as Strict
 import Data.Default
+import Data.Coerce
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
@@ -54,9 +56,9 @@ import Quine.StateVar
 newtype Program = Program GLuint
 
 instance Object Program where
-  object (Program p) = p
-  isa (Program p) = (GL_FALSE /=) `liftM` glIsProgram p
-  delete (Program p) = glDeleteProgram p
+  object = coerce
+  isa p = (GL_FALSE /=) `liftM` glIsProgram (coerce p)
+  delete p = glDeleteProgram (coerce p)
 
 instance Gen Program where
   gen = liftM Program glCreateProgram
@@ -74,11 +76,11 @@ detachShader (Program p) (Shader s) = glDetachShader p s
 
 -- | @'numAttachedShaders' program@ returns the number of shader objects attached to @program@.
 numAttachedShaders :: MonadIO m => Program -> m Int
-numAttachedShaders p = fromIntegral `liftM` getProgram1 p GL_ATTACHED_SHADERS
+numAttachedShaders p = fromIntegral `liftM` get (programParameter1 p GL_ATTACHED_SHADERS)
 
 attachedShaders :: MonadIO m => Program -> m [Shader]
 attachedShaders p = do
-  numShaders <- fromIntegral `liftM` getProgram1 p GL_ATTACHED_SHADERS
+  numShaders <- fromIntegral `liftM` get (programParameter1 p GL_ATTACHED_SHADERS)
   ids <- liftIO $ allocaArray (fromIntegral numShaders) $ \buf -> do
     glGetAttachedShaders (object p) numShaders nullPtr buf
     peekArray (fromIntegral numShaders) buf
@@ -86,15 +88,17 @@ attachedShaders p = do
 
 -- * Properties
 
-getProgram1 :: MonadIO m => Program -> GLenum -> m GLint
-getProgram1 s p = liftIO $ alloca $ \q -> glGetProgramiv (object s) p q >> peek q
+programParameter1 :: Program -> GLenum -> StateVar GLint
+programParameter1 p parm = StateVar g s where
+  g = alloca $ liftM2 (>>) (glGetProgramiv (coerce p) parm) peek
+  s = glProgramParameteri (coerce p) parm
 
 linkProgram :: MonadIO m => Program -> m ()
 linkProgram = glLinkProgram . object
 
 programInfoLog :: MonadIO m => Program -> m Strict.ByteString
 programInfoLog p = liftIO $ do
-  l <- fromIntegral <$> getProgram1 p GL_INFO_LOG_LENGTH
+  l <- fromIntegral <$> get (programParameter1 p GL_INFO_LOG_LENGTH)
   if l <= 1
     then return Strict.empty
     else liftIO $ alloca $ \pl -> do
@@ -104,11 +108,18 @@ programInfoLog p = liftIO $ do
 
 -- | @'programIsDeleted' program@ returns 'True' if @program@ is currently flagged for deletion, 'False' otherwise.
 programIsDeleted :: MonadIO m => Program -> m Bool
-programIsDeleted p = (GL_FALSE /=) `liftM` getProgram1 p GL_DELETE_STATUS
+programIsDeleted p = (GL_FALSE /=) `liftM` get (programParameter1 p GL_DELETE_STATUS)
 
 -- | @'linkStatus' program@ returns 'True'if the last link operation on @program@ was successful, 'False' otherwise.
 linkStatus :: MonadIO m => Program -> m Bool
-linkStatus p = (GL_FALSE /=) `liftM` getProgram1 p GL_LINK_STATUS
+linkStatus p = (GL_FALSE /=) `liftM` get (programParameter1 p GL_LINK_STATUS)
+
+-- | Check if the shader is a separable program
+-- separable shader programs can be created by 'createShaderProgram'
+programSeparable :: Program -> StateVar Bool
+programSeparable p = mapStateVar toGLBool fromGLBool $ programParameter1 p GL_PROGRAM_SEPARABLE where
+  toGLBool b = if b then GL_TRUE else GL_FALSE
+  fromGLBool b = if b == GL_TRUE then True else False 
 
 -- * Validation
 
@@ -121,13 +132,13 @@ validateProgram (Program p) = glValidateProgram p
 --
 -- If 'True', @program@ is guaranteed to execute given the current state. Otherwise, @program@ is guaranteed to not execute.
 validateStatus :: MonadIO m => Program -> m Bool
-validateStatus p = (GL_FALSE /=) `liftM` getProgram1 p GL_VALIDATE_STATUS
+validateStatus p = (GL_FALSE /=) `liftM` get (programParameter1 p GL_VALIDATE_STATUS)
 
 -- * Atomic Counter Buffers
 
 -- | @'activeAtomicCounterBuffers' program@ returns the number of active attribute atomic counter buffers used by @program@.
 activeAtomicCounterBuffers :: MonadIO m => Program -> m Int
-activeAtomicCounterBuffers p = fromIntegral `liftM` getProgram1 p GL_ACTIVE_ATOMIC_COUNTER_BUFFERS
+activeAtomicCounterBuffers p = fromIntegral `liftM` get (programParameter1 p GL_ACTIVE_ATOMIC_COUNTER_BUFFERS)
 
 -- * Attributes
 
@@ -135,27 +146,27 @@ activeAtomicCounterBuffers p = fromIntegral `liftM` getProgram1 p GL_ACTIVE_ATOM
 
 -- | @'numActiveAttributes' program@ returns the number of active attribute variables for @program@.
 numActiveAttributes :: MonadIO m => Program -> m Int
-numActiveAttributes p = fromIntegral `liftM` getProgram1 p GL_ACTIVE_ATTRIBUTES
+numActiveAttributes p = fromIntegral `liftM` get (programParameter1 p GL_ACTIVE_ATTRIBUTES)
 
 -- | @'activeAttributeMaxLength' program@  returns the length of the longest active attribute name for @program@, including the null termination character (i.e., the size of the character buffer required to store the longest attribute name). If no active attributes exist, 0 is returned.
 activeAttributeMaxLength :: MonadIO m => Program -> m Int
-activeAttributeMaxLength p = fromIntegral `liftM` getProgram1 p GL_ACTIVE_ATTRIBUTE_MAX_LENGTH
+activeAttributeMaxLength p = fromIntegral `liftM` get (programParameter1 p GL_ACTIVE_ATTRIBUTE_MAX_LENGTH)
 
 -- * Uniforms
 
 -- | @'numActiveUniforms' returns the number of active uniform variables for @program@.
 numActiveUniforms :: MonadIO m => Program -> m Int
-numActiveUniforms p = fromIntegral `liftM` getProgram1 p GL_ACTIVE_UNIFORMS
+numActiveUniforms p = fromIntegral `liftM` get (programParameter1 p GL_ACTIVE_UNIFORMS)
 
 -- | @'activeUniformMaxLength' program@  returns the length of the longest active uniform variable name for @program@, including the null termination character (i.e., the size of the character buffer required to store the longest uniform variable name). If no active uniform variables exist, 0 is returned.
 activeUniformMaxLength :: MonadIO m => Program -> m Int
-activeUniformMaxLength p = fromIntegral `liftM` getProgram1 p GL_ACTIVE_ATTRIBUTE_MAX_LENGTH
+activeUniformMaxLength p = fromIntegral `liftM` get (programParameter1 p GL_ACTIVE_ATTRIBUTE_MAX_LENGTH)
 
 -- * Binary
 
 -- | @'programBinaryLength' program@ return the length of the program binary, in bytes, that will be returned by a call to @glGetProgramBinary@. When a progam's @linkStatus@ is False, its program binary length is 0.
 programBinaryLength :: MonadIO m => Program -> m Int
-programBinaryLength p = fromIntegral `liftM` getProgram1 p GL_PROGRAM_BINARY_LENGTH
+programBinaryLength p = fromIntegral `liftM` get (programParameter1 p GL_PROGRAM_BINARY_LENGTH)
 
 -- * Compute Workgroups
 
@@ -172,30 +183,30 @@ programComputeWorkGroupSize (Program p) = liftIO $ allocaArray 3 $ \q -> do
 
 -- | @'transformFeedbackBufferMode' program@ returns a symbolic constant indicating the buffer mode for @program@ used when transform feedback is active. This may be 'GL_SEPARATE_ATTRIBS' or 'GL_INTERLEAVED_ATTRIBS'.
 transformFeedbackBufferMode :: MonadIO m => Program -> m GLenum
-transformFeedbackBufferMode p = fromIntegral `liftM` getProgram1 p GL_TRANSFORM_FEEDBACK_BUFFER_MODE
+transformFeedbackBufferMode p = fromIntegral `liftM` get (programParameter1 p GL_TRANSFORM_FEEDBACK_BUFFER_MODE)
 
 -- | @'numTransformFeedbackVaryings' program@ returns the number of varying variables to capture in transform feedback mode for the @program@.
 numTransformFeedbackVaryings :: MonadIO m => Program -> m Int
-numTransformFeedbackVaryings p = fromIntegral `liftM` getProgram1 p GL_TRANSFORM_FEEDBACK_VARYINGS
+numTransformFeedbackVaryings p = fromIntegral `liftM` get (programParameter1 p GL_TRANSFORM_FEEDBACK_VARYINGS)
 
 -- | @'transformFeedbackVaryingsMaxLength' program@ returns the length of the longest variable name to be used for transform feedback, including the null-terminator.
 transformFeedbackVaryingsMaxLength :: MonadIO m => Program -> m Int
-transformFeedbackVaryingsMaxLength p = fromIntegral `liftM` getProgram1 p GL_TRANSFORM_FEEDBACK_VARYINGS
+transformFeedbackVaryingsMaxLength p = fromIntegral `liftM` get (programParameter1 p GL_TRANSFORM_FEEDBACK_VARYINGS)
 
 -- * Geometry Shaders
 
 -- | @'geometryVerticesOut' program@ returns the maximum number of vertices that the geometry shader in @program@ will output.
 geometryVerticesOut :: MonadIO m => Program -> m Int
-geometryVerticesOut p = fromIntegral `liftM` getProgram1 p GL_GEOMETRY_VERTICES_OUT
+geometryVerticesOut p = fromIntegral `liftM` get (programParameter1 p GL_GEOMETRY_VERTICES_OUT)
 
 
 -- | @'geometryInputType' program@ returns a symbolic constant indicating the primitive type accepted as input to the geometry shader contained in @program@.
 geometryInputType :: MonadIO m => Program -> m GLenum
-geometryInputType p = fromIntegral `liftM` getProgram1 p GL_GEOMETRY_INPUT_TYPE
+geometryInputType p = fromIntegral `liftM` get (programParameter1 p GL_GEOMETRY_INPUT_TYPE)
 
 -- | @'geometryOutputType' program@ returns a symbolic constant indicating the primitive type that will be output by the geometry shader contained in @program@.
 geometryOutputType :: MonadIO m => Program -> m GLenum
-geometryOutputType p = fromIntegral `liftM` getProgram1 p GL_GEOMETRY_OUTPUT_TYPE
+geometryOutputType p = fromIntegral `liftM` get (programParameter1 p GL_GEOMETRY_OUTPUT_TYPE)
 
 currentProgram :: StateVar Program
 currentProgram = StateVar
