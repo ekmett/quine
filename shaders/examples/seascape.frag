@@ -188,7 +188,7 @@ void main(void) {
     vec3 color = mix(
         getSkyColor(dir),
         getSeaColor(p,n,light,dir,dist),
-        pow(smoothstep(0.0,-0.05,dir.y),0.3));
+        pow(smoothstep(-0.01,-0.05,dir.y),0.3));
 
     // post
     output_color = vec4(pow(color,vec3(0.75)), 1.0);
