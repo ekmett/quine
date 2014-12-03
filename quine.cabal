@@ -65,6 +65,7 @@ library
   exposed-modules:
     Quine.Camera
     Quine.Clock
+    Quine.Cubemap
     Quine.Debug
     Quine.Display
     Quine.Env
@@ -87,6 +88,8 @@ library
     Quine.GL.Object
     Quine.GL.Pixel
     Quine.GL.Program
+    Quine.GL.Renderbuffer
+    Quine.GL.Sampler
     Quine.GL.Shader
     Quine.GL.Texture
     Quine.GL.Types
@@ -98,6 +101,7 @@ library
     Quine.Instances
     Quine.Math
     Quine.Meter
+    Quine.MipmapChain
     Quine.Monitor
     Quine.Options
     Quine.Queue

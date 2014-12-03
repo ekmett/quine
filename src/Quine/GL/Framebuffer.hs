@@ -15,7 +15,12 @@
 --------------------------------------------------------------------
 module Quine.GL.Framebuffer
   ( Framebuffer
+  -- * Binding
   , boundFramebuffer
+  -- * Attaching
+  , framebufferTexture
+  , framebufferRenderbuffer
+  , framebufferTextureLayer
   -- * Completeness Check
   , checkFramebuffer
   -- * Framebuffer Targets
@@ -38,10 +43,13 @@ import Graphics.GL.Core45
 import Graphics.GL.Types
 import Quine.StateVar
 import Quine.GL.Object
+import Quine.GL.Renderbuffer
+import Quine.GL.Texture
 
 newtype Framebuffer = Framebuffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 data FramebufferTarget = FramebufferTarget GLenum GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 newtype FramebufferError = FramebufferError GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
+type FramebufferAttachmentPoint = GLenum
 
 instance Object Framebuffer where
   object = coerce
@@ -60,12 +68,30 @@ instance Gen Framebuffer where
 instance Default Framebuffer where
   def = Framebuffer 0
 
+-- * Binding
+
 boundFramebuffer :: FramebufferTarget -> StateVar Framebuffer
 boundFramebuffer (FramebufferTarget target binding) = StateVar g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
     return $ Framebuffer (fromIntegral i)
   s = glBindBuffer target . coerce
+
+-- * Attaching Buffer
+
+-- | Attach a 'Texture' to the currently bound 'Framebuffer'
+framebufferTexture :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Texture -> MipmapLevel -> m ()
+framebufferTexture (FramebufferTarget t _) slot tex = liftIO . glFramebufferTexture t slot (object tex)
+
+-- | Attach a single layer of a 'Texture' to the currently bound 'Framebuffer'
+-- also usable to attach a cube map 'Texture' or cube map texture array
+-- For cube map textures, layer is translated into a cube map face according to: face = k `mod` 6.
+-- For cube map array textures, layer is translated into an array layer and face according to: layer = ceil (layer / 6) and face = k `mod` 6
+framebufferTextureLayer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Texture -> MipmapLevel -> TextureLayer -> m ()
+framebufferTextureLayer (FramebufferTarget t _) slot tex level = liftIO . glFramebufferTextureLayer t slot (object tex) level
+
+framebufferRenderbuffer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Renderbuffer -> m () 
+framebufferRenderbuffer (FramebufferTarget t _) slot = liftIO . glFramebufferRenderbuffer t slot GL_RENDERBUFFER . object
 
 checkFramebuffer :: MonadIO m => FramebufferTarget -> m (Maybe FramebufferError)
 checkFramebuffer (FramebufferTarget t _) = do
