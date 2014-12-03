@@ -250,6 +250,27 @@ test-suite test-buffers
       bytestring,
       vector
 
+test-suite test-framebuffers
+  main-is: framebuffers.hs
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  if !flag(test-buffers)
+    buildable: False
+  else
+    ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+    build-depends:
+      base,
+      containers,
+      data-default,
+      gl,
+      sdl2,
+      hspec,
+      quine,
+      linear,
+      bytestring,
+      vector
+
 test-suite test-shaders
   main-is: shaders.hs
   default-language: Haskell2010

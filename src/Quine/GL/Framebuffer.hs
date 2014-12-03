@@ -18,19 +18,23 @@ module Quine.GL.Framebuffer
   -- * Binding
   , boundFramebuffer
   -- * Attaching
+  , FramebufferAttachment(attach)
   , framebufferTexture
   , framebufferRenderbuffer
   , framebufferTextureLayer
   -- * Completeness Check
   , checkFramebuffer
   -- * Framebuffer Targets
+  , FramebufferTarget(..)
   , pattern DrawFramebuffer
   , pattern ReadFramebuffer
   , pattern RWFramebuffer
+  , FramebufferError(..)
   ) where
 
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Exception
 import Data.Coerce
 import Data.Data
 import Data.Default
@@ -51,6 +55,8 @@ data FramebufferTarget = FramebufferTarget GLenum GLenum deriving (Eq,Ord,Show,R
 newtype FramebufferError = FramebufferError GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 type FramebufferAttachmentPoint = GLenum
 
+instance Exception FramebufferError
+
 instance Object Framebuffer where
   object = coerce
   isa i = (GL_FALSE /=) `liftM` glIsFramebuffer (coerce i)
@@ -67,6 +73,15 @@ instance Gen Framebuffer where
 -- | The default Framebuffer is not just the null object but the screen buffer of the context
 instance Default Framebuffer where
   def = Framebuffer 0
+
+class FramebufferAttachment a where
+  attach :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> a -> m ()
+
+instance FramebufferAttachment Texture where
+  attach target slot tex = framebufferTexture target slot tex 0
+
+instance FramebufferAttachment Renderbuffer where
+  attach = framebufferRenderbuffer
 
 -- * Binding
 
