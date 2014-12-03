@@ -75,7 +75,7 @@ boundFramebuffer (FramebufferTarget target binding) = StateVar g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
     return $ Framebuffer (fromIntegral i)
-  s = glBindBuffer target . coerce
+  s = glBindFramebuffer target . coerce
 
 -- * Attaching Buffer
 
