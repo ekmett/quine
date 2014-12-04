@@ -49,6 +49,10 @@ flag test-buffers
   default: True
   manual: True
 
+flag test-framebuffers
+  default: True
+  manual: True
+
 flag test-shaders
   default: True
   manual: True
@@ -255,7 +259,7 @@ test-suite test-framebuffers
   default-language: Haskell2010
   type: exitcode-stdio-1.0
   hs-source-dirs: tests
-  if !flag(test-buffers)
+  if !flag(test-framebuffers)
     buildable: False
   else
     ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
