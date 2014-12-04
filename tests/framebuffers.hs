@@ -136,3 +136,16 @@ main = hspec $ around_ withGLContext $ do
       checkFramebuffer RWFramebuffer `shouldReturn` Nothing
       throwErrors
 
+    it "a Framebuffer is complete with one complete 'Texture' color attachment ('Texture' is unbound)" $ do
+      fb <- gen :: IO Framebuffer
+      boundFramebuffer RWFramebuffer $= fb
+      
+      tex <- gen :: IO Texture    
+      boundTexture GL_TEXTURE_2D GL_TEXTURE_BINDING_2D $= tex
+      glTexImage2D GL_TEXTURE_2D 0 GL_RGBA8 1 1 0 GL_BGRA GL_UNSIGNED_BYTE nullPtr
+      boundTexture GL_TEXTURE_2D GL_TEXTURE_BINDING_2D $= def
+      attach RWFramebuffer GL_COLOR_ATTACHMENT0 tex
+      
+      checkFramebuffer RWFramebuffer `shouldReturn` Nothing
+      throwErrors
+
