@@ -35,7 +35,7 @@ module Quine.GL.Program
   , geometryOutputType
   , currentProgram
   -- * Separable Program
-  , createSeparableProgramInclude
+  , createShaderProgramInclude
   ) where
 
 import Control.Applicative
@@ -222,8 +222,8 @@ currentProgram = StateVar
 -- | @'createSeparableProgram' shaderType source paths@ emulates the missing OpenGL functionality to
 -- create a separable 'Program' from source with 'glCreateShaderProgram' but 
 -- with 'GL_ARB_shading_language_include' support.
-createSeparableProgramInclude :: MonadIO m => ShaderType -> Lazy.ByteString -> [FilePath] -> m Program
-createSeparableProgramInclude shaderTy source paths = do
+createShaderProgramInclude :: MonadIO m => ShaderType -> Lazy.ByteString -> [FilePath] -> m Program
+createShaderProgramInclude shaderTy source paths = do
   s <- createShader shaderTy
   shaderSource s $= source
   compileShaderInclude s paths
