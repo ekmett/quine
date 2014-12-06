@@ -16,6 +16,7 @@ module Quine.GL.ProgramPipeline
   ( ProgramPipeline
   , PipelineStage
   , boundProgramPipeline
+  , useProgramStages
   ) where
 
 import Control.Applicative
@@ -32,6 +33,7 @@ import Graphics.GL.Core45
 import Graphics.GL.Types
 import Quine.StateVar
 import Quine.GL.Object
+import Quine.GL.Program
 
 -- | A Pipeline object captures shader stages
 newtype ProgramPipeline = ProgramPipeline GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
@@ -58,3 +60,6 @@ boundProgramPipeline :: StateVar ProgramPipeline
 boundProgramPipeline = StateVar g s where
   g = fmap (ProgramPipeline . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv GL_PROGRAM_PIPELINE_BINDING) peek
   s = glBindProgramPipeline . coerce
+
+useProgramStages :: MonadIO m => ProgramPipeline -> PipelineStage -> Program -> m ()
+useProgramStages pipe stage prog = glUseProgramStages (coerce pipe) stage (coerce prog)
