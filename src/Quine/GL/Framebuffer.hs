@@ -23,7 +23,7 @@ module Quine.GL.Framebuffer
   , framebufferRenderbuffer
   , framebufferTextureLayer
   -- * Completeness Check
-  , checkFramebuffer
+  , checkFramebufferStatus
   -- * Framebuffer Targets
   , FramebufferTarget(..)
   , pattern DrawFramebuffer
@@ -87,9 +87,7 @@ instance FramebufferAttachment Renderbuffer where
 
 boundFramebuffer :: FramebufferTarget -> StateVar Framebuffer
 boundFramebuffer (FramebufferTarget target binding) = StateVar g s where
-  g = do
-    i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
-    return $ Framebuffer (fromIntegral i)
+  g = fmap (Framebuffer . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv binding) peek
   s = glBindFramebuffer target . coerce
 
 -- * Attaching Buffer
@@ -108,8 +106,8 @@ framebufferTextureLayer (FramebufferTarget t _) slot tex level = liftIO . glFram
 framebufferRenderbuffer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Renderbuffer -> m () 
 framebufferRenderbuffer (FramebufferTarget t _) slot = liftIO . glFramebufferRenderbuffer t slot GL_RENDERBUFFER . object
 
-checkFramebuffer :: MonadIO m => FramebufferTarget -> m (Maybe FramebufferError)
-checkFramebuffer (FramebufferTarget t _) = do
+checkFramebufferStatus :: MonadIO m => FramebufferTarget -> m (Maybe FramebufferError)
+checkFramebufferStatus (FramebufferTarget t _) = do
   status <- glCheckFramebufferStatus t
   case status of
     GL_FRAMEBUFFER_COMPLETE -> return Nothing
