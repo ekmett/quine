@@ -1,4 +1,6 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE TemplateHaskell    #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -14,11 +16,13 @@ module Quine.Camera
   , updateCamera
   ) where
 
+import Control.Lens
 import Control.Monad (when)
 import Control.Monad.IO.Class
 import Control.Monad.State.Class hiding (get)
-import Control.Lens
+import Data.Data
 import Data.Default
+import GHC.Generics
 import Linear
 import Quine.GL.Types
 import Quine.Input
@@ -34,7 +38,7 @@ data Camera = Camera
   , _cameraPos :: !Vec3
   , _nearZ     :: !Float
   , _farZ      :: !Float
-  }
+  } deriving (Show,Eq,Ord,Data,Typeable,Generic)
 
 makeClassy ''Camera
 
