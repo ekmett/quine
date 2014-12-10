@@ -35,10 +35,10 @@ import Graphics.GL.Types
 import Quine.StateVar
 import Quine.GL.Object
 
-newtype Renderbuffer = Renderbuffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
+newtype Renderbuffer a = Renderbuffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 data RenderbufferTargeting = RenderbufferTargeting GLenum GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 
-instance Object Renderbuffer where
+instance Object (Renderbuffer a) where
   object = coerce
   isa i = (GL_FALSE /=) `liftM` glIsRenderbuffer (coerce i)
   deletes xs = liftIO $ allocaArray n $ \p -> do
@@ -46,15 +46,15 @@ instance Object Renderbuffer where
     glDeleteRenderbuffers (fromIntegral n) p
     where n = length xs
 
-instance Gen Renderbuffer where
+instance Gen (Renderbuffer a) where
   gens n = liftIO $ allocaArray n $ \p -> do
     glGenRenderbuffers (fromIntegral n) p
     map Renderbuffer <$> peekArray n p
 
-instance Default Renderbuffer where
+instance Default (Renderbuffer a) where
   def = Renderbuffer 0
 
-boundRenderbuffer :: RenderbufferTargeting -> StateVar Renderbuffer
+boundRenderbuffer :: RenderbufferTargeting -> StateVar (Renderbuffer a)
 boundRenderbuffer (RenderbufferTargeting target binding) = StateVar g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
@@ -63,3 +63,4 @@ boundRenderbuffer (RenderbufferTargeting target binding) = StateVar g s where
 
 
 pattern RenderbufferTarget = RenderbufferTargeting GL_RENDERBUFFER GL_RENDERBUFFER_BINDING
+
