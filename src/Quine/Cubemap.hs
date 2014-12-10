@@ -17,7 +17,9 @@
 --------------------------------------------------------------------
 module Quine.Cubemap
   ( -- * A Cube of Images
-    Cubemap(..) 
+    Cubemap(..)
+  , GLFaceTargets
+  , glFaceTargets
   ) where
 
 import Control.Monad
@@ -45,11 +47,14 @@ data Cubemap a = Cubemap
   -- ^ GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
   } deriving ( Show,Functor,Foldable,Traversable,Data,Typeable,Generic )
 
+type GLFaceTargets = Cubemap GLenum
+
 instance Image2D i => Image2D (Cubemap i) where
-  upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList faceTargets) where
-    faceTargets :: Cubemap GLenum
-    faceTargets = Cubemap 
-      GL_TEXTURE_CUBE_MAP_POSITIVE_X GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-      GL_TEXTURE_CUBE_MAP_POSITIVE_Y GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-      GL_TEXTURE_CUBE_MAP_POSITIVE_Z GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+  upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets) where
+
+glFaceTargets :: GLFaceTargets
+glFaceTargets = Cubemap 
+  GL_TEXTURE_CUBE_MAP_POSITIVE_X GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+  GL_TEXTURE_CUBE_MAP_POSITIVE_Y GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+  GL_TEXTURE_CUBE_MAP_POSITIVE_Z GL_TEXTURE_CUBE_MAP_NEGATIVE_X
 
