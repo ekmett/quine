@@ -33,17 +33,17 @@ import Quine.Image
 
 -- | Faces in OpenGL order
 data Cubemap a = Cubemap
-  { faceRight
+  { faceRight   :: !a
   -- ^ GL_TEXTURE_CUBE_MAP_POSITIVE_X
-  , faceLeft
+  , faceLeft    :: !a
   -- ^ GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-  , faceTop
+  , faceTop     :: !a
   -- ^ GL_TEXTURE_CUBE_MAP_POSITIVE_Y
-  , faceBottom
+  , faceBottom  :: !a
   -- ^ GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-  , faceFront
+  , faceFront   :: !a
   -- ^ GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-  , faceBack   :: !a
+  , faceBack    :: !a
   -- ^ GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
   } deriving ( Show,Functor,Foldable,Traversable,Data,Typeable,Generic )
 
