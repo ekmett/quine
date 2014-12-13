@@ -187,9 +187,9 @@ core = do
   liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
   throwErrors
   liftIO $ putStrLn "compiling"
-  viewportsView <- compile GL_VERTEX_SHADER   "shaders/viewports.vert"
-  viewportsGeom <- compile GL_GEOMETRY_SHADER "shaders/viewports.geom"
-  raymarchFrag  <- compile GL_FRAGMENT_SHADER "shaders/raymarch.frag"
+  viewportsView <- compile ["/shaders"] GL_VERTEX_SHADER   "shaders/viewports.vert"
+  viewportsGeom <- compile ["/shaders"] GL_GEOMETRY_SHADER "shaders/viewports.geom"
+  raymarchFrag  <- compile ["/shaders"] GL_FRAGMENT_SHADER "shaders/raymarch.frag"
   scene <- link [viewportsView,viewportsGeom,raymarchFrag]
   currentProgram $= scene
   emptyVAO <- gen
