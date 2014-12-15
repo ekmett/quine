@@ -19,9 +19,16 @@ module Quine.GL.ProgramPipeline
   , useProgramStages
   -- * Properties
   , programPipelineParameter1
+  , activeShaderProgram
   , programPipelineInfoLog
   , validateProgramPipeline
   , validateStatus
+  -- * Stages
+  , vertexShader
+  , fragmentShader
+  , tessControlShader
+  , tessEvaluationShader
+  , geometryShader
   ) where
 
 import Control.Applicative
@@ -69,6 +76,11 @@ instance Default ProgramPipeline where
 programPipelineParameter1 :: ProgramPipeline -> GLenum -> GettableStateVar GLint
 programPipelineParameter1 p parm = alloca $ liftM2 (>>) (glGetProgramPipelineiv (coerce p) parm) peek
 
+activeShaderProgram :: ProgramPipeline -> StateVar (Maybe Program)
+activeShaderProgram p = StateVar g s where
+  g = fmap Program . checkName <$> programPipelineParameter1 p GL_ACTIVE_PROGRAM
+  s = glActiveShaderProgram (coerce p) . coerce . maybe def id
+
 programPipelineInfoLog :: MonadIO m => ProgramPipeline -> m Strict.ByteString
 programPipelineInfoLog p = liftIO $ do
   l <- fromIntegral <$> get (programPipelineParameter1 p GL_INFO_LOG_LENGTH)
@@ -100,6 +112,31 @@ boundProgramPipeline = StateVar g s where
   s = glBindProgramPipeline . coerce
 
 -- * Stages
+
+vertexShader :: ProgramPipeline -> StateVar (Maybe Program)
+vertexShader p = StateVar g s where
+  g = fmap Program . checkName <$> programPipelineParameter1 p GL_VERTEX_SHADER
+  s = useProgramStages p GL_VERTEX_SHADER_BIT . maybe def id
+
+fragmentShader :: ProgramPipeline -> StateVar (Maybe Program)
+fragmentShader p = StateVar g s where
+  g = fmap Program . checkName <$> programPipelineParameter1 p GL_FRAGMENT_SHADER
+  s = useProgramStages p GL_FRAGMENT_SHADER_BIT . maybe def id
+
+tessControlShader :: ProgramPipeline -> StateVar (Maybe Program)
+tessControlShader p = StateVar g s where
+  g = fmap Program . checkName <$> programPipelineParameter1 p GL_TESS_CONTROL_SHADER
+  s = useProgramStages p GL_TESS_CONTROL_SHADER_BIT . maybe def id
+
+tessEvaluationShader :: ProgramPipeline -> StateVar (Maybe Program)
+tessEvaluationShader p = StateVar g s where
+  g = fmap Program . checkName <$> programPipelineParameter1 p GL_TESS_EVALUATION_SHADER
+  s = useProgramStages p GL_TESS_EVALUATION_SHADER_BIT . maybe def id
+
+geometryShader :: ProgramPipeline -> StateVar (Maybe Program)
+geometryShader p = StateVar g s where
+  g = fmap Program . checkName <$> programPipelineParameter1 p GL_GEOMETRY_SHADER
+  s = useProgramStages p GL_GEOMETRY_SHADER_BIT . maybe def id
 
 useProgramStages :: MonadIO m => ProgramPipeline -> PipelineStage -> Program -> m ()
 useProgramStages pipe stage prog = glUseProgramStages (coerce pipe) stage (coerce prog)
