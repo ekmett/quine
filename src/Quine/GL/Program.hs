@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -44,19 +47,21 @@ import Control.Monad.IO.Class
 import qualified Data.ByteString as Strict
 import qualified Data.ByteString.Internal as Strict
 import qualified Data.ByteString.Lazy as Lazy
-import Data.Default
 import Data.Coerce
+import Data.Data
+import Data.Default
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
+import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
 import Quine.GL.Object
 import Quine.GL.Shader
 import Quine.StateVar
 
-newtype Program = Program GLuint
+newtype Program = Program GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 
 instance Object Program where
   object = coerce
