@@ -59,7 +59,7 @@ boundRenderbuffer (RenderbufferTargeting target binding) = StateVar g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
     return $ Renderbuffer (fromIntegral i)
-  s = glBindBuffer target . coerce
+  s = glBindRenderbuffer target . coerce
 
 
 pattern RenderbufferTarget = RenderbufferTargeting GL_RENDERBUFFER GL_RENDERBUFFER_BINDING
