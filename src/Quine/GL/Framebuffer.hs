@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE PatternSynonyms    #-}
+{-# LANGUAGE LambdaCase         #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -52,10 +53,24 @@ import Quine.GL.Texture
 
 newtype Framebuffer = Framebuffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 data FramebufferTarget = FramebufferTarget GLenum GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
-newtype FramebufferError = FramebufferError GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
+newtype FramebufferError = FramebufferError GLenum deriving (Eq,Ord,Read,Typeable,Data,Generic)
 type FramebufferAttachmentPoint = GLenum
 
 instance Exception FramebufferError
+
+instance Show FramebufferError where
+  showsPrec d = \ case
+    FramebufferError GL_FRAMEBUFFER_COMPLETE -> showString "GL_FRAMEBUFFER_COMPLETE"
+    FramebufferError GL_FRAMEBUFFER_UNDEFINED -> showString "GL_FRAMEBUFFER_UNDEFINED"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT -> showString "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT -> showString "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER -> showString "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER -> showString "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"
+    FramebufferError GL_FRAMEBUFFER_UNSUPPORTED -> showString "GL_FRAMEBUFFER_UNSUPPORTED"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE -> showString "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS -> showString "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"
+    t -> showsPrec d t
+
 
 instance Object Framebuffer where
   object = coerce
