@@ -113,7 +113,7 @@ main = hspec $ around_ withGLContext $ do
       checkFramebufferStatus RWFramebuffer `shouldReturn` (Just $ FramebufferError GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)
       throwErrors
 
-    it "when one 'Texture' color attachment is incomplete the Framebuffer also incomplete" $ do
+    it "when one 'Texture' color attachment is incomplete the Framebuffer is also incomplete" $ do
       fb <- gen :: IO Framebuffer
       boundFramebuffer RWFramebuffer $= fb
       
