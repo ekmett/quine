@@ -14,7 +14,7 @@
 module Quine.Image
   ( 
   -- * Uploading to OpenGL
-    Image2D(upload)
+    Image2D(upload,store)
   -- * Downloading from OpenGL
   , download, downloadM
   -- * Image formats
@@ -33,6 +33,7 @@ import Foreign.ForeignPtr
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Graphics.GL.Core41
+import Graphics.GL.Ext.ARB.TextureStorage
 import Quine.GL.Pixel
 import Quine.GL.Texture
 
@@ -152,9 +153,10 @@ downloadM x y (MutableImage w h mv) = liftIO $ do
 
 class Image2D i where
   upload :: MonadIO m => i -> TextureTarget -> MipmapLevel -> m ()
+  store :: MonadIO m => i -> TextureTarget -> m ()
 
 instance ImageFormat a => Image2D (Image a) where
-  upload i@(Image w h v) t l = liftIO $ do
+  upload i@(Image w h v) t l= liftIO $ do
     glPixelStorei GL_UNPACK_LSB_FIRST    0
     glPixelStorei GL_UNPACK_SWAP_BYTES   0
     glPixelStorei GL_UNPACK_ROW_LENGTH   0
@@ -163,8 +165,11 @@ instance ImageFormat a => Image2D (Image a) where
     glPixelStorei GL_UNPACK_SKIP_PIXELS  0
     glPixelStorei GL_UNPACK_SKIP_IMAGES  0
     glPixelStorei GL_UNPACK_ALIGNMENT    1 -- normally 4!
-    V.unsafeWith v $ glTexImage2D t l (internalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelType i) . castPtr
+    V.unsafeWith v $ glTexSubImage2D t l 0 0 (fromIntegral w) (fromIntegral h) (pixelFormat i) (pixelType i) . castPtr
     swizzle i t
+  store i@(Image w h _) t = liftIO $ do
+    glTexStorage2D t 0 (internalFormat i) (fromIntegral w) (fromIntegral h)
+    upload i t 0
 
 instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
   upload i@(MutableImage w h v) t l = liftIO $ do
@@ -176,8 +181,11 @@ instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
     glPixelStorei GL_UNPACK_SKIP_PIXELS  0
     glPixelStorei GL_UNPACK_SKIP_IMAGES  0
     glPixelStorei GL_UNPACK_ALIGNMENT    1 -- normally 4!
-    MV.unsafeWith v $ glTexImage2D t l (internalFormat i) (fromIntegral w) (fromIntegral h) 0 (pixelFormat i) (pixelType i) . castPtr
+    MV.unsafeWith v $ glTexSubImage2D t l 0 0 (fromIntegral w) (fromIntegral h) (pixelFormat i) (pixelType i) . castPtr
     swizzle i t
+  store i@(MutableImage w h _) t = liftIO $ do
+    glTexStorage2D t 0 (internalFormat i) (fromIntegral w) (fromIntegral h)
+    upload i t 0
 
 instance Image2D DynamicImage where
   upload (ImageY8 i)     = upload i
@@ -193,3 +201,17 @@ instance Image2D DynamicImage where
   upload (ImageYCbCr8 i) = upload (convertImage i :: Image PixelRGB8)
   upload (ImageCMYK8 i)  = upload (convertImage i :: Image PixelRGB8)
   upload (ImageCMYK16 i) = upload (convertImage i :: Image PixelRGB16)
+
+  store (ImageY8 i)     = store i
+  store (ImageY16 i)    = store i
+  store (ImageYF i)     = store i
+  store (ImageYA8 i)    = store i
+  store (ImageYA16 i)   = store i
+  store (ImageRGB8 i)   = store i
+  store (ImageRGB16 i)  = store i
+  store (ImageRGBF i)   = store i
+  store (ImageRGBA8 i)  = store i
+  store (ImageRGBA16 i) = store i
+  store (ImageYCbCr8 i) = store (convertImage i :: Image PixelRGB8)
+  store (ImageCMYK8 i)  = store (convertImage i :: Image PixelRGB8)
+  store (ImageCMYK16 i) = store (convertImage i :: Image PixelRGB16)

@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE NamedFieldPuns       #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -50,7 +51,10 @@ data Cubemap a = Cubemap
 type GLFaceTargets = Cubemap GLenum
 
 instance Image2D i => Image2D (Cubemap i) where
-  upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets) where
+  upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets)
+  store cube@Cubemap{faceRight} t = do
+    store faceRight GL_TEXTURE_CUBE_MAP
+    upload cube t 0
 
 glFaceTargets :: GLFaceTargets
 glFaceTargets = Cubemap 

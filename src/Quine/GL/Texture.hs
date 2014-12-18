@@ -69,7 +69,7 @@ type TextureParameter = GLenum
 type TextureWrapping = GLenum
 type TextureMinificationFilter = GLenum
 type TextureMagnificationFilter = GLenum
-type MipmapLevel = GLint
+type MipmapLevel = GLsizei
 type TextureLayer = GLint
 type TextureUnit = GLuint
 
@@ -164,3 +164,4 @@ activeTexture :: StateVar Word32
 activeTexture = StateVar g s where
   g = fmap fromIntegral $ alloca $ liftM2 (>>) (glGetIntegerv GL_ACTIVE_TEXTURE) peek
   s n = glActiveTexture (GL_TEXTURE0 + n)
+
