@@ -68,5 +68,5 @@ instance (ImageFormat a, Image2D (Image a)) => Image2D (MipmapChain (Image a)) w
   upload chain t _l = sequence_ $ zipWith (\img l -> upload img t l) chain (mkMipmapChain 0 [1..])
   store chain t = do
     let base@(Image w h _) = mipMapBase chain
-    glTexStorage2D t (fromIntegral $ maxMipMapLevel chain) (internalFormat base) (fromIntegral w) (fromIntegral h)
+    glTexStorage2D t (fromIntegral $ maxMipMapLevel chain + 1) (internalFormat base) (fromIntegral w) (fromIntegral h)
     upload chain t 0

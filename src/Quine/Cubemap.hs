@@ -6,6 +6,7 @@
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE NamedFieldPuns       #-}
+{-# LANGUAGE FlexibleContexts     #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -24,6 +25,7 @@ module Quine.Cubemap
   ) where
 
 import Control.Monad
+import Codec.Picture
 import Data.Data
 import Data.Foldable
 import Data.Traversable
@@ -50,10 +52,10 @@ data Cubemap a = Cubemap
 
 type GLFaceTargets = Cubemap GLenum
 
-instance Image2D i => Image2D (Cubemap i) where
+instance (ImageFormat a, Image2D (Image a)) => Image2D (Cubemap (Image a)) where
   upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets)
   store cube@Cubemap{faceRight} t = do
-    store faceRight GL_TEXTURE_CUBE_MAP
+    glTexStorage2D GL_TEXTURE_CUBE_MAP 1 (internalFormat faceRight) (fromIntegral $ imageWidth faceRight) (fromIntegral $ imageHeight faceRight)
     upload cube t 0
 
 glFaceTargets :: GLFaceTargets

@@ -168,7 +168,7 @@ instance ImageFormat a => Image2D (Image a) where
     V.unsafeWith v $ glTexSubImage2D t l 0 0 (fromIntegral w) (fromIntegral h) (pixelFormat i) (pixelType i) . castPtr
     swizzle i t
   store i@(Image w h _) t = liftIO $ do
-    glTexStorage2D t 0 (internalFormat i) (fromIntegral w) (fromIntegral h)
+    glTexStorage2D t 1 (internalFormat i) (fromIntegral w) (fromIntegral h)
     upload i t 0
 
 instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
@@ -184,7 +184,7 @@ instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
     MV.unsafeWith v $ glTexSubImage2D t l 0 0 (fromIntegral w) (fromIntegral h) (pixelFormat i) (pixelType i) . castPtr
     swizzle i t
   store i@(MutableImage w h _) t = liftIO $ do
-    glTexStorage2D t 0 (internalFormat i) (fromIntegral w) (fromIntegral h)
+    glTexStorage2D t 1 (internalFormat i) (fromIntegral w) (fromIntegral h)
     upload i t 0
 
 instance Image2D DynamicImage where
