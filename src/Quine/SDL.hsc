@@ -62,7 +62,6 @@ import Data.Typeable
 import Data.Version as Data
 import Foreign
 import Foreign.C
-import Foreign.Ptr
 import Quine.StateVar
 import Graphics.UI.SDL as SDL
 import Prelude hiding (init)
