@@ -10,6 +10,7 @@
 module Quine.GL.Object
   ( Object(..)
   , Gen(..)
+  , checkName
   ) where
 
 import Control.Monad
@@ -36,3 +37,8 @@ class Object a => Gen a where
 
   gens :: MonadIO m => Int -> m [a]
   gens n = liftIO $ replicateM n gen
+
+checkName :: GLint -> Maybe GLuint
+checkName n
+  | n < 0     = Nothing
+  | otherwise = Just $ fromIntegral n

@@ -64,12 +64,12 @@ _ProgramException :: Prism' SomeException ProgramException
 _ProgramException = exception
 
 -- | Compile a shader with @#include@ support if it is available.
-compile :: MonadIO m => ShaderType -> FilePath -> m Shader
-compile st fp = do
+compile :: MonadIO m => [FilePath] -> ShaderType -> FilePath -> m Shader
+compile searchPaths st fp = do
   source <- liftIO $ readFile fp
   s <- createShader st
   shaderSource s $= UTF8.fromString source
-  compileShaderInclude s ["/shaders"]
+  compileShaderInclude s searchPaths
   compiled <- compileStatus s
   unless compiled $ do
     e <- shaderInfoLog s

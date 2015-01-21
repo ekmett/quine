@@ -214,8 +214,8 @@ core = do
   liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
   throwErrors
   liftIO $ putStrLn "compiling"
-  transformVert <- compile GL_VERTEX_SHADER   "shaders/pass-vertex.vert"
-  colorFrag     <- compile GL_FRAGMENT_SHADER "shaders/pass-color.frag"
+  transformVert <- compile ["/shaders"] GL_VERTEX_SHADER   "shaders/pass-vertex.vert"
+  colorFrag     <- compile ["/shaders"] GL_FRAGMENT_SHADER "shaders/pass-color.frag"
   prog <- link [transformVert,colorFrag]
   currentProgram $= prog
   

@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE PatternSynonyms    #-}
+{-# LANGUAGE LambdaCase         #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -18,19 +19,23 @@ module Quine.GL.Framebuffer
   -- * Binding
   , boundFramebuffer
   -- * Attaching
+  , FramebufferAttachment(attach)
   , framebufferTexture
   , framebufferRenderbuffer
   , framebufferTextureLayer
   -- * Completeness Check
-  , checkFramebuffer
+  , checkFramebufferStatus
   -- * Framebuffer Targets
+  , FramebufferTarget(..)
   , pattern DrawFramebuffer
   , pattern ReadFramebuffer
   , pattern RWFramebuffer
+  , FramebufferError(..)
   ) where
 
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Exception
 import Data.Coerce
 import Data.Data
 import Data.Default
@@ -48,8 +53,24 @@ import Quine.GL.Texture
 
 newtype Framebuffer = Framebuffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 data FramebufferTarget = FramebufferTarget GLenum GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
-newtype FramebufferError = FramebufferError GLenum deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
+newtype FramebufferError = FramebufferError GLenum deriving (Eq,Ord,Read,Typeable,Data,Generic)
 type FramebufferAttachmentPoint = GLenum
+
+instance Exception FramebufferError
+
+instance Show FramebufferError where
+  showsPrec d = \ case
+    FramebufferError GL_FRAMEBUFFER_COMPLETE -> showString "GL_FRAMEBUFFER_COMPLETE"
+    FramebufferError GL_FRAMEBUFFER_UNDEFINED -> showString "GL_FRAMEBUFFER_UNDEFINED"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT -> showString "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT -> showString "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER -> showString "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER -> showString "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"
+    FramebufferError GL_FRAMEBUFFER_UNSUPPORTED -> showString "GL_FRAMEBUFFER_UNSUPPORTED"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE -> showString "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"
+    FramebufferError GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS -> showString "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"
+    t -> showsPrec d t
+
 
 instance Object Framebuffer where
   object = coerce
@@ -68,14 +89,21 @@ instance Gen Framebuffer where
 instance Default Framebuffer where
   def = Framebuffer 0
 
+class FramebufferAttachment a where
+  attach :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> a -> m ()
+
+instance FramebufferAttachment Texture where
+  attach target slot tex = framebufferTexture target slot tex 0
+
+instance FramebufferAttachment (Renderbuffer a) where
+  attach = framebufferRenderbuffer
+
 -- * Binding
 
 boundFramebuffer :: FramebufferTarget -> StateVar Framebuffer
 boundFramebuffer (FramebufferTarget target binding) = StateVar g s where
-  g = do
-    i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
-    return $ Framebuffer (fromIntegral i)
-  s = glBindBuffer target . coerce
+  g = fmap (Framebuffer . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv binding) peek
+  s = glBindFramebuffer target . coerce
 
 -- * Attaching Buffer
 
@@ -90,11 +118,11 @@ framebufferTexture (FramebufferTarget t _) slot tex = liftIO . glFramebufferText
 framebufferTextureLayer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Texture -> MipmapLevel -> TextureLayer -> m ()
 framebufferTextureLayer (FramebufferTarget t _) slot tex level = liftIO . glFramebufferTextureLayer t slot (object tex) level
 
-framebufferRenderbuffer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Renderbuffer -> m () 
+framebufferRenderbuffer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Renderbuffer a -> m () 
 framebufferRenderbuffer (FramebufferTarget t _) slot = liftIO . glFramebufferRenderbuffer t slot GL_RENDERBUFFER . object
 
-checkFramebuffer :: MonadIO m => FramebufferTarget -> m (Maybe FramebufferError)
-checkFramebuffer (FramebufferTarget t _) = do
+checkFramebufferStatus :: MonadIO m => FramebufferTarget -> m (Maybe FramebufferError)
+checkFramebufferStatus (FramebufferTarget t _) = do
   status <- glCheckFramebufferStatus t
   case status of
     GL_FRAMEBUFFER_COMPLETE -> return Nothing

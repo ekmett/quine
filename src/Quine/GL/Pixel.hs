@@ -23,7 +23,7 @@ import Graphics.GL.Core45
 import Graphics.GL.Ext
 import Graphics.GL.Types
 
-type InternalFormat = GLint
+type InternalFormat = GLenum
 type PixelFormat = GLenum
 type PixelType = GLenum
 

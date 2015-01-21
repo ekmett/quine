@@ -154,8 +154,8 @@ translate v = eye4 & translation .~ v
 core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
   liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
-  screenShader <- compile GL_VERTEX_SHADER   "shaders/screen.vert"
-  sceneShader  <- compile GL_FRAGMENT_SHADER =<< view optionsFragment
+  screenShader <- compile ["/shaders"] GL_VERTEX_SHADER   "shaders/screen.vert"
+  sceneShader  <- compile ["/shaders"] GL_FRAGMENT_SHADER =<< view optionsFragment
   scn <- link [screenShader,sceneShader]
   emptyVAO <- gen
   iResolution        <- programUniform2f scn `liftM` uniformLocation scn "iResolution"

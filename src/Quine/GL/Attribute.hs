@@ -22,28 +22,28 @@
 --------------------------------------------------------------------
 module Quine.GL.Attribute
   ( 
-    Attribute(..)
-  -- * Attribute Location
+  -- * Layout
+    Layout(..)
+  , BaseType, Components, Normalized, Stride, OffsetPtr
+  -- * Attributes
+  , Attribute(..)
   , AttributeLocation
   , attributeLocation
-  -- * Attribute Definition
+  -- * Attribute Layout Definition
   , vertexAttribute
-  -- * Attribute Pointer
+  , setVertexAttribute
   , vertexAttribPointerI
   , vertexAttribPointer
-  -- * Layout
-  , Layout(..)
-  , BaseType, Components, Normalized, Stride, OffsetPtr
   -- * Layout Annotation
   , UnAnnotated(..), LayoutAnnotation(..)
   , HasLayoutAnnotation(..)
-  
   , AsType(..)
   ) where
 
 import Control.Monad.IO.Class
 import Data.Data
 import Data.Functor
+import Data.Functor.Contravariant
 import Data.Int
 import Data.Word
 import GHC.Generics hiding (V1)
@@ -103,23 +103,44 @@ class HasLayoutAnnotation a where
 
 type AttributeAccessor a b = a LayoutAnnotation -> LayoutAnnotation b
 
--- | Associates the vertex attribute to the data in the vertex buffer. 
+-- | Associates the vertex attribute to the data layout in the vertex buffer. 
 -- The association is stored in the vertex array object 'OpenGL' wise, so a VAO must be bound
+-- 
+-- See 'setVertexAttribute' for enabling and disabling vertex attribute semantics
 vertexAttribute :: HasLayoutAnnotation a => AttributeLocation -> SettableStateVar (Maybe (AttributeAccessor a b))
-vertexAttribute l = SettableStateVar $ \case
-  Nothing -> glDisableVertexAttribArray l
-  Just accessor -> do
-    glEnableVertexAttribArray l
-    vertexAttribPointer l (getLayout . accessor $ layoutAnnotation (Proxy::Proxy a))
-      
+vertexAttribute = contramap (fmap (\accessor -> getLayout . accessor $ layoutAnnotation (Proxy::Proxy a))) . setVertexAttribute
 
--- | A not so high level binding to 'glVertexAttribIPointer'
+-- | Associates the vertex attribute to the data layout in the vertex buffer. 
+-- The association is stored in the vertex array object 'OpenGL' wise, so a VAO must be bound
+-- 
+-- To disable a vertex attribute set @'Nothing'@
+-- 
+-- @
+-- setVertexAttribute location $= Nothing
+-- @
+-- 
+-- To enable a vertex attribute set @'Just' someLayout@, for example:
+-- 
+-- @
+-- setVertexAttribute location $= 'Just' ('Layout' 3 'GL_FLOAT' False (3 * 'sizeOf' Float) 'nullPtr')
+-- @
+setVertexAttribute :: AttributeLocation -> SettableStateVar (Maybe Layout)
+setVertexAttribute l = SettableStateVar $ \case
+  Nothing -> glDisableVertexAttribArray l
+  Just layout -> do
+    glEnableVertexAttribArray l
+    vertexAttribPointer l layout
+
+
+-- | A "not so high level" binding to 'glVertexAttribIPointer'
+--
 -- sets the attribute array pointer for an integer attribute (no conversion)
 vertexAttribPointerI :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointerI loc (Layout comp ty _norm stride offPtr) = 
   liftIO $ glVertexAttribIPointer loc (fromIntegral comp) ty (fromIntegral stride) offPtr
 
--- | A not so high level binding to 'glVertexAttribPointer'
+-- | A "not so high level" binding to 'glVertexAttribPointer'
+--
 -- sets the attribute array pointer for an integer or floating attribute (integers are converted to the floating type)
 vertexAttribPointer :: MonadIO m => AttributeLocation -> Layout -> m ()
 vertexAttribPointer loc (Layout comp ty toNorm stride offPtr) =
@@ -134,7 +155,8 @@ class Attribute a where
   components :: p a -> Int
   baseType :: p a -> BaseType
   -- | specifies whether integer data values should be normalized ('True') 
-  -- or converted directly as float values ('False') when they are accessed
+  -- or converted directly as float values ('False') when they are accessed.
+  -- default is 'False'
   normalize :: p a -> Bool
   normalize _ = False
 

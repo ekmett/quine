@@ -1,5 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett and Jan-Philip Loos
@@ -24,8 +26,10 @@ module Quine.MipmapChain
   ) where
 
 import Prelude hiding (zipWith,tail,head,length,sequence_)
+import Codec.Picture
 import Data.Foldable (sequence_)
 import Data.List.NonEmpty
+import Graphics.GL.Ext.ARB.TextureStorage
 import Quine.Image
 
 -- | The first element in the 'MipmapChain' is the base element
@@ -60,5 +64,9 @@ maxMipMapLevel :: MipmapChain tex -> Int
 maxMipMapLevel mips = length mips - 1
 {-# INLINE maxMipMapLevel #-}
 
-instance Image2D a => Image2D (MipmapChain a) where
+instance (ImageFormat a, Image2D (Image a)) => Image2D (MipmapChain (Image a)) where
   upload chain t _l = sequence_ $ zipWith (\img l -> upload img t l) chain (mkMipmapChain 0 [1..])
+  store chain t = do
+    let base@(Image w h _) = mipMapBase chain
+    glTexStorage2D t (fromIntegral $ maxMipMapLevel chain + 1) (internalFormat base) (fromIntegral w) (fromIntegral h)
+    upload chain t 0

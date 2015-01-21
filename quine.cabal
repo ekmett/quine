@@ -49,6 +49,10 @@ flag test-buffers
   default: True
   manual: True
 
+flag test-framebuffers
+  default: True
+  manual: True
+
 flag test-shaders
   default: True
   manual: True
@@ -88,6 +92,7 @@ library
     Quine.GL.Object
     Quine.GL.Pixel
     Quine.GL.Program
+    Quine.GL.ProgramPipeline
     Quine.GL.Renderbuffer
     Quine.GL.Sampler
     Quine.GL.Shader
@@ -234,6 +239,27 @@ test-suite test-buffers
   type: exitcode-stdio-1.0
   hs-source-dirs: tests
   if !flag(test-buffers)
+    buildable: False
+  else
+    ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+    build-depends:
+      base,
+      containers,
+      data-default,
+      gl,
+      sdl2,
+      hspec,
+      quine,
+      linear,
+      bytestring,
+      vector
+
+test-suite test-framebuffers
+  main-is: framebuffers.hs
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  if !flag(test-framebuffers)
     buildable: False
   else
     ghc-options: -w -threaded -rtsopts -with-rtsopts=-N

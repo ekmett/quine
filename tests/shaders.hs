@@ -30,7 +30,7 @@ import System.IO
 
 testShader :: GLenum -> FilePath -> IO ()
 testShader st fp = do
-  try (compile st ("shaders" </> fp)) >>= \case
+  try (compile ["/shaders"] st ("shaders" </> fp)) >>= \case
     Right a -> putStrLn $ fp ++ " ok."
     Left (ShaderException _ log) -> do
       putStrLn $ fp ++ ": error in " ++ showShaderType 0 st ""
