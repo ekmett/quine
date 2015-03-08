@@ -17,26 +17,29 @@
 --------------------------------------------------------------------------------
 module Main where
 
-import Test.Hspec
 import Control.Exception.Base
 import Control.Monad hiding (sequence)
 import Control.Applicative
 import Data.Bits
 import Data.Proxy
 import qualified Data.ByteString.Lazy.Char8 as BS
-
-import GHC.Generics
 import Data.Default
 import qualified Data.Vector.Storable as V
 import Data.Vector.Storable.Internal (updPtr)
 import Foreign.C.String
-import Foreign.Storable
-import Foreign.Ptr
 import Foreign.ForeignPtr
 import Foreign.Marshal.Array
 import Foreign.Marshal.Utils
 import Foreign.Marshal.Alloc
-
+import Foreign.Ptr
+import Foreign.Storable
+import Foreign.Var
+import GHC.Generics
+import Graphics.GL.Ext.EXT.DirectStateAccess
+import Graphics.GL.Internal.Shared
+import Graphics.GL.Types
+import Graphics.UI.SDL as SDL
+import Linear
 import Quine.GL.Buffer
 import Quine.GL.Attribute
 import Quine.GL.VertexArray
@@ -48,19 +51,12 @@ import Quine.GL.Uniform
 import Quine.GL.Block
 import Quine.GL.Shader
 import Quine.GL
-import Quine.StateVar
 import Quine.SDL
-import Graphics.UI.SDL as SDL
-import Linear
-
-import Graphics.GL.Ext.EXT.DirectStateAccess
-import Graphics.GL.Internal.Shared
-import Graphics.GL.Types
+import Test.Hspec
 
 --------------------------------------------------------------------------------
 -- * Fixtures
 --------------------------------------------------------------------------------
-
 
 data AnAttribute f = AnAttribute
   { attrPosition :: f Vec3

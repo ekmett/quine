@@ -17,42 +17,36 @@
 --------------------------------------------------------------------------------
 module Main where
 
-import Test.Hspec
-
 import Control.Applicative
 import Control.Exception.Base
 import Control.Monad hiding (sequence)
 import Data.Bits
+import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.Default
 import Data.Maybe
 import Data.Proxy
-import qualified Data.ByteString.Lazy.Char8 as BS
-
-import GHC.Generics
-import Data.Default
 import qualified Data.Vector.Storable as V
 import Data.Vector.Storable.Internal (updPtr)
 import Foreign.C.String
-import Foreign.Storable
-import Foreign.Ptr
 import Foreign.ForeignPtr
+import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Marshal.Utils
-import Foreign.Marshal.Alloc
-
+import Foreign.Ptr
+import Foreign.Storable
+import Foreign.Var
+import GHC.Generics
+import Graphics.GL.Internal.Shared
+import Graphics.GL.Types
 import Graphics.UI.SDL as SDL hiding (Texture)
 import Linear
-
 import Quine.GL
 import Quine.GL.Error
 import Quine.GL.Framebuffer
 import Quine.GL.Object
 import Quine.GL.Texture
 import Quine.SDL
-import Quine.StateVar
-
-import Graphics.GL.Internal.Shared
-import Graphics.GL.Types
-
+import Test.Hspec
 
 --------------------------------------------------------------------------------
 -- * Setup

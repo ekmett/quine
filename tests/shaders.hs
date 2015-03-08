@@ -14,16 +14,16 @@ module Main where
 
 import Control.Exception
 import qualified Data.ByteString as BS
-import Data.Foldable
 import Data.FileEmbed
+import Data.Foldable
 import Foreign.C.String
-import Graphics.UI.SDL as SDL
+import Foreign.Var
 import Graphics.GL
+import Graphics.UI.SDL as SDL
 import Prelude
 import Quine.GL
 import Quine.GL.Shader
 import Quine.SDL
-import Quine.StateVar
 import System.Exit
 import System.FilePath
 import System.IO
