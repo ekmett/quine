@@ -23,10 +23,10 @@ import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Storable
+import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
-import Quine.StateVar
 import Quine.GL.Object
 
 newtype VertexArray = VertexArray GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
@@ -47,8 +47,8 @@ instance Gen VertexArray where
 instance Default VertexArray where
   def = VertexArray 0
 
-boundVertexArray :: StateVar VertexArray
-boundVertexArray = StateVar g s where
+boundVertexArray :: Var VertexArray
+boundVertexArray = Var g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv GL_VERTEX_ARRAY_BINDING) peek
     return $ VertexArray (fromIntegral i)

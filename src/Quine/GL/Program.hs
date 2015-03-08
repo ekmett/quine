@@ -54,12 +54,12 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
+import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
 import Quine.GL.Object
 import Quine.GL.Shader
-import Quine.StateVar
 
 newtype Program = Program GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 
@@ -97,8 +97,8 @@ attachedShaders p = do
 
 -- * Properties
 
-programParameter1 :: Program -> GLenum -> StateVar GLint
-programParameter1 p parm = StateVar g s where
+programParameter1 :: Program -> GLenum -> Var GLint
+programParameter1 p parm = Var g s where
   g = alloca $ liftM2 (>>) (glGetProgramiv (coerce p) parm) peek
   s = glProgramParameteri (coerce p) parm
 
@@ -125,8 +125,8 @@ linkStatus p = (GL_FALSE /=) `liftM` get (programParameter1 p GL_LINK_STATUS)
 
 -- | Check if the shader is a separable program
 -- separable shader programs can be created by 'createShaderProgram'
-programSeparable :: Program -> StateVar Bool
-programSeparable p = mapStateVar toGLBool fromGLBool $ programParameter1 p GL_PROGRAM_SEPARABLE where
+programSeparable :: Program -> Var Bool
+programSeparable p = mapVar toGLBool fromGLBool $ programParameter1 p GL_PROGRAM_SEPARABLE where
   toGLBool b = if b then GL_TRUE else GL_FALSE
   fromGLBool b = if b == GL_TRUE then True else False 
 
@@ -217,8 +217,8 @@ geometryInputType p = fromIntegral `liftM` get (programParameter1 p GL_GEOMETRY_
 geometryOutputType :: MonadIO m => Program -> m GLenum
 geometryOutputType p = fromIntegral `liftM` get (programParameter1 p GL_GEOMETRY_OUTPUT_TYPE)
 
-currentProgram :: StateVar Program
-currentProgram = StateVar
+currentProgram :: Var Program
+currentProgram = Var
   (fmap (Program . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv GL_CURRENT_PROGRAM) peek)
   (glUseProgram . object)
 

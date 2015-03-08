@@ -43,12 +43,12 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
+import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Ext.ARB.ShadingLanguageInclude
 import Graphics.GL.Types
 import Quine.GL.Object
-import Quine.StateVar
 
 -- * Shader types
 
@@ -116,8 +116,8 @@ shaderInfoLogLength :: MonadIO m => Shader -> m Int
 shaderInfoLogLength s = fromIntegral `liftM` getShader s GL_INFO_LOG_LENGTH
 
 -- | Get/set the source code to a shader.
-shaderSource :: Shader -> StateVar Lazy.ByteString
-shaderSource (Shader sh) = StateVar g s where
+shaderSource :: Shader -> Var Lazy.ByteString
+shaderSource (Shader sh) = Var g s where
   g :: IO Lazy.ByteString
   g = alloca $ \pl -> do
     l <- glGetShaderiv sh GL_SHADER_SOURCE_LENGTH pl >> peek pl

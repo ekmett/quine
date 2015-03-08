@@ -29,10 +29,10 @@ import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Storable
+import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
-import Quine.StateVar
 import Quine.GL.Object
 
 newtype Renderbuffer a = Renderbuffer GLuint deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
@@ -54,8 +54,8 @@ instance Gen (Renderbuffer a) where
 instance Default (Renderbuffer a) where
   def = Renderbuffer 0
 
-boundRenderbuffer :: RenderbufferTargeting -> StateVar (Renderbuffer a)
-boundRenderbuffer (RenderbufferTargeting target binding) = StateVar g s where
+boundRenderbuffer :: RenderbufferTargeting -> Var (Renderbuffer a)
+boundRenderbuffer (RenderbufferTargeting target binding) = Var g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
     return $ Renderbuffer (fromIntegral i)

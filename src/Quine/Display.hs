@@ -26,13 +26,13 @@ import Control.Monad.State.Class hiding (get)
 import Control.Lens
 import Data.Bits
 import Foreign.C
+import Foreign.Var
 import Graphics.UI.SDL
 import Quine.Env
 import Quine.Exception
 import Quine.Meter
 import Quine.Options
 import Quine.SDL
-import Quine.StateVar
 import System.IO
 import Graphics.GL.Core41
 

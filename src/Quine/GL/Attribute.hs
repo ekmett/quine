@@ -50,13 +50,13 @@ import GHC.Generics hiding (V1)
 import Data.Foldable
 import Data.Traversable
 import Foreign.C.String
-import Foreign.Storable
 import Foreign.Ptr
+import Foreign.Storable
+import Foreign.Var
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Quine.GL.Types
 import Quine.GL.Program
-import Quine.StateVar
 import Linear
 
 --------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ type AttributeAccessor a b = a LayoutAnnotation -> LayoutAnnotation b
 -- The association is stored in the vertex array object 'OpenGL' wise, so a VAO must be bound
 -- 
 -- See 'setVertexAttribute' for enabling and disabling vertex attribute semantics
-vertexAttribute :: HasLayoutAnnotation a => AttributeLocation -> SettableStateVar (Maybe (AttributeAccessor a b))
+vertexAttribute :: HasLayoutAnnotation a => AttributeLocation -> SettableVar (Maybe (AttributeAccessor a b))
 vertexAttribute = contramap (fmap (\accessor -> getLayout . accessor $ layoutAnnotation (Proxy::Proxy a))) . setVertexAttribute
 
 -- | Associates the vertex attribute to the data layout in the vertex buffer. 
@@ -124,8 +124,8 @@ vertexAttribute = contramap (fmap (\accessor -> getLayout . accessor $ layoutAnn
 -- @
 -- setVertexAttribute location $= 'Just' ('Layout' 3 'GL_FLOAT' False (3 * 'sizeOf' Float) 'nullPtr')
 -- @
-setVertexAttribute :: AttributeLocation -> SettableStateVar (Maybe Layout)
-setVertexAttribute l = SettableStateVar $ \case
+setVertexAttribute :: AttributeLocation -> SettableVar (Maybe Layout)
+setVertexAttribute l = SettableVar $ \case
   Nothing -> glDisableVertexAttribArray l
   Just layout -> do
     glEnableVertexAttribArray l

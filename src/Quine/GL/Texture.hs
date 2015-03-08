@@ -55,13 +55,13 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
+import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
 import Linear
 import Linear.V
 import Quine.GL.Object
-import Quine.StateVar
 
 type TextureTarget = GLenum
 type TextureBinding = GLenum
@@ -91,8 +91,8 @@ instance Gen Texture where
 instance Default Texture where
   def = Texture 0
 
-boundTexture :: TextureTarget -> TextureBinding -> StateVar Texture
-boundTexture target binding = StateVar g s where
+boundTexture :: TextureTarget -> TextureBinding -> Var Texture
+boundTexture target binding = Var g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
     return $ Texture (fromIntegral i)
@@ -104,64 +104,64 @@ boundTexture target binding = StateVar g s where
 -- Settings for the current bound 'Texture'.
 -- Consider using 'Quine.GL.Sampler' to store settings 'Texture' independent
 
-texParameterf :: TextureTarget -> TextureParameter -> StateVar Float
-texParameterf t p = StateVar g s where
+texParameterf :: TextureTarget -> TextureParameter -> Var Float
+texParameterf t p = Var g s where
   g = alloca $ (>>) <$> glGetTexParameterfv t p . castPtr <*> peek
   s = glTexParameterf t p
 
-texParameteri :: TextureTarget -> TextureParameter -> StateVar Int32
-texParameteri t p = StateVar g s where
+texParameteri :: TextureTarget -> TextureParameter -> Var Int32
+texParameteri t p = Var g s where
   g = alloca $ (>>) <$> glGetTexParameteriv t p . castPtr <*> peek
   s = glTexParameteri t p
 
-texParameterfv' :: Storable (f Float) => TextureTarget -> TextureParameter -> StateVar (f Float)
-texParameterfv' t p = StateVar g s where
+texParameterfv' :: Storable (f Float) => TextureTarget -> TextureParameter -> Var (f Float)
+texParameterfv' t p = Var g s where
   g = alloca $ (>>) <$> glGetTexParameterfv t p . castPtr <*> peek
   s v = alloca $ (>>) <$> glTexParameterfv t p . castPtr <*> (`poke` v)
 
-texParameterfv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Float)
+texParameterfv :: Dim n => TextureTarget -> TextureParameter -> Var (V n Float)
 texParameterfv = texParameterfv'
 
-texParameter2f :: TextureTarget -> TextureParameter -> StateVar (V2 Float)
+texParameter2f :: TextureTarget -> TextureParameter -> Var (V2 Float)
 texParameter2f = texParameterfv'
 
-texParameter3f :: TextureTarget -> TextureParameter -> StateVar (V3 Float)
+texParameter3f :: TextureTarget -> TextureParameter -> Var (V3 Float)
 texParameter3f = texParameterfv'
 
-texParameter4f :: TextureTarget -> TextureParameter -> StateVar (V4 Float)
+texParameter4f :: TextureTarget -> TextureParameter -> Var (V4 Float)
 texParameter4f = texParameterfv'
 
-texParameteriv' :: Storable (f Int32) => TextureTarget -> TextureParameter -> StateVar (f Int32)
-texParameteriv' t p = StateVar g s where
+texParameteriv' :: Storable (f Int32) => TextureTarget -> TextureParameter -> Var (f Int32)
+texParameteriv' t p = Var g s where
   g = alloca $ (>>) <$> glGetTexParameteriv t p . castPtr <*> peek
   s v = alloca $ (>>) <$> glTexParameteriv t p . castPtr <*> (`poke` v)
 
-texParameteriv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Int32)
+texParameteriv :: Dim n => TextureTarget -> TextureParameter -> Var (V n Int32)
 texParameteriv = texParameteriv'
 
-texParameter2i :: TextureTarget -> TextureParameter -> StateVar (V2 Int32)
+texParameter2i :: TextureTarget -> TextureParameter -> Var (V2 Int32)
 texParameter2i = texParameteriv'
 
-texParameter3i :: TextureTarget -> TextureParameter -> StateVar (V3 Int32)
+texParameter3i :: TextureTarget -> TextureParameter -> Var (V3 Int32)
 texParameter3i = texParameteriv'
 
-texParameter4i :: TextureTarget -> TextureParameter -> StateVar (V4 Int32)
+texParameter4i :: TextureTarget -> TextureParameter -> Var (V4 Int32)
 texParameter4i = texParameteriv'
 
-texParameterIiv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Int32)
-texParameterIiv t p = StateVar g s where
+texParameterIiv :: Dim n => TextureTarget -> TextureParameter -> Var (V n Int32)
+texParameterIiv t p = Var g s where
   g = alloca $ (>>) <$> glGetTexParameterIiv t p . castPtr <*> peek
   s v = alloca $ (>>) <$> glTexParameterIiv t p . castPtr <*> (`poke` v)
 
-texParameterIuiv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Word32)
-texParameterIuiv t p = StateVar g s where
+texParameterIuiv :: Dim n => TextureTarget -> TextureParameter -> Var (V n Word32)
+texParameterIuiv t p = Var g s where
   g = alloca $ (>>) <$> glGetTexParameterIuiv t p . castPtr <*> peek
   s v = alloca $ (>>) <$> glTexParameterIuiv t p . castPtr <*> (`poke` v)
 
 -- * Texture Unit
 
-activeTexture :: StateVar Word32
-activeTexture = StateVar g s where
+activeTexture :: Var Word32
+activeTexture = Var g s where
   g = fmap fromIntegral $ alloca $ liftM2 (>>) (glGetIntegerv GL_ACTIVE_TEXTURE) peek
   s n = glActiveTexture (GL_TEXTURE0 + n)
 

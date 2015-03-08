@@ -113,7 +113,6 @@ library
     Quine.Ref
     Quine.SDL
     Quine.Simulation
-    Quine.StateVar
     Quine.Supply
     Quine.System
     Quine.Task
@@ -129,7 +128,7 @@ library
     comonad >= 4.2.2,
     concurrent-supply,
     containers,
-    contravariant >= 1.2,
+    contravariant >= 1.2.2,
     data-default,
     directory,
     distributive,
@@ -137,6 +136,7 @@ library
     file-embed,
     filepath,
     fingertree,
+    foreign-var >= 0.1 && < 1,
     gl >= 0.5,
     half,
     JuicyPixels,
@@ -171,6 +171,7 @@ executable toy
       data-default,
       file-embed,
       filepath,
+      foreign-var >= 0.1 && < 1,
       gl,
       quine,
       lens,
@@ -196,6 +197,7 @@ executable quine
       data-default,
       file-embed,
       filepath,
+      foreign-var >= 0.1 && < 1,
       gl,
       quine,
       lens,
@@ -221,6 +223,7 @@ executable triangles
       data-default,
       file-embed,
       filepath,
+      foreign-var >= 0.1 && < 1,
       gl,
       quine,
       lens,
@@ -246,6 +249,7 @@ test-suite test-buffers
       base,
       containers,
       data-default,
+      foreign-var >= 0.1 && < 1,
       gl,
       sdl2,
       hspec,
@@ -267,6 +271,7 @@ test-suite test-framebuffers
       base,
       containers,
       data-default,
+      foreign-var >= 0.1 && < 1,
       gl,
       sdl2,
       hspec,
@@ -289,6 +294,7 @@ test-suite test-shaders
       bytestring,
       file-embed,
       filepath,
+      foreign-var >= 0.1 && < 1,
       gl,
       sdl2,
       quine

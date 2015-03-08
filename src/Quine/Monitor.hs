@@ -48,8 +48,8 @@ import Data.Default
 import Data.Foldable as F
 import Data.Int
 import Data.Text
+import Foreign.Var
 import Options.Applicative
-import Quine.StateVar
 import System.IO
 import System.Process
 import System.Remote.Monitoring
@@ -115,7 +115,7 @@ newtype Counter = Counter { runCounter :: Maybe C.Counter }
 instance HasSetter Label String where
   Label t $= a = liftIO $ maybe (return ()) (L.set ?? pack a) t
 
-instance HasUpdate Label String where
+instance HasUpdate Label String String where
   Label t $~ f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
   Label t $~! f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
 

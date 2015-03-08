@@ -30,10 +30,8 @@ import Data.FileEmbed
 import Data.Monoid
 import Foreign
 import Foreign.C
+import Foreign.Var
 import GHC.Conc
-import System.Exit
-import System.FilePath
-import System.IO
 import Graphics.GL.Core41
 import Graphics.UI.SDL as SDL
 import Linear
@@ -41,9 +39,9 @@ import Numeric (showFFloat)
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Camera
-import Quine.Env
 import Quine.Debug
 import Quine.Display
+import Quine.Env
 import Quine.Exception
 import Quine.GL
 import Quine.GL.Error
@@ -60,17 +58,19 @@ import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
 import Quine.Simulation
-import Quine.StateVar
 import Quine.System
+import System.Exit
+import System.FilePath
+import System.IO
 
 -- | I need to switch to UBOs!
 data UniformCamera = UniformCamera
   { _uniformProjection
-  , _uniformModelView :: SettableStateVar Mat4
+  , _uniformModelView :: SettableVar Mat4
   , _uniformFovy
   , _uniformAspectRatio
   , _uniformNear
-  , _uniformFar :: StateVar Float
+  , _uniformFar :: Var Float
   }
 
 makeClassy ''UniformCamera
@@ -85,8 +85,8 @@ programUniformCamera p s = liftIO $ do
   f   <- uniformLocation p $ "viewportCameraFar[" ++ show s ++ "]"
   liftIO $ print pro
   return $ UniformCamera 
-      (SettableStateVar (uniformMat4 pro)) -- TODO programUniformMat4
-      (SettableStateVar (uniformMat4 mv))
+      (SettableVar (uniformMat4 pro)) -- TODO programUniformMat4
+      (SettableVar (uniformMat4 mv))
       (programUniform1f p fov)
       (programUniform1f p a)
       (programUniform1f p n)
@@ -199,8 +199,8 @@ core = do
   throwErrors
   liftIO $ putStrLn "retrieving camera"
   uc <- programUniformCamera scene 0
-  uniformTime         <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
-  uniformPhysicsAlpha <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
+  uniformTime         <- (mapVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
+  uniformPhysicsAlpha <- (mapVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
   throwErrors
   boundVertexArray $= emptyVAO
   liftIO $ putStrLn "setting up program"

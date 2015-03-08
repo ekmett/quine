@@ -30,10 +30,8 @@ import Data.FileEmbed
 import Data.Monoid
 import Foreign
 import Foreign.C
+import Foreign.Var
 import GHC.Conc
-import System.Exit
-import System.FilePath
-import System.IO
 import Graphics.GL.Core41
 import Graphics.UI.SDL as SDL
 import Linear
@@ -41,9 +39,9 @@ import Numeric (showFFloat)
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Camera
-import Quine.Env
 import Quine.Debug
 import Quine.Display
+import Quine.Env
 import Quine.Exception
 import Quine.GL
 import Quine.GL.Error
@@ -60,8 +58,10 @@ import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
 import Quine.Simulation
-import Quine.StateVar
 import Quine.System
+import System.Exit
+import System.FilePath
+import System.IO
 
 #include "locations.h"
 
@@ -159,13 +159,13 @@ core = do
   scn <- link [screenShader,sceneShader]
   emptyVAO <- gen
   iResolution        <- programUniform2f scn `liftM` uniformLocation scn "iResolution"
-  iGlobalTime        <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iGlobalTime"
-  iPhysicsAlpha      <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iPhysicsAlpha"
+  iGlobalTime        <- (mapVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iGlobalTime"
+  iPhysicsAlpha      <- (mapVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iPhysicsAlpha"
   iCamera            <- programUniform3f scn `liftM` uniformLocation scn "iCamera" -- yaw, pitch, fovy
-  iProjection        <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
-  iInverseProjection <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
-  iView              <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iView"
-  iInverseView       <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iInverseView"
+  iProjection        <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iInverseProjection <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iView              <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iView"
+  iInverseView       <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iInverseView"
   throwErrors
   currentProgram   $= scn
   boundVertexArray $= emptyVAO
