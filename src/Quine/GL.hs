@@ -37,7 +37,7 @@ import qualified Data.ByteString.Internal as Strict
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import Data.Foldable (for_)
 import Data.Data
-import Foreign.Var
+import Data.StateVar
 import Prelude hiding (concat)
 import Quine.GL.Shader
 import Quine.GL.Object

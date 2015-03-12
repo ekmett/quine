@@ -28,9 +28,9 @@ import Control.Monad.State hiding (get)
 import Data.Default
 import Data.FileEmbed
 import Data.Monoid
+import Data.StateVar
 import Foreign
 import Foreign.C
-import Foreign.Var
 import GHC.Conc
 import Graphics.GL.Core41
 import Graphics.UI.SDL as SDL
@@ -159,13 +159,13 @@ core = do
   scn <- link [screenShader,sceneShader]
   emptyVAO <- gen
   iResolution        <- programUniform2f scn `liftM` uniformLocation scn "iResolution"
-  iGlobalTime        <- (mapVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iGlobalTime"
-  iPhysicsAlpha      <- (mapVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iPhysicsAlpha"
+  iGlobalTime        <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iGlobalTime"
+  iPhysicsAlpha      <- (mapStateVar realToFrac realToFrac . programUniform1f scn) `liftM` uniformLocation scn "iPhysicsAlpha"
   iCamera            <- programUniform3f scn `liftM` uniformLocation scn "iCamera" -- yaw, pitch, fovy
-  iProjection        <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
-  iInverseProjection <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
-  iView              <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iView"
-  iInverseView       <- (SettableVar . uniformMat4) `liftM` uniformLocation scn "iInverseView"
+  iProjection        <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iInverseProjection <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iProjection"
+  iView              <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iView"
+  iInverseView       <- (SettableStateVar . uniformMat4) `liftM` uniformLocation scn "iInverseView"
   throwErrors
   currentProgram   $= scn
   boundVertexArray $= emptyVAO

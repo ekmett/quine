@@ -73,7 +73,7 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
-import Foreign.Var
+import Data.StateVar
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Ext.EXT.DirectStateAccess
@@ -135,17 +135,17 @@ instance Storable a => BufferData [a] where
 
 -- * Buffer Access
 
-boundBufferAt :: BufferTarget -> Var (Buffer a)
-boundBufferAt (BufferTarget target binding) = Var g s where
+boundBufferAt :: BufferTarget -> StateVar (Buffer a)
+boundBufferAt (BufferTarget target binding) = StateVar g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv binding) peek
     return $ Buffer (fromIntegral i)
   s = glBindBuffer target . coerce
 
 -- | bindless uploading data to the argumented buffer (since OpenGL 4.4+ or with 'gl_EXT_direct_state_access')
-bufferDataDirect :: forall a. BufferData a => Buffer a -> Var (BufferUsage, a)
+bufferDataDirect :: forall a. BufferData a => Buffer a -> StateVar (BufferUsage, a)
 bufferDataDirect (Buffer i)
-  | gl_EXT_direct_state_access = Var g s
+  | gl_EXT_direct_state_access = StateVar g s
   | otherwise = throw $ BufferException "gl_EXT_direct_state_access unsupported" where
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
@@ -159,8 +159,8 @@ bufferDataDirect (Buffer i)
   s (u,v) = withRawData v $ \ptr -> glNamedBufferDataEXT i (fromIntegral $ sizeOfData v) ptr (coerce u)
 
 -- | uploading data to the currently at 'BufferTarget' bound buffer
-bufferData :: forall a. BufferData a => BufferTarget -> Var (BufferUsage, a)
-bufferData (BufferTarget t _) = Var g s where
+bufferData :: forall a. BufferData a => BufferTarget -> StateVar (BufferUsage, a)
+bufferData (BufferTarget t _) = StateVar g s where
   g = alloca $ \sizePtr ->
       alloca $ \usagePtr -> do
         glGetBufferParameteriv t GL_BUFFER_SIZE sizePtr

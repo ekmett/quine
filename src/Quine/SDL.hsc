@@ -62,7 +62,7 @@ import Data.Typeable
 import Data.Version as Data
 import Foreign
 import Foreign.C
-import Foreign.Var
+import Data.StateVar
 import Graphics.UI.SDL as SDL
 import Prelude hiding (init)
 import System.IO.Unsafe
@@ -93,8 +93,8 @@ err e
   | otherwise = return ()
 
 -- | Get/Set relative mouse mode. When enabled we get relative mouse position events even at the screen edge.
-relativeMouseMode :: Var Bool
-relativeMouseMode = Var getRelativeMouseMode (setRelativeMouseMode >=> err)
+relativeMouseMode :: StateVar Bool
+relativeMouseMode = StateVar getRelativeMouseMode (setRelativeMouseMode >=> err)
 
 -- * Version
 
@@ -114,66 +114,66 @@ revisionNumber :: Int
 revisionNumber = unsafePerformIO $ fromIntegral <$> getRevisionNumber
 {-# NOINLINE revisionNumber #-}
 
--- * Attribute Vars
+-- * Attribute StateVars
   
 -- | get\/set @SDL_GL_RED_SIZE@, the minimum number of bits for the red channel of the color buffer; defaults to 3
-redSize :: Var Int
+redSize :: StateVar Int
 redSize = attr SDL_GL_RED_SIZE
 
 -- | get\/set @SDL_GL_GREEN_SIZE@, the minimum number of bits for the green channel of the color buffer; defaults to 3
-greenSize :: Var Int
+greenSize :: StateVar Int
 greenSize = attr SDL_GL_GREEN_SIZE
 
 -- | get\/set @SDL_GL_BLUE_SIZE@, the minimum number of bits for the blue channel of the color buffer; defaults to 2
-blueSize :: Var Int
+blueSize :: StateVar Int
 blueSize = attr SDL_GL_BLUE_SIZE
 
 -- | get\/set @SDL_GL_ALPHA_SIZE@, the minimum number of bits for the alpha channel of the color buffer; defaults to 0
-alphaSize :: Var Int
+alphaSize :: StateVar Int
 alphaSize = attr SDL_GL_ALPHA_SIZE
 
 -- | get\/set @SDL_GL_BUFFER_SIZE@, the minimum number of bits for frame buffer size; defaults to 0
-bufferSize :: Var Int
+bufferSize :: StateVar Int
 bufferSize = attr SDL_GL_BUFFER_SIZE
 
 -- | get\/set @SDL_GL_DEPTH_SIZE@, the minimum number of bits in the depth buffer; defaults to 16
-depthSize :: Var Int
+depthSize :: StateVar Int
 depthSize = attr SDL_GL_DEPTH_SIZE
 
 -- | get\/set @SDL_GL_STENCIL_SIZE@, the minimum number of bits in the stencil buffer; defaults to 0
-stencilSize :: Var Int
+stencilSize :: StateVar Int
 stencilSize = attr SDL_GL_STENCIL_SIZE
 
 -- | get\/set @SDL_GL_ACCUM_RED_SIZE@, the minimum number of bits for the red channel of the accumulation buffer; defaults to 0
-accumRedSize :: Var Int
+accumRedSize :: StateVar Int
 accumRedSize = attr SDL_GL_ACCUM_RED_SIZE
 
 -- | get\/set @SDL_GL_ACCUM_GREEN_SIZE@, the minimum number of bits for the green channel of the accumulation buffer; defaults to 0
-accumGreenSize :: Var Int
+accumGreenSize :: StateVar Int
 accumGreenSize = attr SDL_GL_ACCUM_GREEN_SIZE
 
 -- | get\/set @SDL_GL_ACCUM_BLUE_SIZE@, the minimum number of bits for the blue channel of the accumulation buffer; defaults to 0
-accumBlueSize :: Var Int
+accumBlueSize :: StateVar Int
 accumBlueSize = attr SDL_GL_ACCUM_BLUE_SIZE
 
 -- | get\/set @SDL_GL_ACCUM_ALPHA_SIZE@, the minimum number of bits for the alpha channel of the accumulation buffer; defaults to 0
-accumAlphaSize :: Var Int
+accumAlphaSize :: StateVar Int
 accumAlphaSize = attr SDL_GL_ACCUM_ALPHA_SIZE
 
 -- | get\/set @SDL_GL_MULTISAMPLEBUFFERS@, the number of buffers used for multisample anti-aliasing; defaults to 0; see <https://wiki.libsdl.org/SDL_GLattr#multisample Remarks> for details
-multiSampleBuffers :: Var Int
+multiSampleBuffers :: StateVar Int
 multiSampleBuffers  = attr SDL_GL_MULTISAMPLEBUFFERS
 
 -- | get\/set @SDL_GL_MULTISAMPLESAMPLES@, the number of samples used around the current pixel used for multisample anti-aliasing; defaults to 0; see <https://wiki.libsdl.org/SDL_GLattr#multisample Remarks> for details
-multiSampleSamples :: Var Int
+multiSampleSamples :: StateVar Int
 multiSampleSamples  = attr SDL_GL_MULTISAMPLESAMPLES
 
 -- | get\/set @SDL_GL_CONTEXT_MAJOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
-contextMajorVersion :: Var Int
+contextMajorVersion :: StateVar Int
 contextMajorVersion = attr SDL_GL_CONTEXT_MAJOR_VERSION
 
 -- | get\/set @SDL_GL_CONTEXT_MINOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
-contextMinorVersion :: Var Int
+contextMinorVersion :: StateVar Int
 contextMinorVersion = attr SDL_GL_CONTEXT_MINOR_VERSION
 
 -- | get\/set @SDL_GL_CONTEXT_FLAGS@, some bitwise (.|.) of 0 or more of:
@@ -194,7 +194,7 @@ contextMinorVersion = attr SDL_GL_CONTEXT_MINOR_VERSION
 --
 -- This flag maps to @GLX_CONTEXT_ROBUST_ACCESS_BIT_ARB@ in the @GLX_ARB_create_context_robustness@ extension for X11 and @WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB@ in the @WGL_ARB_create_context_robustness@ extension for Windows. This flag is currently ignored on other targets that don't support equivalent functionality. This flag is intended to require a GL context that supports the GL_ARB_robustness extension--a mode that offers a few APIs that are safer than the usual defaults (think @snprintf@() vs @sprintf@()).
 
-contextFlags :: Var Int
+contextFlags :: StateVar Int
 contextFlags = attr SDL_GL_CONTEXT_FLAGS
 
 -- | get\/set @SDL_GL_CONTEXT_PROFILE_MASK@, which must be _one_ of
@@ -207,31 +207,31 @@ contextFlags = attr SDL_GL_CONTEXT_FLAGS
 --
 -- Despite the name implying you could (.|.) these together, these are mutually exclusive!
 
-contextProfileMask :: Var Int
+contextProfileMask :: StateVar Int
 contextProfileMask  = attr SDL_GL_CONTEXT_PROFILE_MASK
 
 -- | get\/set @SDL_GL_STEREO@, whether the output is stereo 3D; defaults to off
-stereo :: Var Bool
+stereo :: StateVar Bool
 stereo = boolAttr SDL_GL_STEREO
 
 -- | get\/set @SDL_GL_ACCELERATED_VISUAL@, set to 'True' to require hardware acceleration, set to 'False' to force software rendering; defaults to allow either
-acceleratedVisual :: Var Bool
+acceleratedVisual :: StateVar Bool
 acceleratedVisual = boolAttr SDL_GL_ACCELERATED_VISUAL
 
 -- | get\/set @SDL_GL_DOUBLEBUFFER@
-doubleBuffer :: Var Bool
+doubleBuffer :: StateVar Bool
 doubleBuffer = boolAttr SDL_GL_DOUBLEBUFFER
 
 -- | get\/set @SDL_GL_SHARE_WITH_CURRENT_CONTEXT@
-shareWithCurrentContext :: Var Bool
+shareWithCurrentContext :: StateVar Bool
 shareWithCurrentContext = boolAttr SDL_GL_SHARE_WITH_CURRENT_CONTEXT
 
 -- | get\/set @SDL_GL_FRAMEBUFFER_SRGB_CAPABLE@
-framebufferSRGBCapable :: Var Bool
+framebufferSRGBCapable :: StateVar Bool
 framebufferSRGBCapable  = boolAttr SDL_GL_FRAMEBUFFER_SRGB_CAPABLE
 
-windowDisplayMode :: Window -> Var DisplayMode
-windowDisplayMode w = Var getWDM setWDM where
+windowDisplayMode :: Window -> StateVar DisplayMode
+windowDisplayMode w = StateVar getWDM setWDM where
   getWDM = alloca $ \p -> do
     getWindowDisplayMode w p >>= err
     peek p 
@@ -247,8 +247,8 @@ desktopDisplayMode idx = alloca $ \p -> do
 elemOff :: forall a. Storable a => Ptr a -> Int -> Ptr a
 elemOff p n = p `plusPtr` (n * sizeOf (undefined :: a))
 
-windowSize :: Window -> Var (Int, Int)
-windowSize win = Var g s where
+windowSize :: Window -> StateVar (Int, Int)
+windowSize win = StateVar g s where
  g = allocaArray 2 $ \p -> do
    getWindowSize win p (elemOff p 1)
    w <- peek p
@@ -261,17 +261,17 @@ windowSize win = Var g s where
 -- 0 for immediate updates, 1 for updates synchronized with the vertical retrace. -1 for late swap tearing (if supported)
 -- late swap tearing support can be checked under the @GLX_EXT_swap_control_tear@ extension
 
-swapInterval :: Var Int
-swapInterval = Var (fromIntegral <$> glGetSwapInterval) (\a -> glSetSwapInterval (fromIntegral a) >>= err)
+swapInterval :: StateVar Int
+swapInterval = StateVar (fromIntegral <$> glGetSwapInterval) (\a -> glSetSwapInterval (fromIntegral a) >>= err)
 
 -- * Utilities
 
 -- | Use a GLattr as a variable
-attr :: GLattr -> Var Int
-attr a = Var (getAttr a) (setAttr a)
+attr :: GLattr -> StateVar Int
+attr a = StateVar (getAttr a) (setAttr a)
 
-boolAttr :: GLattr -> Var Bool
-boolAttr = mapVar fromEnum toEnum . attr
+boolAttr :: GLattr -> StateVar Bool
+boolAttr = mapStateVar fromEnum toEnum . attr
 
 getAttr :: GLattr -> IO Int
 getAttr a = alloca $ \p -> do

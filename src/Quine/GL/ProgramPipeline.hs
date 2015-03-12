@@ -41,7 +41,7 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
-import Foreign.Var
+import Data.StateVar
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
@@ -73,11 +73,11 @@ instance Default ProgramPipeline where
 
 -- * Properties
 
-programPipelineParameter1 :: ProgramPipeline -> GLenum -> GettableVar GLint
+programPipelineParameter1 :: ProgramPipeline -> GLenum -> GettableStateVar GLint
 programPipelineParameter1 p parm = alloca $ liftM2 (>>) (glGetProgramPipelineiv (coerce p) parm) peek
 
-activeShaderProgram :: ProgramPipeline -> Var (Maybe Program)
-activeShaderProgram p = Var g s where
+activeShaderProgram :: ProgramPipeline -> StateVar (Maybe Program)
+activeShaderProgram p = StateVar g s where
   g = fmap Program . checkName <$> programPipelineParameter1 p GL_ACTIVE_PROGRAM
   s = glActiveShaderProgram (coerce p) . coerce . maybe def id
 
@@ -106,35 +106,35 @@ validateStatus p = (GL_FALSE /=) `liftM` get (programPipelineParameter1 p GL_VAL
 
 -- * Binding
 
-boundProgramPipeline :: Var ProgramPipeline
-boundProgramPipeline = Var g s where
+boundProgramPipeline :: StateVar ProgramPipeline
+boundProgramPipeline = StateVar g s where
   g = fmap (ProgramPipeline . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv GL_PROGRAM_PIPELINE_BINDING) peek
   s = glBindProgramPipeline . coerce
 
 -- * Stages
 
-vertexShader :: ProgramPipeline -> Var (Maybe Program)
-vertexShader p = Var g s where
+vertexShader :: ProgramPipeline -> StateVar (Maybe Program)
+vertexShader p = StateVar g s where
   g = fmap Program . checkName <$> programPipelineParameter1 p GL_VERTEX_SHADER
   s = useProgramStages p GL_VERTEX_SHADER_BIT . maybe def id
 
-fragmentShader :: ProgramPipeline -> Var (Maybe Program)
-fragmentShader p = Var g s where
+fragmentShader :: ProgramPipeline -> StateVar (Maybe Program)
+fragmentShader p = StateVar g s where
   g = fmap Program . checkName <$> programPipelineParameter1 p GL_FRAGMENT_SHADER
   s = useProgramStages p GL_FRAGMENT_SHADER_BIT . maybe def id
 
-tessControlShader :: ProgramPipeline -> Var (Maybe Program)
-tessControlShader p = Var g s where
+tessControlShader :: ProgramPipeline -> StateVar (Maybe Program)
+tessControlShader p = StateVar g s where
   g = fmap Program . checkName <$> programPipelineParameter1 p GL_TESS_CONTROL_SHADER
   s = useProgramStages p GL_TESS_CONTROL_SHADER_BIT . maybe def id
 
-tessEvaluationShader :: ProgramPipeline -> Var (Maybe Program)
-tessEvaluationShader p = Var g s where
+tessEvaluationShader :: ProgramPipeline -> StateVar (Maybe Program)
+tessEvaluationShader p = StateVar g s where
   g = fmap Program . checkName <$> programPipelineParameter1 p GL_TESS_EVALUATION_SHADER
   s = useProgramStages p GL_TESS_EVALUATION_SHADER_BIT . maybe def id
 
-geometryShader :: ProgramPipeline -> Var (Maybe Program)
-geometryShader p = Var g s where
+geometryShader :: ProgramPipeline -> StateVar (Maybe Program)
+geometryShader p = StateVar g s where
   g = fmap Program . checkName <$> programPipelineParameter1 p GL_GEOMETRY_SHADER
   s = useProgramStages p GL_GEOMETRY_SHADER_BIT . maybe def id
 

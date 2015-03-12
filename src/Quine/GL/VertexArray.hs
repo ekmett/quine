@@ -23,7 +23,7 @@ import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Storable
-import Foreign.Var
+import Data.StateVar
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
@@ -47,8 +47,8 @@ instance Gen VertexArray where
 instance Default VertexArray where
   def = VertexArray 0
 
-boundVertexArray :: Var VertexArray
-boundVertexArray = Var g s where
+boundVertexArray :: StateVar VertexArray
+boundVertexArray = StateVar g s where
   g = do
     i <- alloca $ liftM2 (>>) (glGetIntegerv GL_VERTEX_ARRAY_BINDING) peek
     return $ VertexArray (fromIntegral i)

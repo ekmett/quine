@@ -22,7 +22,7 @@ import Control.Monad.IO.Class
 import Control.Monad.State.Class hiding (get)
 import Data.Data
 import Data.Default
-import Foreign.Var
+import Data.StateVar
 import GHC.Generics
 import Linear
 import Quine.GL.Types

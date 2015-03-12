@@ -28,9 +28,9 @@ import Control.Monad.State hiding (get)
 import Data.Default
 import Data.FileEmbed
 import Data.Monoid
+import Data.StateVar
 import Foreign
 import Foreign.C
-import Foreign.Var
 import GHC.Conc
 import Graphics.GL.Core41
 import Graphics.UI.SDL as SDL
@@ -66,11 +66,11 @@ import System.IO
 -- | I need to switch to UBOs!
 data UniformCamera = UniformCamera
   { _uniformProjection
-  , _uniformModelView :: SettableVar Mat4
+  , _uniformModelView :: SettableStateVar Mat4
   , _uniformFovy
   , _uniformAspectRatio
   , _uniformNear
-  , _uniformFar :: Var Float
+  , _uniformFar :: StateVar Float
   }
 
 makeClassy ''UniformCamera
@@ -85,8 +85,8 @@ programUniformCamera p s = liftIO $ do
   f   <- uniformLocation p $ "viewportCameraFar[" ++ show s ++ "]"
   liftIO $ print pro
   return $ UniformCamera 
-      (SettableVar (uniformMat4 pro)) -- TODO programUniformMat4
-      (SettableVar (uniformMat4 mv))
+      (SettableStateVar (uniformMat4 pro)) -- TODO programUniformMat4
+      (SettableStateVar (uniformMat4 mv))
       (programUniform1f p fov)
       (programUniform1f p a)
       (programUniform1f p n)
@@ -199,8 +199,8 @@ core = do
   throwErrors
   liftIO $ putStrLn "retrieving camera"
   uc <- programUniformCamera scene 0
-  uniformTime         <- (mapVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
-  uniformPhysicsAlpha <- (mapVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
+  uniformTime         <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "time"
+  uniformPhysicsAlpha <- (mapStateVar realToFrac realToFrac . programUniform1f scene) `liftM` uniformLocation scene "physicsAlpha"
   throwErrors
   boundVertexArray $= emptyVAO
   liftIO $ putStrLn "setting up program"

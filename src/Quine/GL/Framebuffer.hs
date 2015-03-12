@@ -43,7 +43,7 @@ import Data.Functor
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Storable
-import Foreign.Var
+import Data.StateVar
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
@@ -100,8 +100,8 @@ instance FramebufferAttachment (Renderbuffer a) where
 
 -- * Binding
 
-boundFramebuffer :: FramebufferTarget -> Var Framebuffer
-boundFramebuffer (FramebufferTarget target binding) = Var g s where
+boundFramebuffer :: FramebufferTarget -> StateVar Framebuffer
+boundFramebuffer (FramebufferTarget target binding) = StateVar g s where
   g = fmap (Framebuffer . fromIntegral) $ alloca $ liftM2 (>>) (glGetIntegerv binding) peek
   s = glBindFramebuffer target . coerce
 

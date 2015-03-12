@@ -26,7 +26,7 @@ import Control.Monad.State.Class hiding (get)
 import Control.Lens
 import Data.Bits
 import Foreign.C
-import Foreign.Var
+import Data.StateVar
 import Graphics.UI.SDL
 import Quine.Env
 import Quine.Exception

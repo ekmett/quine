@@ -33,10 +33,10 @@ import Control.Monad.State hiding (get)
 import Data.Default
 import Data.FileEmbed
 import Data.Monoid
+import Data.StateVar
 import qualified Data.Vector.Storable as V
 import Foreign
 import Foreign.C
-import Foreign.Var
 import GHC.Conc
 import GHC.Generics
 import Graphics.GL.Core41
@@ -75,11 +75,11 @@ import System.IO
 -- | I need to switch to UBOs!
 data UniformCamera = UniformCamera
   { _uniformProjection
-  , _uniformModelView :: SettableVar Mat4
+  , _uniformModelView :: SettableStateVar Mat4
   , _uniformFovy
   , _uniformAspectRatio
   , _uniformNear
-  , _uniformFar :: Var Float
+  , _uniformFar :: StateVar Float
   }
 
 makeClassy ''UniformCamera
@@ -94,8 +94,8 @@ programUniformCamera p s = liftIO $ do
   f   <- uniformLocation p $ "viewportCameraFar[" ++ show s ++ "]"
   liftIO $ print pro
   return $ UniformCamera 
-      (SettableVar (uniformMat4 pro)) -- TODO programUniformMat4
-      (SettableVar (uniformMat4 mv))
+      (SettableStateVar (uniformMat4 pro)) -- TODO programUniformMat4
+      (SettableStateVar (uniformMat4 mv))
       (programUniform1f p fov)
       (programUniform1f p a)
       (programUniform1f p n)

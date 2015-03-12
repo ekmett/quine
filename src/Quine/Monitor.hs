@@ -48,7 +48,7 @@ import Data.Default
 import Data.Foldable as F
 import Data.Int
 import Data.Text
-import Foreign.Var
+import Data.StateVar
 import Options.Applicative
 import System.IO
 import System.Process

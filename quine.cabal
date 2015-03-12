@@ -128,7 +128,7 @@ library
     comonad >= 4.2.2,
     concurrent-supply,
     containers,
-    contravariant >= 1.2.2,
+    contravariant >= 1.3,
     data-default,
     directory,
     distributive,
@@ -136,7 +136,6 @@ library
     file-embed,
     filepath,
     fingertree,
-    foreign-var >= 0.1 && < 1,
     gl >= 0.5,
     half,
     JuicyPixels,
@@ -149,6 +148,7 @@ library
     process >= 1.2,
     sdl2 >= 1.3,
     semigroups >= 0.9,
+    StateVar >= 1.1 && < 1.2,
     stm >= 2.4.2,
     text,
     transformers,
@@ -171,7 +171,6 @@ executable toy
       data-default,
       file-embed,
       filepath,
-      foreign-var >= 0.1 && < 1,
       gl,
       quine,
       lens,
@@ -180,6 +179,7 @@ executable toy
       MonadRandom,
       optparse-applicative,
       sdl2,
+      StateVar >= 1.1 && < 1.2,
       time,
       transformers
 
@@ -197,7 +197,6 @@ executable quine
       data-default,
       file-embed,
       filepath,
-      foreign-var >= 0.1 && < 1,
       gl,
       quine,
       lens,
@@ -205,6 +204,7 @@ executable quine
       mtl,
       MonadRandom,
       optparse-applicative,
+      StateVar >= 1.1 && < 1.2,
       sdl2,
       time,
       transformers
@@ -223,7 +223,6 @@ executable triangles
       data-default,
       file-embed,
       filepath,
-      foreign-var >= 0.1 && < 1,
       gl,
       quine,
       lens,
@@ -232,6 +231,7 @@ executable triangles
       MonadRandom,
       optparse-applicative,
       sdl2,
+      StateVar >= 1.1 && < 1.2,
       time,
       vector,
       transformers
@@ -247,15 +247,15 @@ test-suite test-buffers
     ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
     build-depends:
       base,
+      bytestring,
       containers,
       data-default,
-      foreign-var >= 0.1 && < 1,
       gl,
-      sdl2,
       hspec,
-      quine,
       linear,
-      bytestring,
+      quine,
+      sdl2,
+      StateVar >= 1.1 && < 1.2,
       vector
 
 test-suite test-framebuffers
@@ -269,15 +269,15 @@ test-suite test-framebuffers
     ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
     build-depends:
       base,
+      bytestring,
       containers,
       data-default,
-      foreign-var >= 0.1 && < 1,
       gl,
-      sdl2,
       hspec,
-      quine,
       linear,
-      bytestring,
+      quine,
+      sdl2,
+      StateVar >= 1.1 && < 1.2,
       vector
 
 test-suite test-shaders
@@ -294,7 +294,7 @@ test-suite test-shaders
       bytestring,
       file-embed,
       filepath,
-      foreign-var >= 0.1 && < 1,
       gl,
+      quine,
       sdl2,
-      quine
+      StateVar >= 1.1 && < 1.2
