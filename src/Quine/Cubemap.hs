@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DeriveFoldable       #-}
 {-# LANGUAGE DeriveFunctor        #-}
 {-# LANGUAGE DeriveTraversable    #-}
@@ -28,7 +29,9 @@ import Control.Monad
 import Codec.Picture
 import Data.Data
 import Data.Foldable
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Traversable
+#endif
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 --------------------------------------------------------------------
@@ -18,7 +19,9 @@ module Quine.Meter
 import Data.Data
 import Data.Default
 import Data.FingerTree
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Monoid
+#endif
 import Quine.Clock
 
 data Ticks

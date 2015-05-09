@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -24,7 +25,9 @@ module Quine.Geometry.Normal
 
 import Control.Lens
 import Data.Data
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Functor
+#endif
 import GHC.Generics
 import Linear
 import Quine.GL.Block

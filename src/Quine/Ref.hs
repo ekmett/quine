@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -20,15 +21,17 @@ module Quine.Ref
   , withRef
   ) where
 
-import Control.Applicative
 import Control.Comonad
 import Control.Exception
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
-import Data.Foldable
 import Data.IORef
+#if ! MIN_VERSION_base(4,8,0)
+import Control.Applicative
+import Data.Foldable
 import Data.Traversable
+#endif
 
 -- | reference counting
 data Ref a = Ref (IO ()) a !(IORef Int)
