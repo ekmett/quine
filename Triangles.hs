@@ -207,7 +207,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     exitSuccess
 
 translate :: Vec3 -> Mat4
-translate v = eye4 & translation .~ v
+translate v = identity & translation .~ v
 
 core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
