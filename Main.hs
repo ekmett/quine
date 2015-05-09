@@ -179,7 +179,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
     exitSuccess
 
 translate :: Vec3 -> Mat4
-translate v = eye4 & translation .~ v
+translate v = identity & translation .~ v
 
 core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
@@ -224,7 +224,7 @@ core = do
       c <- use camera
       uc^.uniformProjection  $= perspective (c^.fovy) aspectRatio (c^.nearZ) (c^.farZ)
       let cameraQuat = axisAngle (V3 1 0 0) (c^.pitch) * axisAngle (V3 0 1 0) (c^.yaw)
-      let mv = set translation (V3 1 0 0) eye4 !*! m33_to_m44 (fromQuaternion cameraQuat)
+      let mv = set translation (V3 1 0 0) identity !*! m33_to_m44 (fromQuaternion cameraQuat)
       liftIO $ print mv
       uc^.uniformModelView   $= mv
       uc^.uniformFovy        $= c^.fovy

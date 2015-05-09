@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE PatternSynonyms    #-}
@@ -39,7 +40,9 @@ import Control.Exception
 import Data.Coerce
 import Data.Data
 import Data.Default
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Functor
+#endif
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Storable

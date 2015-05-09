@@ -5,6 +5,9 @@ env:
     GHCVER=7.8.3
     MODE="-f-test-shaders -f-test-buffers -f-test-framebuffers"
   - >
+    GHCVER=7.10.1
+    MODE="-f-test-shaders -f-test-buffers -f-test-framebuffers"
+  - >
     GHCVER=head
     MODE="-f-test-shaders -f-test-buffers -f-test-framebuffers"
 

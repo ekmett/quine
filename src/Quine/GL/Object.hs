@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -15,7 +16,9 @@ module Quine.GL.Object
 
 import Control.Monad
 import Control.Monad.IO.Class
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Functor
+#endif
 import Graphics.GL.Types
 
 class Object a where

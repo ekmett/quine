@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                    #-}
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE LambdaCase             #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
@@ -42,13 +43,10 @@ module Quine.GL.Attribute
 
 import Control.Monad.IO.Class
 import Data.Data
-import Data.Functor
 import Data.Functor.Contravariant
 import Data.Int
 import Data.Word
 import GHC.Generics hiding (V1)
-import Data.Foldable
-import Data.Traversable
 import Foreign.C.String
 import Foreign.Ptr
 import Foreign.Storable
@@ -58,6 +56,11 @@ import Graphics.GL.Types
 import Quine.GL.Types
 import Quine.GL.Program
 import Linear
+#if ! MIN_VERSION_base(4,8,0)
+import Data.Functor
+import Data.Foldable
+import Data.Traversable
+#endif
 
 --------------------------------------------------------------------------------
 -- * Attribute Locations

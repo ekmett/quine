@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -17,7 +18,9 @@ module Quine.GL.Version
   ) where
 
 import Control.Monad
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Functor
+#endif
 import Data.List (isPrefixOf)
 import Data.Maybe
 import Data.Set as Set
