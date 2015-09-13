@@ -9,9 +9,9 @@ maintainer:    Edward A. Kmett <ekmett@gmail.com>
 stability:     experimental
 homepage:      http://github.com/ekmett/quine/
 bug-reports:   http://github.com/ekmett/quine/issues
-copyright:     Copyright (C) 2014 Edward A. Kmett
+copyright:     Copyright (C) 2014-2015 Edward A. Kmett
 build-type:    Custom
-tested-with:   GHC == 7.8.3
+tested-with:   GHC == 7.10.2
 synopsis:      Quine
 description:   Quine
 
@@ -147,7 +147,7 @@ library
     primitive,
     process >= 1.2,
     sdl2 >= 1.3,
-    semigroups >= 0.9,
+    semigroups >= 0.17,
     StateVar >= 1.1 && < 1.2,
     stm >= 2.4.2,
     text,

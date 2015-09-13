@@ -100,7 +100,7 @@ instance Field2 Box Box Vec3 Vec3 where
 -- | union
 instance Semigroup Box where
   Box l h <> Box l' h' = Box (liftA2 min l l') (liftA2 max h h')
-  times1p _ x = x
+  stimes _ x = x
 
 intersectBox :: Box -> Box -> Maybe Box
 intersectBox (Box l h) (Box l' h')
