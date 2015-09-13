@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -14,7 +15,9 @@ module Quine.Clock
   ) where
 
 import Control.Monad.IO.Class
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Functor
+#endif
 import Graphics.UI.SDL
 import System.IO.Unsafe
 

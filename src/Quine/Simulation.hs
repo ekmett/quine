@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -37,7 +38,9 @@ import Control.Monad.IO.Class
 import Control.Monad.State.Class
 import Control.Lens
 import Data.Default
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Foldable
+#endif
 import Quine.Clock
 import Quine.Meter
 import Quine.Monitor

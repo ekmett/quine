@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -14,7 +15,11 @@ import Control.Applicative
 import Control.Lens
 import Control.Monad
 import Data.Data
+#if MIN_VERSION_base(4,8,0)
+import Data.Foldable hiding (null)
+#else
 import Data.Foldable
+#endif
 import Data.Function (on)
 import Data.Traversable
 import GHC.Generics hiding (prec)
