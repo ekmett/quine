@@ -27,7 +27,7 @@ import Control.Lens
 import Data.Bits
 import Foreign.C
 import Data.StateVar
-import Graphics.UI.SDL
+import SDL.Raw
 import Quine.Env
 import Quine.Exception
 import Quine.Meter

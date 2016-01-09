@@ -38,7 +38,7 @@ import GHC.Generics
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Internal.Shared
 import Graphics.GL.Types
-import Graphics.UI.SDL as SDL
+import SDL
 import Linear
 import Quine.GL.Buffer
 import Quine.GL.Attribute

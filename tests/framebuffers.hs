@@ -38,7 +38,7 @@ import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Internal.Shared
 import Graphics.GL.Types
-import Graphics.UI.SDL as SDL hiding (Texture)
+import SDL hiding (Texture)
 import Linear
 import Quine.GL
 import Quine.GL.Error

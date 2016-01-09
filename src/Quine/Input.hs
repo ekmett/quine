@@ -25,7 +25,7 @@ import Data.Default
 import Data.Int
 import Data.Set
 import Data.Word
-import Graphics.UI.SDL
+import SDL.Raw
 import Linear
 
 data Input = Input

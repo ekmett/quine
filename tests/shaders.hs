@@ -19,7 +19,7 @@ import Data.Foldable
 import Foreign.C.String
 import Foreign.Var
 import Graphics.GL
-import Graphics.UI.SDL as SDL
+import SDL
 import Prelude
 import Quine.GL
 import Quine.GL.Shader

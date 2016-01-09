@@ -63,7 +63,8 @@ import Data.Version as Data
 import Foreign
 import Foreign.C
 import Data.StateVar
-import Graphics.UI.SDL as SDL
+import SDL.Raw
+import SDL.Raw.Types as SDL (Version(..))
 import Prelude hiding (init)
 import System.IO.Unsafe
 

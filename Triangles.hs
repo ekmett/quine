@@ -40,7 +40,7 @@ import Foreign.C
 import GHC.Conc
 import GHC.Generics
 import Graphics.GL.Core41
-import Graphics.UI.SDL as SDL
+import SDL.Raw
 import Linear
 import Numeric (showFFloat)
 import Options.Applicative
