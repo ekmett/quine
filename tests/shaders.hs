@@ -17,9 +17,10 @@ import qualified Data.ByteString as BS
 import Data.FileEmbed
 import Data.Foldable
 import Foreign.C.String
-import Foreign.Var
 import Graphics.GL
-import SDL
+import SDL (($=), get)
+import SDL.Raw as SDL
+import SDL.Raw.Enum
 import Prelude
 import Quine.GL
 import Quine.GL.Shader

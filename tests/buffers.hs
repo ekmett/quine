@@ -33,12 +33,13 @@ import Foreign.Marshal.Utils
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
-import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Ext.EXT.DirectStateAccess
 import Graphics.GL.Internal.Shared
 import Graphics.GL.Types
-import SDL
+import SDL (($=), get)
+import SDL.Raw as SDL
+import SDL.Raw.Enum
 import Linear
 import Quine.GL.Buffer
 import Quine.GL.Attribute

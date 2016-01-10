@@ -18,7 +18,6 @@ import Control.Monad.IO.Class
 #if ! MIN_VERSION_base(4,8,0)
 import Data.Functor
 #endif
-import SDL
 import SDL.Raw.Timer
 import System.IO.Unsafe
 

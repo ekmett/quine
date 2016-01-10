@@ -34,11 +34,12 @@ import Foreign.Marshal.Array
 import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
-import Foreign.Var
 import GHC.Generics
 import Graphics.GL.Internal.Shared
 import Graphics.GL.Types
-import SDL hiding (Texture)
+import SDL (($=), get)
+import SDL.Raw as SDL hiding (Texture)
+import SDL.Raw.Enum
 import Linear
 import Quine.GL
 import Quine.GL.Error
