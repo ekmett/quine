@@ -19,6 +19,7 @@ module Quine.Options
 import Control.Applicative
 import Control.Lens
 import Data.Default
+import Data.Monoid
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Monitor

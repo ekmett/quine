@@ -46,6 +46,7 @@ import Control.Monad.Reader
 import Data.ByteString.Lens
 import Data.Default
 import Data.Foldable as F
+import Data.Monoid
 import Data.Int
 import Data.Text
 import Data.StateVar
