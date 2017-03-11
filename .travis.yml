@@ -1,7 +1,7 @@
 language: haskell
 
 env:
-  - > 
+  - >
     GHCVER=7.8.3
     MODE="-f-test-shaders -f-test-buffers -f-test-framebuffers"
   - >
@@ -46,8 +46,8 @@ before_install:
 
   # install SDL 2.0.3
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-  - wget http://libsdl.org/release/SDL2-2.0.3.tar.gz -O - | tar xz
-  - cd SDL2-2.0.3 && ./configure && make -j && sudo make install && cd ..
+  - wget http://libsdl.org/release/SDL2-2.0.5.tar.gz -O - | tar xz
+  - cd SDL2-2.0.5 && ./configure && make -j && sudo make install && cd ..
 
   # if we want GLFW-b
   # - sudo apt-get install libxxf86vm-dev
