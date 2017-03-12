@@ -31,7 +31,7 @@ before_install:
       travis_retry sudo apt-get update
       travis_retry sudo apt-get install cabal-install-1.24 ghc-$GHCVER happy
       export CABAL=cabal-1.24
-      export PATH=/opt/ghc/$GHCVER/bin:$PATH
+      export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABAL/bin:$PATH
     fi
   # Uncomment whenever hackage is down.
   # - mkdir -p ~/.cabal && cp travis/config ~/.cabal/config && $CABAL update
