@@ -20,3 +20,4 @@ old
 notes
 .ghci
 cabal.config
+.stack-work

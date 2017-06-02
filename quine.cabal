@@ -11,7 +11,7 @@ homepage:      http://github.com/ekmett/quine/
 bug-reports:   http://github.com/ekmett/quine/issues
 copyright:     Copyright (C) 2014-2015 Edward A. Kmett
 build-type:    Simple
-tested-with:   GHC == 7.10.2
+tested-with:   GHC == 8.0.2
 synopsis:      Quine
 description:   Quine
 
