@@ -6,7 +6,7 @@
 {-# LANGUAGE LambdaCase #-}
 -- |
 -- The GPU is an asynchronous resource, but we only have one controlling thread..
--- 
+--
 -- We can poll the GPU at various sync points
 module Quine.Task
   ( MonadTask(..)
@@ -38,7 +38,7 @@ instance Ord Fence where
   Fence a _ `compare` Fence b _ = compare a b
 
 class MonadIO m => MonadTask m where
-  -- | Start a task, this task may be run out of order with your own context. 
+  -- | Start a task, this task may be run out of order with your own context.
   --
   -- After running this command, assume that the context is scrambled.
   --
@@ -121,8 +121,8 @@ instance Monad Task where
 
 -- await a given fence, idling when we timeout
 drive :: Word64 -> IO () -> Heap -> Int -> Int -> IO ()
-drive d w (Heap (Fence l s) k hs) i j 
-  | l <= i       = k h i j -- we're already synchronized through to i. 
+drive d w (Heap (Fence l s) k hs) i j
+  | l <= i       = k h i j -- we're already synchronized through to i.
   | s == nullPtr = k h l j -- this is administrative, not a sync, l > i above
   | otherwise = go         -- use w >> go?
   where
@@ -136,8 +136,8 @@ drive d w (Heap (Fence l s) k hs) i j
 
 instance MonadIO Task where
   liftIO m = Task $ \k _ _ h i j -> do
-    a <- m 
-    k a h i j 
+    a <- m
+    k a h i j
 
 instance MonadTask Task where
   fence = Task $ \k _ _ h i j -> do
@@ -149,7 +149,7 @@ instance MonadTask Task where
     result <- newIORef Nothing
     let f = Fence j nullPtr
     let future h' i' j' = do
-          m (\ a h'' i'' j'' -> writeIORef result a >> 
+          m (\ a h'' i'' j'' -> writeIORef result a >>
     k (await f) (push f (\h i' j' -> ) h
 -}
 

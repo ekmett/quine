@@ -28,7 +28,7 @@ import Text.Read
 
 -- an _ephemeral_ work queue
 data Queue a = Queue [a] [a]
-  deriving (Functor, Data, Typeable, Generic) 
+  deriving (Functor, Data, Typeable, Generic)
 
 instance Show a => Show (Queue a) where
   showsPrec d q = showParen (d > 10) $
@@ -46,7 +46,7 @@ instance Eq a => Eq (Queue a) where
 instance Ord a => Ord (Queue a) where
   compare = compare `on` toList
 
-fromList :: [a] -> Queue a 
+fromList :: [a] -> Queue a
 fromList fs = Queue fs []
 
 null :: Queue a -> Bool
