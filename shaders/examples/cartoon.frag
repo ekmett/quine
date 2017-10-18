@@ -5,7 +5,6 @@
 #include "camera.h"
 #include "geometry/box.h"
 #include "geometry/beam.h"
-#include "simtime.h"
 
 uniform vec2 iResolution = vec2(640.,480.);
 uniform float iGlobalTime = 0.;
