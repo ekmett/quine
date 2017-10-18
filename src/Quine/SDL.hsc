@@ -12,7 +12,7 @@
 -- Prettier SDL bindings
 --------------------------------------------------------------------
 module Quine.SDL
-  ( 
+  (
   -- * Versioning
     version
   , revision
@@ -86,7 +86,7 @@ errOnNull p
 
 -- | Treat negative return codes as prompting an error check.
 err :: MonadIO m => CInt -> m ()
-err e 
+err e
   | e < 0 = liftIO $ do
     msg <- getError >>= peekCString
     clearError
@@ -116,7 +116,7 @@ revisionNumber = unsafePerformIO $ fromIntegral <$> getRevisionNumber
 {-# NOINLINE revisionNumber #-}
 
 -- * Attribute StateVars
-  
+
 -- | get\/set @SDL_GL_RED_SIZE@, the minimum number of bits for the red channel of the color buffer; defaults to 3
 redSize :: StateVar Int
 redSize = attr SDL_GL_RED_SIZE
@@ -169,11 +169,11 @@ multiSampleBuffers  = attr SDL_GL_MULTISAMPLEBUFFERS
 multiSampleSamples :: StateVar Int
 multiSampleSamples  = attr SDL_GL_MULTISAMPLESAMPLES
 
--- | get\/set @SDL_GL_CONTEXT_MAJOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
+-- | get\/set @SDL_GL_CONTEXT_MAJOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details
 contextMajorVersion :: StateVar Int
 contextMajorVersion = attr SDL_GL_CONTEXT_MAJOR_VERSION
 
--- | get\/set @SDL_GL_CONTEXT_MINOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details 
+-- | get\/set @SDL_GL_CONTEXT_MINOR_VERSION@, OpenGL context major version; see <https://wiki.libsdl.org/SDL_GLattr#OpenGL Remarks> for details
 contextMinorVersion :: StateVar Int
 contextMinorVersion = attr SDL_GL_CONTEXT_MINOR_VERSION
 
@@ -235,7 +235,7 @@ windowDisplayMode :: Window -> StateVar DisplayMode
 windowDisplayMode w = StateVar getWDM setWDM where
   getWDM = alloca $ \p -> do
     getWindowDisplayMode w p >>= err
-    peek p 
+    peek p
   setWDM m = alloca $ \p -> do
     poke p m
     setWindowDisplayMode w p >>= err

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, PatternSynonyms #-}
+ {-# LANGUAGE DeriveDataTypeable, DeriveGeneric, PatternSynonyms #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -20,7 +20,7 @@ module Quine.GL.Error
   , pattern StackUnderflow
   , pattern TableTooLarge
   , showError
-  , errors 
+  , errors
   , throwErrors
   , Errors(..)
   ) where
@@ -37,7 +37,7 @@ import Graphics.GL.Types
 -- | Used to represent the result of 'glGetError'
 newtype Error = Error GLenum deriving (Eq, Typeable, Data, Generic)
 
--- | No error has been recorded. 
+-- | No error has been recorded.
 pattern NoError = Error GL_NO_ERROR
 
 -- | An unacceptable value is specified for an enumerated argument.
@@ -46,7 +46,7 @@ pattern InvalidEnum = Error GL_INVALID_ENUM
 -- | A numeric argument is out of range.
 pattern InvalidValue = Error GL_INVALID_VALUE
 
--- | The specified operation is not allowed in the current state. 
+-- | The specified operation is not allowed in the current state.
 pattern InvalidOperation = Error GL_INVALID_OPERATION
 
 -- | The framebuffer object is not complete.
@@ -103,7 +103,7 @@ errors :: MonadIO m => m [Error]
 errors = liftIO $ go [] where
   go es = do
     e <- glGetError
-    if e == GL_NO_ERROR 
+    if e == GL_NO_ERROR
       then return $ reverse es
       else go $ Error e:es
 

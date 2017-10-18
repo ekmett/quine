@@ -19,6 +19,7 @@ module Quine.Options
 import Control.Applicative
 import Control.Lens
 import Data.Default
+import Data.Monoid
 import Options.Applicative
 import Prelude hiding (init)
 import Quine.Monitor
@@ -42,7 +43,7 @@ instance HasMonitorOptions Options where
 
 -- we need to set up the data directory first
 parseOptions :: Parser Options
-parseOptions = Options 
+parseOptions = Options
        <$> parseMonitorOptions
        <*> switch (long "full-screen" <> short 'f' <> help "open full-screen on launch")
        <*> switch (long "real-full-screen" <> short 'n' <> help "use real full screen; exiting is buggy on OS X with SDL 2.0.3")

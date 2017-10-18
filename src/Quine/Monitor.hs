@@ -47,6 +47,7 @@ import Data.ByteString.Lens
 import Data.Default
 import Data.Foldable as F
 import Data.Int
+import Data.Monoid
 import Data.Text
 import Data.StateVar
 import Options.Applicative

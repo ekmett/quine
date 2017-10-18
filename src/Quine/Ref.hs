@@ -40,7 +40,7 @@ data Ref a = Ref (IO ()) a !(IORef Int)
 instance Comonad Ref where
   extract (Ref _ a _) = a
   duplicate w@(Ref f _ r) = Ref f w r
-  
+
 -- | create a reference counter initialized to 1
 newRef :: MonadIO m => IO () -> a -> m (Ref a)
 newRef f a = liftIO $ Ref f a <$> newIORef 1
