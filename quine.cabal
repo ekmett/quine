@@ -139,7 +139,7 @@ library
     gl >= 0.5,
     half,
     JuicyPixels,
-    lens,
+    lens >= 4.16.1,
     linear >= 1.15.4,
     monad-control >= 0.3.3,
     mtl,
