@@ -20,7 +20,10 @@ import Data.Data
 import Data.Default
 import Data.FingerTree
 #if ! MIN_VERSION_base(4,8,0)
-import Data.Monoid
+import Data.Monoid (Monoid(..))
+#endif
+#if ! MIN_VERSION_base(4,11,0)
+import Data.Semigroup (Semigroup(..))
 #endif
 import Quine.Clock
 
@@ -29,11 +32,16 @@ data Ticks
   | Ticks {-# UNPACK #-} !Time {-# UNPACK #-} !Time {-# UNPACK #-} !Int
   deriving (Show, Typeable, Data)
 
+instance Semigroup Ticks where
+  NoTicks     <> m            = m
+  m           <> NoTicks      = m
+  Ticks l _ n <> Ticks _ h n' = Ticks l h (n + n')
+
 instance Monoid Ticks where
   mempty = NoTicks
-  mappend NoTicks m = m
-  mappend m NoTicks = m
-  mappend (Ticks l _ n) (Ticks _ h n') = Ticks l h (n + n')
+#if ! MIN_VERSION_base(4,11,0)
+  mappend = (<>)
+#endif
 
 newtype Tick = Tick Time deriving (Show, Typeable, Data)
 
@@ -59,4 +67,4 @@ tick d (Meter t) = Meter $ dropUntil newEnough (t |> Tick d) where
 fps :: Meter -> Double
 fps (Meter t) = case measure t of
   Ticks l h n | h > l -> (fromIntegral n - 1) / (h - l)
-  _ -> 0 
+  _ -> 0
