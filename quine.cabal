@@ -221,6 +221,7 @@ executable triangles
       base >= 4.7 && < 5,
       containers,
       data-default,
+      fail,
       file-embed,
       filepath,
       gl,
