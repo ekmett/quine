@@ -28,6 +28,7 @@ import Control.Exception.Lens
 import Control.Lens hiding (assign)
 import Control.Lens.Extras (is)
 import Control.Monad hiding (forM_)
+import Control.Monad.Fail
 import Control.Monad.Reader
 import Control.Monad.State hiding (get)
 import Data.Default
@@ -209,7 +210,7 @@ main = runInBoundThread $ withCString "quine" $ \windowName -> do
 translate :: Vec3 -> Mat4
 translate v = identity & translation .~ v
 
-core :: (MonadIO m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
+core :: (MonadIO m, MonadFail m, MonadState s m, HasSystem s (), MonadReader e m, HasEnv e, HasOptions e) => m a
 core = do
   liftIO (getDir "shaders") >>= \ ss -> buildNamedStrings ss ("/shaders"</>)
   throwErrors

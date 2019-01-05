@@ -123,7 +123,7 @@ library
   build-depends:
     adjunctions,
     aeson,
-    base >= 4.7 && < 5,
+    base >= 4.11 && < 5,
     bytestring,
     comonad >= 4.2.2,
     concurrent-supply,
@@ -146,7 +146,7 @@ library
     optparse-applicative,
     primitive,
     process >= 1.2,
-    sdl2 >= 2.2.0 && < 2.3.0,
+    sdl2 >= 2.2.0 && < 2.5.0,
     semigroups >= 0.17,
     StateVar >= 1.1 && < 1.2,
     stm >= 2.4.2,
